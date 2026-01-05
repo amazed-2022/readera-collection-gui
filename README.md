@@ -38,14 +38,29 @@ To use all features of `readera-collection-cli`, the following should be ensured
  `Example Author - Example Title.epub`
 - In the ReadEra app, books should be organized into **Collections** (which are basically folders), e.g. novels, sci-fi, etc.
 - After finishing a book, it should be **marked as "Have read"** in the ReadEra app
-- Books should include an **Author** in the _About Document_ page within the ReadEra app  
+- Books should include an **Author** in the _About Document_ page within the ReadEra app
+  
+  <img width="511" height="193" alt="kép" src="https://github.com/user-attachments/assets/d945ae8d-08a1-4ea7-acf7-fc10dbcbf1fc" />
 - Books should include a text-based **Review** in the _About Document_ page, containing the following data **separated by semicolons**:  
- `publish date`;`rating`;`ratings count`;  
-  (I use data from [goodreads](https://www.goodreads.com/))
+ `publish date`;`rating`;`ratings count`;
+
+  <img width="496" height="158" alt="kép" src="https://github.com/user-attachments/assets/265f1679-7e73-4a65-b8bc-48492c609600" />
+  
+  ([goodreads](https://www.goodreads.com/) can be used for info)
 
 
 ## Features / Highlights
-### TBD
+- Print quotes of any length or only short quotes using corresponding buttons.
+  (Use "delay author" toggle button to delay author print for each quote.)
+- Print every quote from a selected book.
+- Print quote distribution from a selected book (lengths/pages map).
+- Print statistics.
+- Search within quote text.
+- Print a book list sorted by a selected property.
+
+<img width="900" alt="kép" src="https://github.com/user-attachments/assets/0437fd7c-125d-469d-8dde-8eed7c2812a0" />
+
+
 
 ## License
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  

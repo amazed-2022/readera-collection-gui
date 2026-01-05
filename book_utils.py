@@ -1,7 +1,6 @@
 #=================================================
 # IMPORT
 #=================================================
-import book_collection
 import constants
 import datetime
 import random
@@ -127,25 +126,25 @@ def sort_books_for_property(books, book_property):
     """
     Return a sorted list of books based on the given property.
     """
-    if book_property == PROP_ADDED_ON:
+    if book_property == constants.PROP_ADDED_ON:
         return sorted(books, key=lambda b: b.file_modified_time, reverse=True)
-    elif book_property == PROP_READING_NOW:
+    elif book_property == constants.PROP_READING_NOW:
         return sorted(books, key=lambda b: b.published_date, reverse=True)
-    elif book_property == PROP_FINISHED_LIST:
+    elif book_property == constants.PROP_FINISHED_LIST:
         return sorted(books, key=lambda b: b.have_read_time, reverse=True)
-    elif book_property == PROP_READ_DURATION:
+    elif book_property == constants.PROP_READ_DURATION:
         return sorted(books, key=lambda b: b.first_q_date, reverse=True)
-    elif book_property == PROP_PUBLISH_DATE:
+    elif book_property == constants.PROP_PUBLISH_DATE:
         return sorted(books, key=lambda b: b.published_date, reverse=True)
-    elif book_property == PROP_NUMBER_OF_QUOTES:
+    elif book_property == constants.PROP_NUMBER_OF_QUOTES:
         return sorted(books, key=lambda b: b.total_q, reverse=True)
-    elif book_property == PROP_Q_PER_PAGE_RATIO:
+    elif book_property == constants.PROP_Q_PER_PAGE_RATIO:
         return sorted(books, key=lambda b: b.q_per_page, reverse=True)
-    elif book_property == PROP_RATING:
+    elif book_property == constants.PROP_RATING:
         return sorted(books, key=lambda b: b.rating, reverse=True)
-    elif book_property == PROP_FOLDER:
+    elif book_property == constants.PROP_FOLDER:
         return sorted(books, key=lambda b: b.title, reverse=False)
-    elif book_property == PROP_RATINGS_COUNT:
+    elif book_property == constants.PROP_RATINGS_COUNT:
         return sorted(books, key=lambda b: b.ratings_count, reverse=True)
     # fallback: return unsorted
     return books
@@ -160,22 +159,22 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
     Return a formatted string representing a book's info based on the given property.
     Returns None if the book should be skipped (e.g., filtered out).
     """
-    if book_property == PROP_ADDED_ON:
+    if book_property == constants.PROP_ADDED_ON:
         return f"{book.file_modified_time.strftime('%Y-%b-%d')}  /  {book.title}"
-    elif book_property == PROP_READING_NOW:
+    elif book_property == constants.PROP_READING_NOW:
         if (book.activity_time != 0) and (book.have_read_time.year == 1970):
             return (f"{book.published_date:4d}  /  "
                     f"{book.rating:.2f}  /  "
                     f"{book.ratings_count:>{6}}k  /  "
                     f"{book.pages_count:4d} pages  /  {book.title}")
         return None
-    elif book_property == PROP_FINISHED_LIST:
+    elif book_property == constants.PROP_FINISHED_LIST:
         if book.have_read_time.year > 1970:
             return f"{book.have_read_time.strftime('%Y-%b-%d')}  /  {book.title}"
         return None
-    elif book_property == PROP_READ_DURATION:
+    elif book_property == constants.PROP_READ_DURATION:
         if (book.first_q_date > constants.START_DATE_FOR_READ_LIST and
-            (book.last_q_date - book.first_q_date) > book_collection.ONE_DAY_IN_SECONDS and
+            (book.last_q_date - book.first_q_date) > constants.ONE_DAY_IN_SECONDS and
             book.title not in constants.EXCLUDED_TITLES_FROM_READ_DURATION and
             book.have_read_time.year > 1970):
             dt_first = datetime.datetime.fromtimestamp(book.first_q_date)
@@ -188,31 +187,31 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
                     f"{book.title}{' ' * (62-len(book.title))}/ {book.pages_count:4d} pages  /  "
                     f"{int((book.pages_count / elapsed_days)+0.5):2d} / day")
         return None
-    elif book_property == PROP_PUBLISH_DATE:
+    elif book_property == constants.PROP_PUBLISH_DATE:
         if require_finished and book.have_read_time.year <= 1970:
             return None
             
         date_data = f"{book.published_date:4d}" if book.published_date else " N/A"
         if print_pages:
-            pages_text = f"{book.pages_count:4d} pages  /  " if book.pages_count else " N/A pages /  "
-        else
+            pages_text = f"{book.pages_count:4d} pages  /  " if book.pages_count else " N/A pages  /  "
+        else:
             pages_text = ""
         return f"{date_data}  /  {pages_text}{book.title}"
-    elif book_property == PROP_NUMBER_OF_QUOTES:
+    elif book_property == constants.PROP_NUMBER_OF_QUOTES:
         if book.total_q > 0:
             return f"{book.total_q:3d}  /  {book.title}"
         return None
-    elif book_property == PROP_Q_PER_PAGE_RATIO:
+    elif book_property == constants.PROP_Q_PER_PAGE_RATIO:
         if book.q_per_page > 0.0:
             clean_title = book.title.replace('\u200b', '').strip()
             string = f"{book.q_per_page:.3f}  /  {clean_title}"
             return f"{string}{' ' * (78-len(string))} ( {book.total_q:3d} / {book.pages_count:4d} )"
         return None
-    elif book_property == PROP_RATING:
+    elif book_property == constants.PROP_RATING:
         return f"{book.rating:.2f}  /  {book.ratings_count:>{6}}k  /  {book.title}"
-    elif book_property == PROP_FOLDER:
+    elif book_property == constants.PROP_FOLDER:
         # controlled delegation
-        return get_info_row_by_property(book, PROP_PUBLISH_DATE, print_pages=True)
-    elif book_property == PROP_RATINGS_COUNT:
+        return get_info_row_by_property(book, constants.PROP_PUBLISH_DATE, print_pages=True)
+    elif book_property == constants.PROP_RATINGS_COUNT:
         return f"{book.rating:.2f}  /  {book.ratings_count:>{6}}k  /  {book.title}"
     return None

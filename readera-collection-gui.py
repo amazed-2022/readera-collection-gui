@@ -20,7 +20,7 @@ class MainFrame(wx.Frame):
     # initialization
     #=================================================
     def __init__(self):
-        super().__init__(None, title=constants.GUI_TITLE, size=(1280, 960))
+        super().__init__(None, title=constants.GUI_TITLE, size=constants.WINDOW_SIZE)
         panel = wx.Panel(self)
         
         #=================================================
@@ -107,7 +107,7 @@ class MainFrame(wx.Frame):
         text_sizer = wx.BoxSizer(wx.HORIZONTAL)
         # stretch spacer is basically an expanding empty item (proportion=1)
         text_sizer.AddStretchSpacer(1)
-        text_sizer.Add(logo_text, proportion=0, wx.ALIGN_CENTER_VERTICAL)
+        text_sizer.Add(logo_text, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL)
         text_sizer.AddStretchSpacer(1)
         text_sizer.SetMinSize((450, -1))
         # add it to the header sizer
@@ -116,14 +116,20 @@ class MainFrame(wx.Frame):
         #=================================================
         # output box
         #=================================================
-        # self.output = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.NO_BORDER | wx.HSCROLL)
-        # self.output = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.RAISED_BORDER | wx.HSCROLL)
-        self.output = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.SIMPLE_BORDER | wx.HSCROLL)
+        output_pad = wx.Panel(panel)
+        output_pad.SetBackgroundColour(wx.Colour(240, 230, 200))
+        
+        self.output = wx.TextCtrl(output_pad, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.NO_BORDER)
         self.output.SetFont(wx.Font(13, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.output.SetBackgroundColour(wx.Colour(240, 230, 200))
         self.output.SetForegroundColour(wx.BLACK)
+        
+        inner_sizer = wx.BoxSizer(wx.VERTICAL)
+        inner_sizer.Add(self.output, 1, wx.EXPAND | wx.ALL, 10)
+        output_pad.SetSizer(inner_sizer)
+        
         output_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        output_sizer.Add(self.output, 1, wx.EXPAND)
+        output_sizer.Add(output_pad, 1, wx.EXPAND | wx.ALL, 5)
 
         #=================================================
         # toggle button and button grid with separate calls
@@ -240,7 +246,14 @@ class MainFrame(wx.Frame):
                 authors = [constants.ANY_AUTHOR] + self.authors_with_quotes
             else:
                 # build list based on current folder
-                authors = [constants.ANY_AUTHOR] + sorted({book.author for book in book_collection.The_Collection if book.folder == chosen_folder})
+                folder_authors = {
+                    book.author
+                    for book in book_collection.The_Collection
+                    if book.folder == chosen_folder
+                    and book.total_q > 0
+                }
+                folder_authors = sorted(folder_authors)
+                authors = [constants.ANY_AUTHOR] + folder_authors
                 
             self.authors_dropdown.Clear()
             self.authors_dropdown.AppendItems(authors)
@@ -296,7 +309,6 @@ class MainFrame(wx.Frame):
             # reset toggle button to OFF visually and logically
             self.delay_author_toggle.SetValue(False)
             self.delay_author_toggle.SetBackgroundColour(wx.NullColour)
-            self.delay_author_toggle.SetLabel("Random quote author appears later (OFF)")
             self.delay_author_toggle.Refresh()
             self.clear()
         dlg.Destroy()
@@ -471,27 +483,27 @@ class MainFrame(wx.Frame):
             filtered_books = book_utils.filter_books_by_folder(sorted_books, folder)
 
             for book in filtered_books:
-                line = book_utils.get_info_row_by_property(book, book_property, print_pages=(book_property == PROP_PUBLISH_DATE)
+                line = book_utils.get_info_row_by_property(book, book_property, print_pages=(book_property == constants.PROP_PUBLISH_DATE))
                 if line:
                     # only log if not None
                     self.log(f"  -->  {line}")
 
             # continued print for rating / finished list
-            if book_property == PROP_RATING:
-                sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, PROP_RATINGS_COUNT)
+            if book_property == constants.PROP_RATING:
+                sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, constants.PROP_RATINGS_COUNT)
                 filtered_books = book_utils.filter_books_by_folder(sorted_books, folder)
                 self.log("\n")
                 for book in filtered_books:
-                    line = book_utils.get_info_row_by_property(book, PROP_RATINGS_COUNT)
+                    line = book_utils.get_info_row_by_property(book, constants.PROP_RATINGS_COUNT)
                     if line:
                         self.log(f"  -->  {line}")
 
-            elif book_property == PROP_FINISHED_LIST:
-                sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, PROP_PUBLISH_DATE)
+            elif book_property == constants.PROP_FINISHED_LIST:
+                sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, constants.PROP_PUBLISH_DATE)
                 filtered_books = book_utils.filter_books_by_folder(sorted_books, folder)
                 self.log("\n")
                 for book in filtered_books:
-                    line = book_utils.get_info_row_by_property(book, PROP_PUBLISH_DATE, require_finished=True)
+                    line = book_utils.get_info_row_by_property(book, constants.PROP_PUBLISH_DATE, require_finished=True)
                     if line:
                         self.log(f"  -->  {line}")
 

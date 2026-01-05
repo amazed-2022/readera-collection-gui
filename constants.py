@@ -3,6 +3,13 @@
 #=================================================
 
 #=================================================
+# GUI resolution
+#=================================================
+WINDOW_WIDTH = 1400
+WINDOW_HEIGHT = 1050
+WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
+
+#=================================================
 # short quotes length limit
 #=================================================
 MAX_CHAR_IN_SHORT_QUOTE = 300
@@ -122,7 +129,6 @@ PROP_Q_PER_PAGE_RATIO = "quote/page ratio"
 PROP_RATING = "rating"
 PROP_FOLDER = "folder"
 PROP_RATINGS_COUNT = "ratings count"
-PROP_PUBLISH_DATE_FOR_FINISHED
 
 PROPERTIES = [
             PROP_ADDED_ON,

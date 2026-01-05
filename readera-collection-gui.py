@@ -677,7 +677,6 @@ class MainFrame(wx.Frame):
             self.log("Incorrect input. Please enter at least 3 characters.\n")
             return
 
-
         selected_title = self.books_dropdown.GetStringSelection()
         if selected_title == constants.ANY_BOOK:
             books = [book for book in book_collection.The_Collection if book.title in self.filtered_books]

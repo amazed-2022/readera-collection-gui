@@ -45,13 +45,12 @@ EXCLUDED_TITLES_FROM_READ_DATE = {
 #=================================================
 # exception can be added to alter finished date
 #=================================================
-2026-01-01 12:00:00
+# 2026-01-01 12:00:00
 EXCEPTION_DATE_FOR_READ_DATE = 1767265200
 EXCEPTION_TITLES_FOR_READ_DATE = {
     "Dummy Author - Dummy Title"
     }
     
- 
 #=================================================
 # omit words from search results
 #=================================================
@@ -97,4 +96,5 @@ PROPERTIES = [
             PROP_FOLDER
         ]
                 
+
 ONE_DAY_IN_SECONDS = 86400

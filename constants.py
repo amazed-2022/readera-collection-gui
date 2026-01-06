@@ -10,9 +10,11 @@ WINDOW_HEIGHT = 1050
 WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 
 #=================================================
-# short quotes length limit
+# misc
 #=================================================
+ONE_DAY_IN_SECONDS = 86400
 MAX_CHAR_IN_SHORT_QUOTE = 300
+MAX_SEC_BETWEEN_LAST_QUOTE_AND_READ_DATE = 7 * ONE_DAY_IN_SECONDS
 
 #=================================================
 # read list can be started from a timestamp
@@ -98,3 +100,4 @@ PROPERTIES = [
                 
 
 ONE_DAY_IN_SECONDS = 86400
+

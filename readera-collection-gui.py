@@ -87,13 +87,13 @@ class MainFrame(wx.Frame):
         self.books_dropdown.SetFont(font)
 
         # create the dropdown grid sizer
-        dropdown_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=8, hgap=8)
+        dropdown_sizer = wx.FlexGridSizer(rows=3, cols=2, vgap=8, hgap=8)
         dropdown_sizer.AddGrowableCol(1, 1)
-        dropdown_sizer.Add(wx.StaticText(panel, label="FOLDER"), proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, border=10)
+        dropdown_sizer.Add(wx.StaticText(panel, label="FOLDER"), proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, border=30)
         dropdown_sizer.Add(self.folders_dropdown, proportion=1, flag=wx.EXPAND)
-        dropdown_sizer.Add(wx.StaticText(panel, label="AUTHOR"), proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, border=10)
+        dropdown_sizer.Add(wx.StaticText(panel, label="AUTHOR"), proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, border=30)
         dropdown_sizer.Add(self.authors_dropdown, proportion=1, flag=wx.EXPAND)
-        dropdown_sizer.Add(wx.StaticText(panel, label="BOOK"), proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, border=10)
+        dropdown_sizer.Add(wx.StaticText(panel, label="BOOK"), proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, border=30)
         dropdown_sizer.Add(self.books_dropdown, proportion=1, flag=wx.EXPAND)
 
         #=================================================
@@ -115,7 +115,7 @@ class MainFrame(wx.Frame):
         text_sizer.AddStretchSpacer(1)
         text_sizer.Add(logo_text, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL)
         text_sizer.AddStretchSpacer(1)
-        text_sizer.SetMinSize((450, -1))
+        text_sizer.SetMinSize((500, -1))
         
         #=================================================
         # finish header sizer

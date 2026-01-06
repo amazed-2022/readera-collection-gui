@@ -97,7 +97,3 @@ PROPERTIES = [
             PROP_RATING,
             PROP_FOLDER
         ]
-                
-
-ONE_DAY_IN_SECONDS = 86400
-

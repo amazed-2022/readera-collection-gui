@@ -23,6 +23,18 @@ class MainFrame(wx.Frame):
         super().__init__(None, title=constants.GUI_TITLE, size=constants.WINDOW_SIZE)
         panel = wx.Panel(self)
         
+        #=============
+        # full window
+        # +-------------------------------------------------+
+        # | header_sizer (dropdowns left, logo right)       |
+        # +-------------------------------------------------+
+        # | output_sizer (text output, expands vertically)  |
+        # +-------------------------------------------------+
+        # | grid_sizer (3x3 buttons)                        |
+        # +-------------------------------------------------+
+        # | reset_sizer (full-width reset button)           |
+        # +-------------------------------------------------+
+        
         #=================================================
         # data preparation
         #=================================================
@@ -43,18 +55,16 @@ class MainFrame(wx.Frame):
         self.author_timer = None
         self.pending_author_data = None
 
-
-        #=================================================
-        # horizontal header sizer
-        #=================================================
-        # +------------------------------------------------------------------+
-        # | dropdown_sizer (FlexGridSizer 3x2)   |      text_sizer           |
-        # +------------------------------------------------------------------+
-        # |  FOLDER      [folders]               |    ====================   |
-        # |  AUTHOR      [authors]               |    == The Collection ==   |
-        # |  BOOK        [books]                 |    ====================   |
-        # +------------------------------------------------------------------+
-
+        #=========================
+        # HORIZONTAL header_sizer
+        # +----------------------------------------------------------------------------------------------+
+        # | dropdown_sizer (FlexGridSizer 3x2)   |      text_sizer                                       |
+        # +----------------------------------------------------------------------------------------------+
+        # |  FOLDER      [folders]               |  left       |   ====================    |  right      |
+        # |  AUTHOR      [authors]               |  expanding  |   == The Collection ==    |  expanding  |
+        # |  BOOK        [books]                 |  space      |   ====================    |  space      |
+        # +----------------------------------------------------------------------------------------------+
+        
         #=================================================
         # dropdowns
         #=================================================
@@ -86,36 +96,48 @@ class MainFrame(wx.Frame):
         dropdown_sizer.Add(wx.StaticText(panel, label="BOOK"), proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, border=10)
         dropdown_sizer.Add(self.books_dropdown, proportion=1, flag=wx.EXPAND)
 
-        # wrap dropdown_sizer in a horizontal sizer
+        #=================================================
+        # create header sizer
+        #=================================================
         header_sizer = wx.BoxSizer(wx.HORIZONTAL)
         header_sizer.Add(dropdown_sizer, 1, wx.EXPAND)
 
         #=================================================
-        # "logo"
+        # logo and text sizer
         #=================================================
         string = f"== The Collection =="
         separator = '=' * len(string)
         the_collection_logo = f"{separator}\n{string}\n{separator}"
         logo_text = wx.StaticText(panel, label=the_collection_logo)
-        logo_text.SetFont(wx.Font(14, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-
-        # create a horizontal sizer to center the text (width=450, height automatic)
-        # +-------------------------------------------------------------+
-        # |  left expanding  |  centered logo_text  |  right expanding  |
-        # |     space        |   (fixed width)      |     space         |
-        # +-------------------------------------------------------------+
+        logo_text.SetFont(wx.Font(14, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))        
         text_sizer = wx.BoxSizer(wx.HORIZONTAL)
         # stretch spacer is basically an expanding empty item (proportion=1)
         text_sizer.AddStretchSpacer(1)
         text_sizer.Add(logo_text, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL)
         text_sizer.AddStretchSpacer(1)
         text_sizer.SetMinSize((450, -1))
-        # add it to the header sizer
+        
+        #=================================================
+        # finish header sizer
+        #=================================================
         header_sizer.Add(text_sizer, 0, wx.EXPAND)
 
-        #=================================================
-        # output box
-        #=================================================
+        #========================
+        # HORIZONTAL output_sizer
+        # +--------------------------------------+
+        # |  +--------------------------------+  |
+        # |  | output_pad (Panel)             |  |
+        # |  |                                |  |
+        # |  |  inner_sizer (VERTICAL)        |  |
+        # |  |   +------------------------+   |  |
+        # |  |   | self.output (TextCtrl) |   |  |
+        # |  |   |                        |   |  |
+        # |  |   |                        |   |  |
+        # |  |   |                        |   |  |
+        # |  |   |                        |   |  |
+        # |  |   +------------------------+   |  |
+        # |  +--------------------------------+  |
+        # +--------------------------------------+
         output_pad = wx.Panel(panel)
         output_pad.SetBackgroundColour(wx.Colour(240, 230, 200))
         
@@ -131,9 +153,15 @@ class MainFrame(wx.Frame):
         output_sizer = wx.BoxSizer(wx.HORIZONTAL)
         output_sizer.Add(output_pad, 1, wx.EXPAND | wx.ALL, 5)
 
-        #=================================================
-        # toggle button and button grid with separate calls
-        #=================================================
+        #============
+        # grid_sizer
+        # +-----------------------------------------------------------------------+
+        # | Random quote          | Print every quote     | Statistics            |
+        # |-----------------------|-----------------------|-----------------------|
+        # | Random short quote    | Quote distribution    | Search                |
+        # |-----------------------|-----------------------|-----------------------|
+        # | Delay author toggle   | Clear window          | Book list by property |
+        # +-----------------------------------------------------------------------+
         self.delay_author_toggle = wx.ToggleButton(panel, label="Random quotes: delay author")
         self.delay_author_toggle.SetValue(False)
         self.delay_author_toggle.SetToolTip("ON: Author appears after a delay\nOFF: Author appears immediately")
@@ -161,12 +189,7 @@ class MainFrame(wx.Frame):
         font = btn1.GetFont()
         font.SetPointSize(font.GetPointSize() + 1)
 
-        #=================================================
-        # 3x3 grid
-        # (toggle replaces Statistics position)
-        #=================================================
         grid_sizer = wx.GridSizer(3, 3, 10, 10)
-
         grid_buttons = [
             btn1, btn2, btn3,
             btn4, btn5, btn6,
@@ -178,10 +201,12 @@ class MainFrame(wx.Frame):
             # width auto, height = 33 px
             btn.SetMinSize((-1, 33))
             btn.SetFont(font)
-
-        #=================================================
-        # reset button (full width)
-        #=================================================
+            
+        #=============
+        # reset_sizer
+        # +-----------------------------------------------------------------------+
+        # | Reset (full width)                                                    |
+        # +-----------------------------------------------------------------------+
         reset_button = wx.Button(panel, label="Reset")
         reset_button.Bind(wx.EVT_BUTTON, lambda event: self.reset())
         reset_button.SetToolTip("Reset all settings and clear the output")
@@ -191,19 +216,17 @@ class MainFrame(wx.Frame):
         reset_sizer = wx.BoxSizer(wx.HORIZONTAL)
         reset_sizer.Add(reset_button, 1, wx.EXPAND)
 
-        #=================================================
-        # vertical main sizer
-        #=================================================
-        # +--------------------------------------+
-        # | header_sizer (dropdowns)             |
-        # +--------------------------------------+
-        # | output_sizer (text output)           | <- expands vertically
-        # |                                      |
-        # +--------------------------------------+
-        # | grid_sizer (3x3 buttons)             |
-        # +--------------------------------------+
-        # | reset_sizer (full-width reset btn)   |
-        # +--------------------------------------+
+        #==================================
+        # full window (VERTICAL main_sizer)
+        # +-------------------------------------------------+
+        # | header_sizer (dropdowns left, logo right)       |
+        # +-------------------------------------------------+
+        # | output_sizer (text output, expands vertically)  |
+        # +-------------------------------------------------+
+        # | grid_sizer (3x3 buttons)                        |
+        # +-------------------------------------------------+
+        # | reset_sizer (full-width reset button)           |
+        # +-------------------------------------------------+
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         main_sizer.Add(header_sizer, 0, wx.ALL | wx.EXPAND, 10)
         main_sizer.Add(output_sizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)

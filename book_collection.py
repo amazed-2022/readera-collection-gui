@@ -202,17 +202,21 @@ def build_the_collection():
                     this_book.q_per_page = this_book.total_q / this_book.pages_count
 
             # check if current doc was finished or not
+            read_at_timestamp = doc['data'].get('doc_have_read_time') / 1000
             if doc['data'].get('doc_have_read_time') != 0:
                 if this_book.title in constants.EXCEPTION_TITLES_FOR_READ_DATE:
                     aux_date = datetime.datetime.fromtimestamp(constants.EXCEPTION_DATE_FOR_READ_DATE)
                 elif ((this_book.last_q_date - this_book.first_q_date) > constants.ONE_DAY_IN_SECONDS and
                        this_book.title not in constants.EXCLUDED_TITLES_FROM_READ_DATE ):
-                    # use last quote date if available
-                    aux_date = datetime.datetime.fromtimestamp(this_book.last_q_date)
+                    # sanity check for doc have read time
+                    if (read_at_timestamp - this_book.last_q_date) < constants.MAX_SEC_BETWEEN_LAST_QUOTE_AND_READ_DATE:
+                        aux_date = datetime.datetime.fromtimestamp(read_at_timestamp)
+                    else:
+                        aux_date = datetime.datetime.fromtimestamp(this_book.last_q_date)
                 else:
                     # use default date
-                    # Friday, February 23, 2024 12:00:00 PM GMT+01:00
-                    aux_date = datetime.datetime.fromtimestamp(1708686000)
+                   # 2026-01-01 12:00:00
+                    aux_date = datetime.datetime.fromtimestamp(1767265200)
             else:
                 aux_date = datetime.datetime.fromtimestamp(0)
 
@@ -226,4 +230,5 @@ def build_the_collection():
 
     # alphabetical order by title
     The_Collection.sort(key=lambda book: book.title)
+
     return error

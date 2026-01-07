@@ -22,7 +22,7 @@ def get_book_for_random_quote(collection, selected_title, filtered_titles, lengt
             if book.title in filtered_titles
             and (book.has_remaining_quotes if length != "short" else book.has_remaining_short_quotes)
         ]
-        
+
         # check if any book remains at all
         if books:
             return random.choice(books), None
@@ -31,16 +31,17 @@ def get_book_for_random_quote(collection, selected_title, filtered_titles, lengt
     else:
         # get the selected book instance
         book = get_book_by_title(collection, selected_title)
-        
+
         # check for available quote(s)
         if length != "short":
             if not book.has_remaining_quotes:
                 return None, "All quotes were printed."
         elif not book.has_remaining_short_quotes:
             return None, "No (more) short quotes available in the selected book."
-        
+
         # book is valid for random quote
         return book, None
+
 
 def get_random_quote(book, length="any"):
     """
@@ -51,21 +52,22 @@ def get_random_quote(book, length="any"):
     return book.get_random_short_q()
 
 
-
 #=================================================
 # functions for print_every_quote
 #=================================================
 def get_book_by_title(collection, title):
     """
-    Return the book with the given title from the collection.
+    Return the book instance with the given title from the collection.
     """
     return next((book for book in collection if book.title == title), None)
+
 
 def get_quotes_sorted_by_page(book):
     """
     Return all quotes from a book sorted by page number.
     """
     return sorted(book.get_all_quotes_list(), key=lambda q: q.page)
+
 
 def get_and_export_quotes(book, filename):
     """
@@ -82,7 +84,7 @@ def get_and_export_quotes(book, filename):
             f.write(f"{header}\n{quote.text}\n\n")
 
     return quotes
-    
+
 
 #=================================================
 # functions for print_quote_distribution
@@ -113,12 +115,13 @@ def compute_quote_distribution(book, columns=50, rows=10):
         mapped_distr = [rows * (x - old_min) / (old_max - old_min) for x in q_distr]
 
     return mapped_distr
-    
+
+
 def calculate_columns_from_width(ctrl_width_px, avg_char_width, min_columns=30, ratio=0.94):
     usable_px = int(ctrl_width_px * ratio) - 20
     return max(min_columns, int(usable_px / avg_char_width) - 1)
-    
-    
+
+
 #=================================================
 # functions for print_list_by_property
 #=================================================
@@ -148,12 +151,17 @@ def sort_books_for_property(books, book_property):
         return sorted(books, key=lambda b: b.ratings_count, reverse=True)
     # fallback: return unsorted
     return books
-    
+
+
 def filter_books_by_folder(books, folder):
+    """
+    Return a list of books filtered by folder selection.
+    """
     if folder == constants.ANY_FOLDER:
         return books
     return [b for b in books if b.folder == folder]
-    
+
+
 def get_info_row_by_property(book, book_property, print_pages=False, require_finished=False):
     """
     Return a formatted string representing a book's info based on the given property.
@@ -190,7 +198,7 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
     elif book_property == constants.PROP_PUBLISH_DATE:
         if require_finished and book.have_read_time.year <= 1970:
             return None
-            
+
         date_data = f"{book.published_date:4d}" if book.published_date else " N/A"
         if print_pages:
             pages_text = f"{book.pages_count:4d} pages  /  " if book.pages_count else " N/A pages  /  "

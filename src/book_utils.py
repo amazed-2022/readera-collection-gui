@@ -4,7 +4,7 @@
 import constants
 import datetime
 import random
-
+ 
 
 #=================================================
 # functions for print_random_quote
@@ -223,3 +223,4 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
     elif book_property == constants.PROP_RATINGS_COUNT:
         return f"{book.rating:.2f}  /  {book.ratings_count:>{6}}k  /  {book.title}"
     return None
+

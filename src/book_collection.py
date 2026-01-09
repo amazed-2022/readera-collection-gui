@@ -31,15 +31,15 @@ class Book:
         self.annotation = ""
         self.pages_count = 0
         self.published_date = 0
-        self.file_modified_time = 0
-        self.have_read_time = 0
+        self.file_modified_date = 0
+        self.have_read_date = 0
         self.activity_time = 0
         self.q_per_page = 0.0
         self.quotes = []
         self.short_quotes = []
         self.selected_set = set()
-        self.first_q_date = 0
-        self.last_q_date = 0
+        self.first_q_timestamp = 0
+        self.last_q_timestamp = 0
         self.rating = 0.0
         self.ratings_count = 0.0
 
@@ -156,7 +156,7 @@ def build_the_collection():
 
             # store file date as a date object, activity time as a simple timestamp
             aux_date = datetime.datetime.fromtimestamp(doc['data'].get('file_modified_time') / 1000)
-            this_book.file_modified_time = aux_date
+            this_book.file_modified_date = aux_date
             this_book.activity_time = doc['data'].get('doc_activity_time')
 
             # get the folder, if available
@@ -194,8 +194,8 @@ def build_the_collection():
 
                 # sort the dates list to easily access first and last, convert to seconds
                 quote_dates.sort()
-                this_book.first_q_date = quote_dates[0] / 1000
-                this_book.last_q_date = quote_dates[-1] / 1000
+                this_book.first_q_timestamp = quote_dates[0] / 1000
+                this_book.last_q_timestamp = quote_dates[-1] / 1000
 
                 # calculate the q/p ratio, avoid division by zero
                 if this_book.pages_count > 0:
@@ -206,13 +206,13 @@ def build_the_collection():
             if doc['data'].get('doc_have_read_time') != 0:
                 if this_book.title in constants.EXCEPTION_TITLES_FOR_READ_DATE:
                     aux_date = datetime.datetime.fromtimestamp(constants.EXCEPTION_DATE_FOR_READ_DATE)
-                elif ((this_book.last_q_date - this_book.first_q_date) > constants.ONE_DAY_IN_SECONDS and
+                elif ((this_book.last_q_timestamp - this_book.first_q_timestamp) > constants.ONE_DAY_IN_SECONDS and
                        this_book.title not in constants.EXCLUDED_TITLES_FROM_READ_DATE ):
                     # sanity check for doc have read time
-                    if (read_at_timestamp - this_book.last_q_date) < constants.MAX_SEC_BETWEEN_LAST_QUOTE_AND_READ_DATE:
+                    if (read_at_timestamp - this_book.last_q_timestamp) < constants.MAX_SEC_BETWEEN_LAST_QUOTE_AND_READ_DATE:
                         aux_date = datetime.datetime.fromtimestamp(read_at_timestamp)
                     else:
-                        aux_date = datetime.datetime.fromtimestamp(this_book.last_q_date)
+                        aux_date = datetime.datetime.fromtimestamp(this_book.last_q_timestamp)
                 else:
                     # use default date
                    # 2026-01-01 12:00:00
@@ -221,7 +221,7 @@ def build_the_collection():
                 aux_date = datetime.datetime.fromtimestamp(0)
 
             # add the constructed date
-            this_book.have_read_time = aux_date
+            this_book.have_read_date = aux_date
 
     # gather titles, authors and quote counts
     for book in The_Collection:
@@ -232,4 +232,3 @@ def build_the_collection():
     The_Collection.sort(key=lambda book: book.title)
 
     return error
-

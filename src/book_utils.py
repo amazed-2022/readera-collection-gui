@@ -130,13 +130,13 @@ def sort_books_for_property(books, book_property):
     Return a sorted list of books based on the given property.
     """
     if book_property == constants.PROP_ADDED_ON:
-        return sorted(books, key=lambda b: b.file_modified_time, reverse=True)
+        return sorted(books, key=lambda b: b.file_modified_date, reverse=True)
     elif book_property == constants.PROP_READING_NOW:
         return sorted(books, key=lambda b: b.published_date, reverse=True)
     elif book_property == constants.PROP_FINISHED_LIST:
-        return sorted(books, key=lambda b: b.have_read_time, reverse=True)
+        return sorted(books, key=lambda b: b.have_read_date, reverse=True)
     elif book_property == constants.PROP_READ_DURATION:
-        return sorted(books, key=lambda b: b.first_q_date, reverse=True)
+        return sorted(books, key=lambda b: b.first_q_timestamp, reverse=True)
     elif book_property == constants.PROP_PUBLISH_DATE:
         return sorted(books, key=lambda b: b.published_date, reverse=True)
     elif book_property == constants.PROP_NUMBER_OF_QUOTES:
@@ -168,35 +168,35 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
     Returns None if the book should be skipped (e.g., filtered out).
     """
     if book_property == constants.PROP_ADDED_ON:
-        return f"{book.file_modified_time.strftime('%Y-%b-%d')}  /  {book.title}"
+        return f"{book.file_modified_date.strftime('%Y-%b-%d')}  /  {book.title}"
     elif book_property == constants.PROP_READING_NOW:
-        if (book.activity_time != 0) and (book.have_read_time.year == 1970):
+        if (book.activity_time != 0) and (book.have_read_date.year == 1970):
             return (f"{book.published_date:4d}  /  "
                     f"{book.rating:.2f}  /  "
                     f"{book.ratings_count:>{6}}k  /  "
                     f"{book.pages_count:4d} pages  /  {book.title}")
         return None
     elif book_property == constants.PROP_FINISHED_LIST:
-        if book.have_read_time.year > 1970:
-            return f"{book.have_read_time.strftime('%Y-%b-%d')}  /  {book.title}"
+        if book.have_read_date.year > 1970:
+            return f"{book.have_read_date.strftime('%Y-%b-%d')}  /  {book.title}"
         return None
     elif book_property == constants.PROP_READ_DURATION:
-        if (book.first_q_date > constants.START_DATE_FOR_READ_LIST and
-            (book.last_q_date - book.first_q_date) > constants.ONE_DAY_IN_SECONDS and
+        if (book.first_q_timestamp > constants.START_DATE_FOR_READ_LIST and
+            (book.last_q_timestamp - book.first_q_timestamp) > constants.ONE_DAY_IN_SECONDS and
             book.title not in constants.EXCLUDED_TITLES_FROM_READ_DURATION and
-            book.have_read_time.year > 1970):
-            dt_first = datetime.datetime.fromtimestamp(book.first_q_date)
-            elapsed_days = (book.have_read_time - dt_first).days + 1
-            if dt_first.year == book.have_read_time.year:
-                dt_string = f"{dt_first.strftime('%Y %b.%d')} - {book.have_read_time.strftime('%b.%d')}"
+            book.have_read_date.year > 1970):
+            dt_first = datetime.datetime.fromtimestamp(book.first_q_timestamp)
+            elapsed_days = (book.have_read_date - dt_first).days + 1
+            if dt_first.year == book.have_read_date.year:
+                dt_string = f"{dt_first.strftime('%Y %b.%d')} - {book.have_read_date.strftime('%b.%d')}"
             else:
-                dt_string = f"{dt_first.strftime('%Y %b.%d')} - {book.have_read_time.strftime('%Y %b.%d')}"
+                dt_string = f"{dt_first.strftime('%Y %b.%d')} - {book.have_read_date.strftime('%Y %b.%d')}"
             return (f"{dt_string}{' ' * (25-len(dt_string))}  /  "
                     f"{book.title}{' ' * (62-len(book.title))}/ {book.pages_count:4d} pages  /  "
                     f"{int((book.pages_count / elapsed_days)+0.5):2d} / day")
         return None
     elif book_property == constants.PROP_PUBLISH_DATE:
-        if require_finished and book.have_read_time.year <= 1970:
+        if require_finished and book.have_read_date.year <= 1970:
             return None
 
         date_data = f"{book.published_date:4d}" if book.published_date else " N/A"
@@ -223,4 +223,3 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
     elif book_property == constants.PROP_RATINGS_COUNT:
         return f"{book.rating:.2f}  /  {book.ratings_count:>{6}}k  /  {book.title}"
     return None
-

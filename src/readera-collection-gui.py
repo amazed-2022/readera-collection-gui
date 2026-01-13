@@ -3,7 +3,7 @@
 #=================================================
 import book_collection
 import book_utils
-import constants
+from constants_loader import constants
 import datetime
 import random
 import re

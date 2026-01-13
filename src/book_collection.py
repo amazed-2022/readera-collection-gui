@@ -1,7 +1,7 @@
 #=================================================
 # IMPORT
 #=================================================
-import constants
+from constants_loader import constants
 import datetime
 import json
 import random

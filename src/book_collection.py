@@ -217,8 +217,7 @@ def build_the_collection():
                         aux_date = datetime.datetime.fromtimestamp(this_book.last_q_timestamp)
                 else:
                     # use default date
-                   # 2026-01-01 12:00:00
-                    aux_date = datetime.datetime.fromtimestamp(1767265200)
+                    aux_date = datetime.datetime.fromtimestamp(constants.DEFAULT_DATE_FOR_READ_DATE)
             else:
                 aux_date = datetime.datetime.fromtimestamp(0)
 

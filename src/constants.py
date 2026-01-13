@@ -16,11 +16,13 @@ ONE_DAY_IN_SECONDS = 86400
 MAX_CHAR_IN_SHORT_QUOTE = 300
 MAX_SEC_BETWEEN_LAST_QUOTE_AND_READ_DATE = 7 * ONE_DAY_IN_SECONDS
 
+
 #=================================================
 # read list can be started from a timestamp
 #=================================================
 # 2026-01-01 12:00:00
 START_DATE_FOR_READ_LIST = 1767265200
+
 
 #=================================================
 # books can be renamed (e.g. made shorter)
@@ -30,29 +32,35 @@ BOOK_RENAME_DICTIONARY = {
         "Author - Title"
     }
 
+
 #=================================================
 # exclude titles from read duration (interval)
 #=================================================
 EXCLUDED_TITLES_FROM_READ_DURATION = {
     "Dummy Author - Dummy Title"
     }
-    
+
+
 #=================================================
 # exclude titles from finished book list
 #=================================================
 EXCLUDED_TITLES_FROM_READ_DATE = {
     "Dummy Author - Dummy Title"
     }
-    
+
+
 #=================================================
 # exception can be added to alter finished date
 #=================================================
+# 2026-01-01 12:00:00
+DEFAULT_DATE_FOR_READ_DATE = 1767265200
 # 2026-01-01 12:00:00
 EXCEPTION_DATE_FOR_READ_DATE = 1767265200
 EXCEPTION_TITLES_FOR_READ_DATE = {
     "Dummy Author - Dummy Title"
     }
-    
+
+
 #=================================================
 # omit words from search results
 #=================================================
@@ -65,8 +73,8 @@ WORDS_TO_OMIT_FROM_SEARCH = [
     "know", "things", "some", "something", "those", "want", "others",
     "find", "just", "becomes"
     ]
-    
-    
+
+
 #=================================================
 # CONSTANTS
 #=================================================

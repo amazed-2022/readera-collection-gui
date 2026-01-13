@@ -144,6 +144,8 @@ def build_the_collection():
 
             # handle renamed books, book_title is the default return
             book_title = constants.BOOK_RENAME_DICTIONARY.get(book_title, book_title)
+            # remove funny character (Zero Width Space)
+            book_title = book_title.replace('\u200b', '').strip()
 
             # add the book to The Collection (which is a list of instances)
             this_book = Book(book_title)

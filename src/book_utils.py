@@ -211,8 +211,7 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
         return None
     elif book_property == constants.PROP_Q_PER_PAGE_RATIO:
         if book.q_per_page > 0.0:
-            clean_title = book.title.replace('\u200b', '').strip()
-            string = f"{book.q_per_page:.3f}  /  {clean_title}"
+            string = f"{book.q_per_page:.3f}  /  {book.title}"
             return f"{string}{' ' * (78-len(string))} ( {book.total_q:3d} / {book.pages_count:4d} )"
         return None
     elif book_property == constants.PROP_RATING:

@@ -170,21 +170,21 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
     if book_property == constants.PROP_ADDED_ON:
         return f"{book.file_modified_date.strftime('%Y-%b-%d')}  /  {book.title}"
     elif book_property == constants.PROP_READING_NOW:
-        if (book.activity_time != 0) and (book.have_read_date.year == 1970):
+        if (book.activity_time != 0) and not book.is_read:
             return (f"{book.published_date:4d}  /  "
                     f"{book.rating:.2f}  /  "
                     f"{book.ratings_count:>{6}}k  /  "
                     f"{book.pages_count:4d} pages  /  {book.title}")
         return None
     elif book_property == constants.PROP_FINISHED_LIST:
-        if book.have_read_date.year > 1970:
+        if book.is_read:
             return f"{book.have_read_date.strftime('%Y-%b-%d')}  /  {book.title}"
         return None
     elif book_property == constants.PROP_READ_DURATION:
         if (book.first_q_timestamp > constants.START_DATE_FOR_READ_LIST and
             (book.last_q_timestamp - book.first_q_timestamp) > constants.ONE_DAY_IN_SECONDS and
             book.title not in constants.EXCLUDED_TITLES_FROM_READ_DURATION and
-            book.have_read_date.year > 1970):
+            book.is_read):
             dt_first = datetime.datetime.fromtimestamp(book.first_q_timestamp)
             elapsed_days = (book.have_read_date - dt_first).days + 1
             if dt_first.year == book.have_read_date.year:
@@ -196,7 +196,7 @@ def get_info_row_by_property(book, book_property, print_pages=False, require_fin
                     f"{int((book.pages_count / elapsed_days)+0.5):2d} / day")
         return None
     elif book_property == constants.PROP_PUBLISH_DATE:
-        if require_finished and book.have_read_date.year <= 1970:
+        if require_finished and not book.is_read:
             return None
 
         date_data = f"{book.published_date:4d}" if book.published_date else " N/A"

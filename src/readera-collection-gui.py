@@ -543,7 +543,7 @@ class MainFrame(wx.Frame):
         folder_book_count = {}
 
         # gather book counts
-        books_with_quotes, books_20th, books_21th = 0, 0, 0
+        books_with_quotes, books_20th, books_21th, read_books_count = 0, 0, 0, 0
         for book in book_collection.The_Collection:
             if book.total_q > 0:
                 books_with_quotes += 1
@@ -551,6 +551,8 @@ class MainFrame(wx.Frame):
                 books_20th += 1
             if book.published_date >= 2000:
                 books_21th += 1
+            if book.is_read:
+                read_books_count += 1
 
             # gather folders statistics
             for folder in book_collection.Folders:
@@ -573,7 +575,8 @@ class MainFrame(wx.Frame):
             self.print_stat_line("Books from the 21th century", f"{books_21th:4d} / {self.get_percentage_string(books_21th, books_count)}")
         if books_20th:
             self.print_stat_line("Books from the 20th century", f"{books_20th:4d} / {self.get_percentage_string(books_20th, books_count)}")
-        self.print_stat_line("Books with quotes", f"{books_with_quotes:4d} / {self.get_percentage_string(books_with_quotes, books_count)}", blank_line=True)
+        self.print_stat_line("Books with quotes", f"{books_with_quotes:4d} / {self.get_percentage_string(books_with_quotes, books_count)}")
+        self.print_stat_line("Books read", f"{read_books_count:4d} / {self.get_percentage_string(read_books_count, books_count)}", blank_line=True)
 
         # Sort folders by book count (descending)
         folder_book_count = dict(sorted(folder_book_count.items(), key=lambda item: item[1], reverse=True))
@@ -584,7 +587,7 @@ class MainFrame(wx.Frame):
         #=================================================
         self.print_stat_line("Quotes in total", f"{book_collection.All_Quotes_Count:4d} / 100%")
         string = f"{book_collection.Short_Quotes_Count:4d} / {self.get_percentage_string(book_collection.Short_Quotes_Count, book_collection.All_Quotes_Count)}"
-        self.print_stat_line(f"Quotes that are less than {book_collection.MAX_CHAR_IN_SHORT_QUOTE} characters", string)
+        self.print_stat_line(f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters", string)
         self.print_stat_line("Quotes per book on average", f"{round(book_collection.All_Quotes_Count / books_with_quotes):4d}", blank_line=True)
 
 

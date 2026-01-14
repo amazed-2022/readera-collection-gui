@@ -92,6 +92,10 @@ class Book:
     @property
     def has_remaining_short_quotes(self):
         return any(q not in self.selected_set for q in self.short_quotes)
+        
+    @property
+    def is_read(self):
+        return self.have_read_date.year > 1970
 
     #=================================================
     # string representation

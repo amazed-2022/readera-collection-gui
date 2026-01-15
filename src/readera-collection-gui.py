@@ -543,16 +543,16 @@ class MainFrame(wx.Frame):
         folder_book_count = {}
 
         # gather book counts
-        books_with_quotes, books_20th, books_21th, read_books_count = 0, 0, 0, 0
+        books_with_quotes, books_20th, books_21st, books_read_count = 0, 0, 0, 0
         for book in book_collection.The_Collection:
             if book.total_q > 0:
                 books_with_quotes += 1
             if 1900 <= book.published_date < 2000:
                 books_20th += 1
             if book.published_date >= 2000:
-                books_21th += 1
+                books_21st += 1
             if book.is_read:
-                read_books_count += 1
+                books_read_count += 1
 
             # gather folders statistics
             for folder in book_collection.Folders:
@@ -571,12 +571,12 @@ class MainFrame(wx.Frame):
         self.log(f"{string}\n{'-' * len(string)}\n")
         books_count = len(book_collection.The_Collection)
         self.print_stat_line("Books in The Collection", f"{books_count:4d} / 100%")
-        if books_21th:
-            self.print_stat_line("Books from the 21th century", f"{books_21th:4d} / {self.get_percentage_string(books_21th, books_count)}")
+        if books_21st:
+            self.print_stat_line("Books from the 21st century", f"{books_21st:4d} / {self.get_percentage_string(books_21st, books_count)}")
         if books_20th:
             self.print_stat_line("Books from the 20th century", f"{books_20th:4d} / {self.get_percentage_string(books_20th, books_count)}")
         self.print_stat_line("Books with quotes", f"{books_with_quotes:4d} / {self.get_percentage_string(books_with_quotes, books_count)}")
-        self.print_stat_line("Books read", f"{read_books_count:4d} / {self.get_percentage_string(read_books_count, books_count)}", blank_line=True)
+        self.print_stat_line("Books finished", f"{books_read_count:4d} / {self.get_percentage_string(books_read_count, books_count)}", blank_line=True)
 
         # Sort folders by book count (descending)
         folder_book_count = dict(sorted(folder_book_count.items(), key=lambda item: item[1], reverse=True))

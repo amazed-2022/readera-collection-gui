@@ -257,8 +257,8 @@ class MainFrame(wx.Frame):
     #=================================================
     # FUNCTION: folder/author dropdown change
     #=================================================
-    def on_folder_or_author_change(self, event):
-        widget = event.GetEventObject()
+    def on_folder_or_author_change(self, event=None):
+        widget = event.GetEventObject() if event else self.folders_dropdown
         chosen_folder = self.folders_dropdown.GetStringSelection()
         chosen_author = self.authors_dropdown.GetStringSelection()
 
@@ -329,6 +329,9 @@ class MainFrame(wx.Frame):
             self.folders_dropdown.SetSelection(0)
             self.authors_dropdown.SetSelection(0)
             self.books_dropdown.SetSelection(0)
+            # use full dropdown lists again
+            self.on_folder_or_author_change()
+            
             # reset toggle button to OFF visually and logically
             self.delay_author_toggle.SetValue(False)
             self.delay_author_toggle.SetBackgroundColour(wx.NullColour)

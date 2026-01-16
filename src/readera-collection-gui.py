@@ -596,12 +596,6 @@ class MainFrame(wx.Frame):
         string = f"{book_collection.Short_Quotes_Count:4d} / {self.get_percentage_string(book_collection.Short_Quotes_Count, book_collection.All_Quotes_Count)}"
         self.print_stat_line(f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters", string)
         self.print_stat_line("Quotes per book on average", f"{round(book_collection.All_Quotes_Count / books_with_quotes):4d}", blank_line=True)
-        
-        
-        # TEST
-        unprinted_quotes = sum(book.total_q - len(book.selected_set) for book in The_Collection)
-        self.log(unprinted_quotes)
-
 
         # Sort folders by total quotes (descending)
         folder_q_count = dict(sorted(folder_q_count.items(), key=lambda item: item[1], reverse=True))

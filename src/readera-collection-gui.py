@@ -68,6 +68,7 @@ class MainFrame(wx.Frame):
         #=================================================
         # dropdowns
         #=================================================
+        # create "Choice" objects (dropdowns)
         self.folders_dropdown = wx.Choice(panel, choices=[constants.ANY_FOLDER] + sorted(list(book_collection.Folders.keys())))
         self.authors_dropdown = wx.Choice(panel, choices=[constants.ANY_AUTHOR] + self.authors_with_quotes)
         self.books_dropdown = wx.Choice(panel, choices=[constants.ANY_BOOK] + self.filtered_books)
@@ -75,7 +76,8 @@ class MainFrame(wx.Frame):
         self.authors_dropdown.SetSelection(0)
         self.books_dropdown.SetSelection(0)
 
-        # use folder or author choice event for book list update
+        # only the function reference is bound here
+        # the folder/author choice event triggers the authors and book lists update
         self.folders_dropdown.Bind(wx.EVT_CHOICE, self.on_folder_or_author_change)
         self.authors_dropdown.Bind(wx.EVT_CHOICE, self.on_folder_or_author_change)
 
@@ -243,10 +245,10 @@ class MainFrame(wx.Frame):
     def on_toggle_delay_author(self, event):
         toggle = event.GetEventObject()
         if toggle.GetValue():
-            # toggle is ON — change background color (light green) and label
+            # toggle is ON — change background color (light green)
             toggle.SetBackgroundColour(wx.Colour(180, 230, 180))
         else:
-            # toggle is OFF — reset background and label and print pending author
+            # toggle is OFF — reset background and print pending author
             toggle.SetBackgroundColour(wx.NullColour)
             if self.pending_author_data:
                 self._flush_pending_author()
@@ -268,7 +270,7 @@ class MainFrame(wx.Frame):
                 # use full list (again)
                 authors = [constants.ANY_AUTHOR] + self.authors_with_quotes
             else:
-                # build list based on current folder
+                # build list based on current folder (set comprehension)
                 folder_authors = {
                     book.author
                     for book in book_collection.The_Collection
@@ -323,13 +325,13 @@ class MainFrame(wx.Frame):
         )
         if dlg.ShowModal() == wx.ID_YES:
             # flush any pending delayed author print
-            self._flush_pending_author()
+            self._flush_pending_author(print_data=False)
 
             book_collection.build_the_collection()
             self.folders_dropdown.SetSelection(0)
             self.authors_dropdown.SetSelection(0)
             self.books_dropdown.SetSelection(0)
-            # use full dropdown lists again
+            # build full dropdown lists again
             self.on_folder_or_author_change()
             
             # reset toggle button to OFF visually and logically
@@ -396,27 +398,29 @@ class MainFrame(wx.Frame):
         delay_ms = base_delay_ms + quote_length * ms_per_char
         # cap maximum delay to 60 seconds
         delay_ms = min(delay_ms, 60000)
-
+        # store data in a tuple
         self.pending_author_data = (book, quotes_left)
         self.author_timer = wx.CallLater(delay_ms, self._print_pending_author)
 
     def _print_pending_author(self):
         if self.pending_author_data:
+            # unpack the stored tuple
             book, quotes_left = self.pending_author_data
             self._print_author_now(book, quotes_left)
 
         self.pending_author_data = None
         self.author_timer = None
 
-    def _flush_pending_author(self):
+    def _flush_pending_author(self, print_data=True):
         if self.author_timer:
             self.author_timer.Stop()
             self.author_timer = None
 
-        if self.pending_author_data:
+        if print_data and self.pending_author_data:
             book, quotes_left = self.pending_author_data
             self._print_author_now(book, quotes_left)
-            self.pending_author_data = None
+        
+        self.pending_author_data = None
 
     #=================================================
     # FUNCTION: print every quote
@@ -592,6 +596,11 @@ class MainFrame(wx.Frame):
         string = f"{book_collection.Short_Quotes_Count:4d} / {self.get_percentage_string(book_collection.Short_Quotes_Count, book_collection.All_Quotes_Count)}"
         self.print_stat_line(f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters", string)
         self.print_stat_line("Quotes per book on average", f"{round(book_collection.All_Quotes_Count / books_with_quotes):4d}", blank_line=True)
+        
+        
+        # TEST
+        unprinted_quotes = sum(book.total_q - len(book.selected_set) for book in The_Collection)
+        self.log(unprinted_quotes)
 
 
         # Sort folders by total quotes (descending)

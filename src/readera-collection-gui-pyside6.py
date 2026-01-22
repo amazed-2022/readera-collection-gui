@@ -11,12 +11,12 @@ import textwrap
 from collections import Counter
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFont, QTextOption
+from PySide6.QtGui import QFont, QTextOption, QTextCursor, QTextBlockFormat
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QTextEdit, QComboBox,
-    QMessageBox, QInputDialog
+    QMessageBox, QInputDialog, QSizePolicy
 )
 
 #=================================================
@@ -67,6 +67,9 @@ class MainWindow(QMainWindow):
         self.folders_dropdown.setCurrentIndex(0)
         self.authors_dropdown.setCurrentIndex(0)
         self.books_dropdown.setCurrentIndex(0)
+        self.folders_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.authors_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.books_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         # only the function reference is bound here
         # the folder/author choice event triggers the authors and book lists update
@@ -82,12 +85,25 @@ class MainWindow(QMainWindow):
         
         # create the dropdown grid layout
         dropdown_layout = QGridLayout()
+        # left padding
+        dropdown_layout.setContentsMargins(30, 0, 0, 0)  
+        # adds space between columns
+        dropdown_layout.setHorizontalSpacing(30)  
         dropdown_layout.addWidget(QLabel("FOLDER"), 0, 0)
         dropdown_layout.addWidget(self.folders_dropdown, 0, 1)
         dropdown_layout.addWidget(QLabel("AUTHOR"), 1, 0)
         dropdown_layout.addWidget(self.authors_dropdown, 1, 1)
         dropdown_layout.addWidget(QLabel("BOOK"), 2, 0)
         dropdown_layout.addWidget(self.books_dropdown, 2, 1)
+        # create a container QWidget to hold the layout
+        dropdown_container = QWidget()
+        dropdown_container.setLayout(dropdown_layout)
+        
+        # set size policy on the container widget
+        dropdown_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        # labels fixed, dropdowns expand
+        dropdown_layout.setColumnStretch(0, 0)  
+        dropdown_layout.setColumnStretch(1, 1)  
         
         #=================================================
         # logo and text layout
@@ -96,29 +112,39 @@ class MainWindow(QMainWindow):
         separator = '=' * len(string)
         the_collection_logo = f"{separator}\n{string}\n{separator}"
         logo_text = QLabel(the_collection_logo)
-        logo_text.setFont(QFont("Monospace", 14))
+        # logo_text.setFont(QFont("Courier New", 14))
+        logo_text.setFont(QFont("Consolas", 14))
         logo_text.setAlignment(Qt.AlignCenter)
-        
-        text_layout = QHBoxLayout()
-        text_layout.addStretch(1)
-        text_layout.addWidget(logo_text)
-        text_layout.addStretch(1)
+        # prevent logo from expanding
+        logo_text.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        logo_text.setContentsMargins(150, 0, 150, 0)
         
         #=================================================
         # finish header layout
         #=================================================
         header_layout = QHBoxLayout()
-        header_layout.addLayout(dropdown_layout, 1)
-        header_layout.addLayout(text_layout, 0)
+        header_layout.addWidget(dropdown_container, 1)
+        header_layout.addWidget(logo_text)
         
         #========================
         # HORIZONTAL output layout
         #========================
         self.output = QTextEdit()
         self.output.setReadOnly(True)
-        self.output.setFont(QFont("Monospace", 13))
+        # self.output.setFont(QFont("Courier New", 13))
+        self.output.setFont(QFont("Consolas", 13))
         self.output.setStyleSheet("background-color: rgb(240,230,200);")
         self.output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
+        
+        # set line spacing multiplier for all text
+        cursor = self.output.textCursor()
+        block_format = QTextBlockFormat()
+        # 110% line spacing
+        block_format.setLineHeight(150.0, QTextBlockFormat.ProportionalHeight.value)  
+        cursor.select(QTextCursor.Document)
+        cursor.setBlockFormat(block_format)
+        cursor.clearSelection()
+        self.output.setTextCursor(cursor)
         
         #=============
         # grid_layout
@@ -436,6 +462,9 @@ class MainWindow(QMainWindow):
             if book.total_q > 0:
                 author_quotes[book.author] = author_quotes.get(book.author, 0) + book.total_q
 
+        #=================================================
+        # books
+        #=================================================
         string = "Statistics"
         self.log(f"{string}\n{'-'*len(string)}\n")
         books_count = len(book_collection.The_Collection)
@@ -446,24 +475,29 @@ class MainWindow(QMainWindow):
             self.print_stat_line("Books from the 20th century", f"{books_20th:4d} / {self.get_percentage_string(books_20th, books_count)}")
         self.print_stat_line("Books with quotes", f"{books_with_quotes:4d} / {self.get_percentage_string(books_with_quotes, books_count)}")
         self.print_stat_line("Books finished", f"{books_read_count:4d} / {self.get_percentage_string(books_read_count, books_count)}", blank_line=True)
-
+        
+        # Sort folders by book count (descending)
         folder_book_count = dict(sorted(folder_book_count.items(), key=lambda item: item[1], reverse=True))
         self.print_folder_dict(folder_book_count, books_count)
 
+        #=================================================
+        # quotes
+        #=================================================
         self.print_stat_line("Quotes in total", f"{book_collection.All_Quotes_Count:4d} / 100%")
         string = f"{book_collection.Short_Quotes_Count:4d} / {self.get_percentage_string(book_collection.Short_Quotes_Count, book_collection.All_Quotes_Count)}"
         self.print_stat_line(f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters", string)
         self.print_stat_line("Quotes per book on average", f"{round(book_collection.All_Quotes_Count / books_with_quotes):4d}", blank_line=True)
 
-        unprinted_quotes = sum(book.total_q - len(book.selected_set) for book in book_collection.The_Collection)
-        self.log(unprinted_quotes)
-
         folder_q_count = dict(sorted(folder_q_count.items(), key=lambda item: item[1], reverse=True))
         self.print_folder_dict(folder_q_count, book_collection.All_Quotes_Count)
 
-        self.log("")
+        #=================================================
+        # authors
+        #=================================================
         string = "Top 15 Authors"
         self.log(f"{string}\n{'-'*len(string)}")
+        
+        # Sort authors by total quotes (descending)
         author_quotes = dict(sorted(author_quotes.items(), key=lambda item: item[1], reverse=True))
         cumulative = 0
         for i, (author, count) in enumerate(author_quotes.items(), start=1):
@@ -472,9 +506,11 @@ class MainWindow(QMainWindow):
             if i >= 15:
                 break
 
-        self.log("\n")
+        #=================================================
+        # words
+        #=================================================
         string = "Top 30 most used words"
-        self.log(f"\n{string}\n{'-'*len(string)}")
+        self.log(f"\n\n{string}\n{'-'*len(string)}")
 
         all_quotes_list = []
         for book in book_collection.The_Collection:
@@ -484,15 +520,19 @@ class MainWindow(QMainWindow):
         pattern = r"\b(?:" + '|'.join(constants.WORDS_TO_OMIT_FROM_SEARCH) + r")\b"
         updated_text = re.sub(pattern, "", all_text, flags=re.IGNORECASE)
 
+        # convert to lowercase and split by non-word characters (e.g., punctuation)
         words = re.findall(r"\b\w{4,}\b", updated_text.lower())
         top_30 = Counter(words).most_common(30)
 
+        # get word counts for each book, omitted words from top_30 will be
+        # also counted, but there will be no match during later check
         book_word_counts = {}
         for book in book_collection.The_Collection:
             quotes_text = ' '.join(quote.text for quote in book.get_all_quotes_list()).lower()
             word_counts = Counter(re.findall(r'\b\w{4,}\b', quotes_text))
             book_word_counts[book.title] = word_counts
 
+        # process the top 30 words
         for word, count in top_30:
             max_count = 0
             book_string = ""
@@ -501,6 +541,7 @@ class MainWindow(QMainWindow):
                 if word_count > max_count:
                     max_count = word_count
                     book_string = book.title
+            # print related data in one line
             self.log(f" --> {count:3d} x {word}{' '*(12-len(word))}{max_count:3d} / {book_string}")
 
     #=================================================
@@ -526,10 +567,14 @@ class MainWindow(QMainWindow):
     #=================================================
     def search(self):
         self.clear()
+        # popup for user input
         text, ok = QInputDialog.getText(self, "Search", "Enter at least 3 characters:")
         if not ok:
+            # user cancelled
             return
         str_to_search = text.strip().lower()
+        
+        # check length
         if len(str_to_search) < 3:
             self.log("Incorrect input. Please enter at least 3 characters.\n")
             return
@@ -550,11 +595,13 @@ class MainWindow(QMainWindow):
                     if not match_in_book:
                         self.log(f"{book.title}\n{'-'*len(book.title)}")
                         match_in_book = True
+                    # highlight the search term by uppercasing (you could also add color later)
                     highlighted_text = self.highlight(quote.text, str_to_search)
                     self.print_wrapped_text(highlighted_text)
                     self.log('\n')
                     counter += len(re.findall(str_to_search, quote_text))
 
+        # print result summary
         result = f"Matched {counter} time{'s' if counter != 1 else ''}."
         self.log(result if counter else "No match found.")
         if counter:
@@ -562,6 +609,7 @@ class MainWindow(QMainWindow):
         self.log('\n')
 
     def highlight(self, text, term):
+        # replace all occurrences of term (case-insensitive) with uppercase
         return re.sub(re.escape(term), lambda m: m.group(0).upper(), text, flags=re.IGNORECASE)
 
     #=================================================

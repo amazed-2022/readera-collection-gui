@@ -596,7 +596,7 @@ class MainFrame(wx.Frame):
         self.print_stat_line(f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters", string)
         self.print_stat_line("Quotes per book on average", f"{round(book_collection.All_Quotes_Count / books_with_quotes):4d}", blank_line=True)
 
-        # Sort folders by total quotes (descending)
+        # sort folders by total quotes (descending)
         folder_q_count = dict(sorted(folder_q_count.items(), key=lambda item: item[1], reverse=True))
         self.print_folder_dict(folder_q_count, book_collection.All_Quotes_Count)
 
@@ -607,7 +607,7 @@ class MainFrame(wx.Frame):
         string = "Top 15 Authors"
         self.log(f"{string}\n{'-' * len(string)}")
 
-        # Sort authors by total quotes (descending)
+        # sort authors by total quotes (descending)
         author_quotes = dict(sorted(author_quotes.items(), key=lambda item: item[1], reverse=True))
         cumulative = 0
         for i, (author, count) in enumerate(author_quotes.items(), start=1):
@@ -661,7 +661,7 @@ class MainFrame(wx.Frame):
                     max_count = word_count
                     book_string = book.title
 
-            # Print related data in one line
+            # print related data in one line
             self.log(f" --> {count:3d} x {word}{' ' * (12-len(word))}{max_count:3d} / {book_string}")
 
     def print_stat_line(self, string, value, blank_line=False):

@@ -22,7 +22,7 @@ class MainFrame(wx.Frame):
     def __init__(self):
         super().__init__(None, title=constants.GUI_TITLE, size=constants.WINDOW_SIZE)
         panel = wx.Panel(self)
-        
+
         #=============
         # full window
         # +-------------------------------------------------+
@@ -34,22 +34,21 @@ class MainFrame(wx.Frame):
         # +-------------------------------------------------+
         # | reset_sizer (full-width reset button)           |
         # +-------------------------------------------------+
-        
+
         #=================================================
         # data preparation
         #=================================================
-        self.books_with_quotes = []
+        self.filtered_books = []
         authors_set = set()
-        
+
+        # filtered books start with full list
         for book in book_collection.The_Collection:
             if book.total_q > 0:
-                self.books_with_quotes.append(book.title)
+                self.filtered_books.append(book.title)
                 authors_set.add(book.author)
-                
+
         # sorted returns a list
         self.authors_with_quotes = sorted(authors_set)
-        # filtered books start with full list
-        self.filtered_books = self.books_with_quotes
 
         # for delayed author print
         self.author_timer = None
@@ -64,7 +63,7 @@ class MainFrame(wx.Frame):
         # |  AUTHOR      [authors]               |  expanding  |   == The Collection ==    |  expanding  |
         # |  BOOK        [books]                 |  space      |   ====================    |  space      |
         # +----------------------------------------------------------------------------------------------+
-        
+
         #=================================================
         # dropdowns
         #=================================================
@@ -111,14 +110,14 @@ class MainFrame(wx.Frame):
         separator = '=' * len(string)
         the_collection_logo = f"{separator}\n{string}\n{separator}"
         logo_text = wx.StaticText(panel, label=the_collection_logo)
-        logo_text.SetFont(wx.Font(14, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))        
+        logo_text.SetFont(wx.Font(14, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         text_sizer = wx.BoxSizer(wx.HORIZONTAL)
         # stretch spacer is basically an expanding empty item (proportion=1)
         text_sizer.AddStretchSpacer(1)
         text_sizer.Add(logo_text, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL)
         text_sizer.AddStretchSpacer(1)
         text_sizer.SetMinSize((500, -1))
-        
+
         #=================================================
         # finish header sizer
         #=================================================
@@ -142,16 +141,16 @@ class MainFrame(wx.Frame):
         # +--------------------------------------+
         output_pad = wx.Panel(panel)
         output_pad.SetBackgroundColour(wx.Colour(240, 230, 200))
-        
+
         self.output = wx.TextCtrl(output_pad, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.NO_BORDER)
         self.output.SetFont(wx.Font(13, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.output.SetBackgroundColour(wx.Colour(240, 230, 200))
         self.output.SetForegroundColour(wx.BLACK)
-        
+
         inner_sizer = wx.BoxSizer(wx.VERTICAL)
         inner_sizer.Add(self.output, 1, wx.EXPAND | wx.ALL, 10)
         output_pad.SetSizer(inner_sizer)
-        
+
         output_sizer = wx.BoxSizer(wx.HORIZONTAL)
         output_sizer.Add(output_pad, 1, wx.EXPAND | wx.ALL, 5)
 
@@ -203,7 +202,7 @@ class MainFrame(wx.Frame):
             # width auto, height = 33 px
             btn.SetMinSize((-1, 33))
             btn.SetFont(font)
-            
+
         #=============
         # reset_sizer
         # +-----------------------------------------------------------------------+
@@ -279,7 +278,7 @@ class MainFrame(wx.Frame):
                 }
                 folder_authors = sorted(folder_authors)
                 authors = [constants.ANY_AUTHOR] + folder_authors
-                
+
             self.authors_dropdown.Clear()
             self.authors_dropdown.AppendItems(authors)
             self.authors_dropdown.SetSelection(0)
@@ -333,7 +332,7 @@ class MainFrame(wx.Frame):
             self.books_dropdown.SetSelection(0)
             # build full dropdown lists again
             self.on_folder_or_author_change()
-            
+
             # reset toggle button to OFF visually and logically
             self.delay_author_toggle.SetValue(False)
             self.delay_author_toggle.SetBackgroundColour(wx.NullColour)
@@ -365,7 +364,7 @@ class MainFrame(wx.Frame):
     def print_random_quote(self, length="any"):
         # if a delayed author is pending, show it now
         self._flush_pending_author()
-        
+
         # get GUI values
         selected_title = self.books_dropdown.GetStringSelection()
         delay_author = self.delay_author_toggle.GetValue()
@@ -419,7 +418,7 @@ class MainFrame(wx.Frame):
         if print_data and self.pending_author_data:
             book, quotes_left = self.pending_author_data
             self._print_author_now(book, quotes_left)
-        
+
         self.pending_author_data = None
 
     #=================================================
@@ -456,7 +455,7 @@ class MainFrame(wx.Frame):
     #=================================================
     def print_quote_distribution(self):
         self.clear()
-        
+
         # get the book
         selected_title = self.books_dropdown.GetStringSelection()
         if selected_title == constants.ANY_BOOK:

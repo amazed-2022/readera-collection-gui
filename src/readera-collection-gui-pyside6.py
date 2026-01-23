@@ -34,26 +34,48 @@ class MainWindow(QMainWindow):
 
         panel = QWidget()
         self.setCentralWidget(panel)
-        
+
+        #=============
+        # full window
+        # +-------------------------------------------------+
+        # | header_layout (dropdowns left, logo right)      |
+        # +-------------------------------------------------+
+        # | output_widget (text output, expands vertically) |
+        # +-------------------------------------------------+
+        # | grid_layout (3x3 buttons)                       |
+        # +-------------------------------------------------+
+        # | reset_button (full-width reset button)          |
+        # +-------------------------------------------------+
+
         #=================================================
         # data preparation
         #=================================================
         self.filtered_books = []
         authors_set = set()
-        
+
         # filtered books start with full list
         for book in book_collection.The_Collection:
             if book.total_q > 0:
                 self.filtered_books.append(book.title)
                 authors_set.add(book.author)
-                
+
         # sorted returns a list
         self.authors_with_quotes = sorted(authors_set)
-        
+
         # for delayed author print
         self.author_timer = None
         self.pending_author_data = None
-        
+
+        #=========================
+        # header_layout
+        # +----------------------------------------------------------------------------------------------+
+        # | dropdown_layout (QGridLayout 3x2)    |      logo widget                                      |
+        # +----------------------------------------------------------------------------------------------+
+        # |  FOLDER      [folders]               |  fixed      |   ====================    |  fixed      |
+        # |  AUTHOR      [authors]               |  margin     |   == The Collection ==    |  margin     |
+        # |  BOOK        [books]                 |             |   ====================    |             |
+        # +----------------------------------------------------------------------------------------------+
+
         #=================================================
         # dropdowns
         #=================================================
@@ -67,44 +89,54 @@ class MainWindow(QMainWindow):
         self.folders_dropdown.setCurrentIndex(0)
         self.authors_dropdown.setCurrentIndex(0)
         self.books_dropdown.setCurrentIndex(0)
+        # make them expanding horizontally
         self.folders_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.authors_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.books_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        
+
         # only the function reference is bound here
         # the folder/author choice event triggers the authors and book lists update
         self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
         self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
-        
+
+
+
+        # TEST
         # increase font size for dropdowns
-        font = self.folders_dropdown.font()
-        font.setPointSize(font.pointSize() + 1)
+        # font = self.folders_dropdown.font()
+        # font.setPointSize(font.pointSize() + 1)
+        font = QFont("Consolas", 13)
+
+        # closed combobox text
         self.folders_dropdown.setFont(font)
         self.authors_dropdown.setFont(font)
         self.books_dropdown.setFont(font)
-        
+        # dropdown list items
+        self.folders_dropdown.view().setFont(font)
+        self.authors_dropdown.view().setFont(font)
+        self.books_dropdown.view().setFont(font)
+
         # create the dropdown grid layout
         dropdown_layout = QGridLayout()
-        # left padding
-        dropdown_layout.setContentsMargins(30, 0, 0, 0)  
-        # adds space between columns
-        dropdown_layout.setHorizontalSpacing(30)  
-        dropdown_layout.addWidget(QLabel("FOLDER"), 0, 0)
+        # add left padding and space between columns
+        dropdown_layout.setContentsMargins(30, 0, 0, 0)
+        dropdown_layout.setHorizontalSpacing(30)
+        # addWidget(widget, row, column, rowSpan, columnSpan, alignment)
+        dropdown_layout.addWidget(QLabel("FOLDER"), 0, 0, alignment=Qt.AlignRight)
         dropdown_layout.addWidget(self.folders_dropdown, 0, 1)
         dropdown_layout.addWidget(QLabel("AUTHOR"), 1, 0)
         dropdown_layout.addWidget(self.authors_dropdown, 1, 1)
         dropdown_layout.addWidget(QLabel("BOOK"), 2, 0)
         dropdown_layout.addWidget(self.books_dropdown, 2, 1)
-        # create a container QWidget to hold the layout
+        # labels fixed, dropdowns expand
+        dropdown_layout.setColumnStretch(0, 0)
+        dropdown_layout.setColumnStretch(1, 1)
+
+        # wrap the grid layout in a widget because layouts alone cannot have size policies
         dropdown_container = QWidget()
         dropdown_container.setLayout(dropdown_layout)
-        
-        # set size policy on the container widget
         dropdown_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        # labels fixed, dropdowns expand
-        dropdown_layout.setColumnStretch(0, 0)  
-        dropdown_layout.setColumnStretch(1, 1)  
-        
+
         #=================================================
         # logo and text layout
         #=================================================
@@ -118,43 +150,43 @@ class MainWindow(QMainWindow):
         # prevent logo from expanding
         logo_text.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         logo_text.setContentsMargins(150, 0, 150, 0)
-        
+
         #=================================================
         # finish header layout
         #=================================================
         header_layout = QHBoxLayout()
         header_layout.addWidget(dropdown_container, 1)
         header_layout.addWidget(logo_text)
-        
-        #========================
-        # HORIZONTAL output layout
-        #========================
+
+        #=================================================
+        # output layout
+        #=================================================
         self.output = QTextEdit()
         self.output.setReadOnly(True)
         # self.output.setFont(QFont("Courier New", 13))
         self.output.setFont(QFont("Consolas", 13))
         self.output.setStyleSheet("background-color: rgb(240,230,200);")
         self.output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
-        
+
         # set line spacing multiplier for all text
         cursor = self.output.textCursor()
         block_format = QTextBlockFormat()
         # 110% line spacing
-        block_format.setLineHeight(150.0, QTextBlockFormat.ProportionalHeight.value)  
+        block_format.setLineHeight(150.0, QTextBlockFormat.ProportionalHeight.value)
         cursor.select(QTextCursor.Document)
         cursor.setBlockFormat(block_format)
         cursor.clearSelection()
         self.output.setTextCursor(cursor)
-        
-        #=============
+
+        #=================================================
         # grid_layout
-        #=============
+        #=================================================
         self.delay_author_toggle = QPushButton("Random quotes: delay author")
         self.delay_author_toggle.setCheckable(True)
         self.delay_author_toggle.setChecked(False)
         self.delay_author_toggle.setToolTip("ON: Author appears after a delay\nOFF: Author appears immediately")
         self.delay_author_toggle.toggled.connect(self.on_toggle_delay_author)
-        
+
         btn1 = QPushButton("Random quote")
         btn1.clicked.connect(lambda: self.print_random_quote())
         btn2 = QPushButton("Print every quote")
@@ -171,44 +203,44 @@ class MainWindow(QMainWindow):
         btn7.clicked.connect(self.clear)
         btn8 = QPushButton("Book list by property")
         btn8.clicked.connect(self.print_list_by_property)
-        
+
         font_btn = btn1.font()
         font_btn.setPointSize(font_btn.pointSize() + 1)
         for b in [btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, self.delay_author_toggle]:
             b.setFont(font_btn)
             b.setMinimumHeight(33)
-        
+
         grid_layout = QGridLayout()
         grid_buttons = [
             btn1, btn2, btn3,
             btn4, btn5, btn6,
             self.delay_author_toggle, btn7, btn8
         ]
-        
+
         positions = [(i,j) for i in range(3) for j in range(3)]
         for pos, btn in zip(positions, grid_buttons):
             grid_layout.addWidget(btn, pos[0], pos[1])
-        
-        #=============
+
+        #=================================================
         # reset_layout
-        #=============
+        #=================================================
         reset_button = QPushButton("Reset")
         reset_button.clicked.connect(self.reset)
         reset_button.setToolTip("Reset all settings and clear the output")
         reset_button.setFont(font_btn)
         reset_button.setMinimumHeight(36)
         reset_button.setStyleSheet("background-color: rgb(220,220,220);")
-        
-        #==================================
-        # full window (VERTICAL main_layout)
-        #==================================
+
+        #=================================================
+        # full window
+        #=================================================
         main_layout = QVBoxLayout()
         main_layout.addLayout(header_layout)
         main_layout.addWidget(self.output, 1)
         main_layout.addLayout(grid_layout)
         main_layout.addWidget(reset_button)
         panel.setLayout(main_layout)
-        
+
         self.show()
 
     #=================================================
@@ -216,8 +248,10 @@ class MainWindow(QMainWindow):
     #=================================================
     def on_toggle_delay_author(self, checked):
         if checked:
+            # toggle is ON — change background color (light green)
             self.delay_author_toggle.setStyleSheet("background-color: rgb(180,230,180);")
         else:
+            # toggle is OFF — reset background and print pending author
             self.delay_author_toggle.setStyleSheet("")
             if self.pending_author_data:
                 self._flush_pending_author()
@@ -227,15 +261,17 @@ class MainWindow(QMainWindow):
     #=================================================
     def on_folder_or_author_change(self):
         # gets the widget that triggered the signal
-        sender = self.sender()  
+        sender = self.sender()
         chosen_folder = self.folders_dropdown.currentText()
         chosen_author = self.authors_dropdown.currentText()
 
         # update authors dropdown if folder changed and reset chosen author
         if sender == self.folders_dropdown:
             if chosen_folder == constants.ANY_FOLDER:
+                # use full list (again)
                 authors = [constants.ANY_AUTHOR] + self.authors_with_quotes
             else:
+                # build list based on current folder (set comprehension)
                 folder_authors = {
                     book.author
                     for book in book_collection.The_Collection
@@ -244,7 +280,7 @@ class MainWindow(QMainWindow):
                 }
                 folder_authors = sorted(folder_authors)
                 authors = [constants.ANY_AUTHOR] + folder_authors
-                
+
             self.authors_dropdown.clear()
             self.authors_dropdown.addItems(authors)
             self.authors_dropdown.setCurrentIndex(0)
@@ -291,20 +327,22 @@ class MainWindow(QMainWindow):
             self.folders_dropdown.setCurrentIndex(0)
             self.authors_dropdown.setCurrentIndex(0)
             self.books_dropdown.setCurrentIndex(0)
+            # build full dropdown lists again
             self.on_folder_or_author_change()
+            # reset toggle button to OFF visually and logically
             self.delay_author_toggle.setChecked(False)
             self.clear()
 
     #=================================================
     # FUNCTION: print wrapped text
     #=================================================
-    def print_wrapped_text(self, text, min_width=20, padding=20):
-        font_metrics = self.output.fontMetrics()
-        avg_char_width = font_metrics.horizontalAdvance("X")
-        text_ctrl_width = self.output.width() - padding
-        wrap_width_chars = max(min_width, int(text_ctrl_width / avg_char_width) - 1)
-        wrapped_text = textwrap.fill(text, width=wrap_width_chars)
-        self.log(wrapped_text)
+    # def print_wrapped_text(self, text, min_width=20, padding=20):
+        # font_metrics = self.output.fontMetrics()
+        # avg_char_width = font_metrics.horizontalAdvance("X")
+        # text_ctrl_width = self.output.width() - padding
+        # wrap_width_chars = max(min_width, int(text_ctrl_width / avg_char_width) - 1)
+        # wrapped_text = textwrap.fill(text, width=wrap_width_chars)
+        # self.log(wrapped_text)
 
     #=================================================
     # BUTTON FUNCTIONS
@@ -314,7 +352,7 @@ class MainWindow(QMainWindow):
     #=================================================
     def print_random_quote(self, length="any"):
         self._flush_pending_author()
-        
+
         selected_title = self.books_dropdown.currentText()
         delay_author = self.delay_author_toggle.isChecked()
 
@@ -331,12 +369,40 @@ class MainWindow(QMainWindow):
 
         random_quote, quotes_left = book_utils.get_random_quote(book, length)
 
-        self.print_wrapped_text(random_quote.text)
+        # self.print_wrapped_text(random_quote.text)
+        self.log(random_quote.text)
 
         if not delay_author:
             self._print_author_now(book, quotes_left)
         else:
             self._schedule_author(book, quotes_left, len(random_quote.text))
+
+    def _print_author_now(self, book, quotes_left):
+        self.log(f"\n{book.title}   / {quotes_left} left /")
+        self.log(f"{'-'*len(book.title)}\n\n")
+
+    def _schedule_author(self, book, quotes_left, quote_length, base_delay_ms=1000, ms_per_char=50):
+        # maximize delay to 60 seconds
+        delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
+        # store data in a tuple
+        self.pending_author_data = (book, quotes_left)
+        self.author_timer = QTimer.singleShot(delay_ms, self._print_pending_author)
+
+    def _print_pending_author(self):
+        if self.pending_author_data:
+            # unpack the stored tuple
+            book, quotes_left = self.pending_author_data
+            self._print_author_now(book, quotes_left)
+        self.pending_author_data = None
+        self.author_timer = None
+
+    def _flush_pending_author(self, print_data=True):
+        if self.author_timer:
+            self.author_timer = None
+        if print_data and self.pending_author_data:
+            book, quotes_left = self.pending_author_data
+            self._print_author_now(book, quotes_left)
+        self.pending_author_data = None
 
     #=================================================
     # FUNCTION: print every quote
@@ -354,15 +420,18 @@ class MainWindow(QMainWindow):
             self.log("Book not found.")
             return
 
+		# get and export all quotes to file
         quotes = book_utils.get_and_export_quotes(book, f"{book.title}.txt")
 
+		# print to textbox
         self.log(book.title)
         self.log('-' * len(book.title))
 
         for i, quote in enumerate(quotes):
             header = f"{i+1} / {len(quotes)}  (p.{quote.page})"
             self.log(header)
-            self.print_wrapped_text(quote.text)
+            # self.print_wrapped_text(quote.text)
+            self.log(quote.text)
             self.log("")
 
     #=================================================
@@ -370,6 +439,8 @@ class MainWindow(QMainWindow):
     #=================================================
     def print_quote_distribution(self):
         self.clear()
+
+        # get the book
         selected_title = self.books_dropdown.currentText()
         if selected_title == constants.ANY_BOOK:
             self.log("Select a book from the list.")
@@ -387,9 +458,9 @@ class MainWindow(QMainWindow):
         columns = book_utils.calculate_columns_from_width(ctrl_width_px, avg_char_width)
         rows = round(columns * 0.2)
         space = "   "
-
+        # get distribution using utils
         mapped_distr = book_utils.compute_quote_distribution(book, columns=columns, rows=rows)
-
+        # draw diagram
         self.log(f"{space}↑")
         for i in range(rows):
             row = ''.join('*' if mapped_distr[j] >= (rows-i) else ' ' for j in range(columns))
@@ -403,7 +474,13 @@ class MainWindow(QMainWindow):
     #=================================================
     def print_list_by_property(self):
         self.clear()
-        items, ok = QInputDialog.getItem(self, "Book Properties", "Select a property to sort/filter books by:", constants.PROPERTIES, 0, False)
+        items, ok = QInputDialog.getItem(
+            self,
+            "Book Properties",
+            "Select a property to sort/filter books by:",
+            constants.PROPERTIES,
+            0,
+            False)
         if not ok:
             return
         book_property = items
@@ -414,8 +491,10 @@ class MainWindow(QMainWindow):
         for book in filtered_books:
             line = book_utils.get_info_row_by_property(book, book_property, print_pages=(book_property == constants.PROP_PUBLISH_DATE))
             if line:
+                # only log if not None
                 self.log(f"  -->  {line}")
 
+        # continued print for rating / finished list
         if book_property == constants.PROP_RATING:
             sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, constants.PROP_RATINGS_COUNT)
             filtered_books = book_utils.filter_books_by_folder(sorted_books, folder)
@@ -442,6 +521,7 @@ class MainWindow(QMainWindow):
         folder_q_count = {}
         folder_book_count = {}
 
+        # gather book counts
         books_with_quotes, books_20th, books_21st, books_read_count = 0, 0, 0, 0
         for book in book_collection.The_Collection:
             if book.total_q > 0:
@@ -453,6 +533,7 @@ class MainWindow(QMainWindow):
             if book.is_read:
                 books_read_count += 1
 
+            # gather folders statistics
             for folder in book_collection.Folders:
                 if book.folder == folder:
                     folder_q_count[folder] = folder_q_count.get(folder, 0) + book.total_q
@@ -475,7 +556,7 @@ class MainWindow(QMainWindow):
             self.print_stat_line("Books from the 20th century", f"{books_20th:4d} / {self.get_percentage_string(books_20th, books_count)}")
         self.print_stat_line("Books with quotes", f"{books_with_quotes:4d} / {self.get_percentage_string(books_with_quotes, books_count)}")
         self.print_stat_line("Books finished", f"{books_read_count:4d} / {self.get_percentage_string(books_read_count, books_count)}", blank_line=True)
-        
+
         # Sort folders by book count (descending)
         folder_book_count = dict(sorted(folder_book_count.items(), key=lambda item: item[1], reverse=True))
         self.print_folder_dict(folder_book_count, books_count)
@@ -496,13 +577,17 @@ class MainWindow(QMainWindow):
         #=================================================
         string = "Top 15 Authors"
         self.log(f"{string}\n{'-'*len(string)}")
-        
-        # Sort authors by total quotes (descending)
+
+        # sort authors by total quotes (descending)
         author_quotes = dict(sorted(author_quotes.items(), key=lambda item: item[1], reverse=True))
         cumulative = 0
         for i, (author, count) in enumerate(author_quotes.items(), start=1):
             cumulative += count
-            self.print_stat_line(f" --> {author}", f"{count:4d} / {self.get_percentage_string(count, book_collection.All_Quotes_Count, digit=2)} / {self.get_percentage_string(cumulative, book_collection.All_Quotes_Count, digit=2)}")
+            self.print_stat_line(
+                f" --> {author}",
+                f"{count:4d} / {self.get_percentage_string(count, book_collection.All_Quotes_Count, digit=2)}"
+                f" / {self.get_percentage_string(cumulative, book_collection.All_Quotes_Count, digit=2)}"
+            )
             if i >= 15:
                 break
 
@@ -534,6 +619,7 @@ class MainWindow(QMainWindow):
 
         # process the top 30 words
         for word, count in top_30:
+            # find the book with the most occurrence of the word
             max_count = 0
             book_string = ""
             for book in book_collection.The_Collection:
@@ -544,9 +630,6 @@ class MainWindow(QMainWindow):
             # print related data in one line
             self.log(f" --> {count:3d} x {word}{' '*(12-len(word))}{max_count:3d} / {book_string}")
 
-    #=================================================
-    # HELPER FUNCTIONS
-    #=================================================
     def print_stat_line(self, string, value, blank_line=False):
         self.log(f"{string}  {'-'*(48-len(string))}>  {value}")
         if blank_line:
@@ -559,7 +642,10 @@ class MainWindow(QMainWindow):
         cumulative = 0
         for folder in folder_dict:
             cumulative += folder_dict[folder]
-            self.print_stat_line(f" --> {folder}", f"{folder_dict[folder]:4d} / {self.get_percentage_string(folder_dict[folder], total)}")
+            self.print_stat_line(
+                f" --> {folder}",
+                f"{folder_dict[folder]:4d} / {self.get_percentage_string(folder_dict[folder], total)}"
+            )
         self.log("\n")
 
     #=================================================
@@ -573,7 +659,7 @@ class MainWindow(QMainWindow):
             # user cancelled
             return
         str_to_search = text.strip().lower()
-        
+
         # check length
         if len(str_to_search) < 3:
             self.log("Incorrect input. Please enter at least 3 characters.\n")
@@ -597,7 +683,8 @@ class MainWindow(QMainWindow):
                         match_in_book = True
                     # highlight the search term by uppercasing (you could also add color later)
                     highlighted_text = self.highlight(quote.text, str_to_search)
-                    self.print_wrapped_text(highlighted_text)
+                    # self.print_wrapped_text(highlighted_text)
+                    self.log(highlighted_text)
                     self.log('\n')
                     counter += len(re.findall(str_to_search, quote_text))
 
@@ -612,32 +699,6 @@ class MainWindow(QMainWindow):
         # replace all occurrences of term (case-insensitive) with uppercase
         return re.sub(re.escape(term), lambda m: m.group(0).upper(), text, flags=re.IGNORECASE)
 
-    #=================================================
-    # AUTHOR DELAY HELPERS
-    #=================================================
-    def _print_author_now(self, book, quotes_left):
-        self.log(f"\n{book.title}   / {quotes_left} left /")
-        self.log(f"{'-'*len(book.title)}\n\n")
-
-    def _schedule_author(self, book, quotes_left, quote_length, base_delay_ms=1000, ms_per_char=50):
-        delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
-        self.pending_author_data = (book, quotes_left)
-        self.author_timer = QTimer.singleShot(delay_ms, self._print_pending_author)
-
-    def _print_pending_author(self):
-        if self.pending_author_data:
-            book, quotes_left = self.pending_author_data
-            self._print_author_now(book, quotes_left)
-        self.pending_author_data = None
-        self.author_timer = None
-
-    def _flush_pending_author(self, print_data=True):
-        if self.author_timer:
-            self.author_timer = None
-        if print_data and self.pending_author_data:
-            book, quotes_left = self.pending_author_data
-            self._print_author_now(book, quotes_left)
-        self.pending_author_data = None
 
 #=================================================
 # MAIN

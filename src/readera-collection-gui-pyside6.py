@@ -7,10 +7,14 @@ from constants_loader import constants
 import datetime
 import random
 import re
+import subprocess
+import sys
 import textwrap
 from collections import Counter
+from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer
+
+from PySide6.QtCore import Signal, Qt, QTimer
 from PySide6.QtGui import QFont, QTextOption, QTextCursor, QTextBlockFormat
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
@@ -137,6 +141,9 @@ class MainWindow(QMainWindow):
         # prevent logo from expanding
         logo_text.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         logo_text.setContentsMargins(150, 0, 150, 0)
+        
+        # TEST
+        logo_text.mousePressEvent = logo_click
 
         #=================================================
         # finish header layout
@@ -260,6 +267,15 @@ class MainWindow(QMainWindow):
             # self.delay_author_toggle.setStyleSheet("")
             # if self.pending_author_data:
                 # self._flush_pending_author()
+                
+    #=================================================
+    # FUNCTION: run wxPython based GUI
+    #=================================================
+    def logo_click(event):
+        #event not needed
+        del event
+        script = Path(__file__).parent / "readera-collection-gui.py"
+        subprocess.Popen([sys.executable, str(script)])
 
     #=================================================
     # FUNCTION: folder/author dropdown change

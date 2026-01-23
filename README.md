@@ -9,9 +9,13 @@ An **unofficial GUI tool** for loading and viewing books and quotes stored in Re
 
 
 ---
-**Dependencies:** wxPython
-- Website: [https://www.wxpython.org/](https://www.wxpython.org/)
-- License: wxWindows Library License
+**Dependencies:**
+- wxPython
+  - Website: https://www.wxpython.org/
+  - License: wxWindows Library License
+- PySide6
+  - Website: https://www.qt.io/qt-for-python
+  - License: LGPL v3.0
 ---
 
 

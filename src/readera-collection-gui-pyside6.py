@@ -35,18 +35,6 @@ class MainWindow(QMainWindow):
         panel = QWidget()
         self.setCentralWidget(panel)
 
-        #=============
-        # full window
-        # +-------------------------------------------------+
-        # | header_layout (dropdowns left, logo right)      |
-        # +-------------------------------------------------+
-        # | output_widget (text output, expands vertically) |
-        # +-------------------------------------------------+
-        # | grid_layout (3x3 buttons)                       |
-        # +-------------------------------------------------+
-        # | reset_button (full-width reset button)          |
-        # +-------------------------------------------------+
-
         #=================================================
         # data preparation
         #=================================================
@@ -65,6 +53,7 @@ class MainWindow(QMainWindow):
         # for delayed author print
         self.author_timer = None
         self.pending_author_data = None
+
 
         #=========================
         # header_layout
@@ -98,7 +87,6 @@ class MainWindow(QMainWindow):
         # the folder/author choice event triggers the authors and book lists update
         self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
         self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
-
 
 
         # TEST
@@ -141,8 +129,7 @@ class MainWindow(QMainWindow):
         # logo and text layout
         #=================================================
         string = f"== The Collection =="
-        separator = '=' * len(string)
-        the_collection_logo = f"{separator}\n{string}\n{separator}"
+        the_collection_logo = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
         logo_text = QLabel(the_collection_logo)
         # logo_text.setFont(QFont("Courier New", 14))
         logo_text.setFont(QFont("Consolas", 14))
@@ -168,24 +155,30 @@ class MainWindow(QMainWindow):
         self.output.setStyleSheet("background-color: rgb(240,230,200);")
         self.output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
 
-        # set line spacing multiplier for all text
-        cursor = self.output.textCursor()
-        block_format = QTextBlockFormat()
-        # 110% line spacing
-        block_format.setLineHeight(150.0, QTextBlockFormat.ProportionalHeight.value)
-        cursor.select(QTextCursor.Document)
-        cursor.setBlockFormat(block_format)
-        cursor.clearSelection()
-        self.output.setTextCursor(cursor)
 
-        #=================================================
+        #============
         # grid_layout
-        #=================================================
+        # +-----------------------------------------------------------------------+
+        # | Random quote          | Print every quote     | Statistics            |
+        # |-----------------------|-----------------------|-----------------------|
+        # | Random short quote    | Quote distribution    | Search                |
+        # |-----------------------|-----------------------|-----------------------|
+        # | Delay author toggle   | Clear window          | Book list by property |
+        # +-----------------------------------------------------------------------+
         self.delay_author_toggle = QPushButton("Random quotes: delay author")
         self.delay_author_toggle.setCheckable(True)
         self.delay_author_toggle.setChecked(False)
         self.delay_author_toggle.setToolTip("ON: Author appears after a delay\nOFF: Author appears immediately")
         self.delay_author_toggle.toggled.connect(self.on_toggle_delay_author)
+        # set background color based on checked state
+        self.delay_author_toggle.setStyleSheet("""
+            QPushButton {
+                background-color: none;
+            }
+            QPushButton:checked {
+                background-color: rgb(180,230,180);
+            }
+        """)    
 
         btn1 = QPushButton("Random quote")
         btn1.clicked.connect(lambda: self.print_random_quote())
@@ -231,9 +224,17 @@ class MainWindow(QMainWindow):
         reset_button.setMinimumHeight(36)
         reset_button.setStyleSheet("background-color: rgb(220,220,220);")
 
-        #=================================================
+        #=============
         # full window
-        #=================================================
+        # +-------------------------------------------------+
+        # | header_layout (dropdowns left, logo right)      |
+        # +-------------------------------------------------+
+        # | output_widget (text output)                     |
+        # +-------------------------------------------------+
+        # | grid_layout (3x3 buttons)                       |
+        # +-------------------------------------------------+
+        # | reset_button (full-width reset button)          |
+        # +-------------------------------------------------+
         main_layout = QVBoxLayout()
         main_layout.addLayout(header_layout)
         main_layout.addWidget(self.output, 1)
@@ -247,26 +248,28 @@ class MainWindow(QMainWindow):
     # FUNCTION: toggle button changer
     #=================================================
     def on_toggle_delay_author(self, checked):
-        if checked:
+        if not checked and self.pending_author_data:
+            self._flush_pending_author()
+        
+        # TEST
+        # if checked:
             # toggle is ON — change background color (light green)
-            self.delay_author_toggle.setStyleSheet("background-color: rgb(180,230,180);")
-        else:
+            # self.delay_author_toggle.setStyleSheet("background-color: rgb(180,230,180);")
+        # else:
             # toggle is OFF — reset background and print pending author
-            self.delay_author_toggle.setStyleSheet("")
-            if self.pending_author_data:
-                self._flush_pending_author()
+            # self.delay_author_toggle.setStyleSheet("")
+            # if self.pending_author_data:
+                # self._flush_pending_author()
 
     #=================================================
     # FUNCTION: folder/author dropdown change
     #=================================================
     def on_folder_or_author_change(self):
-        # gets the widget that triggered the signal
-        sender = self.sender()
         chosen_folder = self.folders_dropdown.currentText()
         chosen_author = self.authors_dropdown.currentText()
-
-        # update authors dropdown if folder changed and reset chosen author
-        if sender == self.folders_dropdown:
+        
+        # gets the trigger widget, update authors dropdown if folder changed
+        if self.sender() == self.folders_dropdown:
             if chosen_folder == constants.ANY_FOLDER:
                 # use full list (again)
                 authors = [constants.ANY_AUTHOR] + self.authors_with_quotes
@@ -304,6 +307,13 @@ class MainWindow(QMainWindow):
     # FUNCTION: log messages to the text box
     #=================================================
     def log(self, message):
+        # set line spacing multiplier for all text
+        cursor = self.output.textCursor()
+        fmt = QTextBlockFormat()
+        fmt.setLineHeight(150, QTextBlockFormat.ProportionalHeight)
+        cursor.movePosition(cursor.End)
+        cursor.setBlockFormat(fmt)
+        self.output.setTextCursor(cursor)
         self.output.append(message)
 
     #=================================================

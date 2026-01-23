@@ -28,11 +28,12 @@ If you enjoy using it, please consider supporting the developers by purchasing t
 ---
 ## Installation
 1. **Install wxPython** separately `pip install wxPython`
-2. **Create a backup file** in the ReadEra app (Settings / Backup & Restore)
-3. **Transfer backup file to your PC** (Google Drive, Gmail, etc.)
-4. **Unpack** `bak` file into a freely chosen folder (only `library.json` file will be needed, the rest can be deleted)
-5. **Simply download** python files next to your extracted `library.json` file
-6. **Run** `readera-collection-gui.py`
+2. **Install PySide6** separately `pip install PySide6`
+3. **Create a backup file** in the ReadEra app (Settings / Backup & Restore)
+4. **Transfer backup file to your PC** (Google Drive, Gmail, etc.)
+5. **Unpack** `bak` file into a freely chosen folder (only `library.json` file will be needed, the rest can be deleted)
+6. **Simply download** python files next to your extracted `library.json` file
+7. **Run** `readera-collection-gui.py`
 
   
 ## Usage

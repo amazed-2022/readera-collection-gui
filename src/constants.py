@@ -5,7 +5,7 @@
 #=================================================
 # GUI resolution
 #=================================================
-WINDOW_WIDTH = 1400
+WINDOW_WIDTH = 1050
 WINDOW_HEIGHT = 1050
 WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 

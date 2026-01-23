@@ -1,21 +1,16 @@
 # readera-collection-gui
 An **unofficial GUI tool** for loading and viewing books and quotes stored in ReadEra backup files.
 
-**Current version:** v1.1.0   
+**Current version:** v2.0.0   
 **License:** GNU GPL v3.0  
 **Author:** amazed  
 **Date:** Jan 2026  
 [Version history](CHANGELOG.md)
 
-
 ---
-**Dependencies:**
-- wxPython
-  - Website: https://www.wxpython.org/
-  - License: wxWindows Library License
-- PySide6
-  - Website: https://www.qt.io/qt-for-python
-  - License: LGPL v3.0
+**Dependencies:** PySide6
+- Website: https://www.qt.io/qt-for-python
+- License: LGPL v3.0
 ---
 
 

@@ -2,3 +2,4 @@
 /src/__pycache__
 src/constants_local.py
 src/__build.txt
+*.zip

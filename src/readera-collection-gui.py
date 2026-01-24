@@ -289,7 +289,7 @@ class MainWindow(QMainWindow):
         # set line spacing multiplier for all text
         cursor = self.output.textCursor()
         fmt = QTextBlockFormat()
-        fmt.setLineHeight(110, QTextBlockFormat.ProportionalHeight.value)
+        fmt.setLineHeight(120, QTextBlockFormat.ProportionalHeight.value)
         fmt.setAlignment(Qt.AlignmentFlag.AlignJustify)
         cursor.movePosition(QTextCursor.End)
         cursor.setBlockFormat(fmt)

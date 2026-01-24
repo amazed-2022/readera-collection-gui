@@ -50,7 +50,7 @@ To use all features of `readera-collection-cli`, the following should be ensured
 
 
 ## Features / Highlights
-- Print quotes of any length or only short quotes using corresponding buttons.
+- Print quotes of any length or only short quotes using corresponding buttons.  
   (Use "delay author" toggle button to delay author print for each quote.)
 - Print every quote from a selected book.
 - Print quote distribution from a selected book (lengths/pages map).
@@ -58,8 +58,7 @@ To use all features of `readera-collection-cli`, the following should be ensured
 - Search within quote text.
 - Print a book list sorted by a selected property.
 
-<img width="900" alt="kép" src="https://github.com/user-attachments/assets/0437fd7c-125d-469d-8dde-8eed7c2812a0" />
-
+<img width="900" alt="kép" src="https://github.com/user-attachments/assets/7eaa9cef-f822-4603-b012-b60aa07a4d90" />
 
 
 ## License

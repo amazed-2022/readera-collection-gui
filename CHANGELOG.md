@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] – 2026-01
+### Changed
+- Changed GUI framework from wxPython to PySide6
+  
 ## [1.1.0] – 2026-01
 ### Added
 - `is_read` property to `Book` for clearer read-status tracking

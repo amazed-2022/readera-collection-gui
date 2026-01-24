@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
         self.author_timer.setSingleShot(True)
         self.author_timer.timeout.connect(self._print_pending_author)
         self.pending_author_data = None
+        self.quote_printed = False
 
 
         #=========================
@@ -112,11 +113,6 @@ class MainWindow(QMainWindow):
         dropdown_layout.setColumnStretch(0, 0)
         dropdown_layout.setColumnStretch(1, 1)
 
-        # wrap the grid layout in a widget because layouts alone cannot have size policies
-        dropdown_container = QWidget()
-        dropdown_container.setLayout(dropdown_layout)
-        dropdown_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
         #=================================================
         # logo and text layout
         #=================================================
@@ -134,7 +130,7 @@ class MainWindow(QMainWindow):
         # finish header layout
         #=================================================
         header_layout = QHBoxLayout()
-        header_layout.addWidget(dropdown_container, 1)
+        header_layout.addLayout(dropdown_layout, 1)
         header_layout.addWidget(logo_text)
         header_layout.setContentsMargins(0, 10, 0, 10)
 
@@ -171,7 +167,7 @@ class MainWindow(QMainWindow):
             QPushButton:checked {
                 background-color: rgb(180,230,180);
             }
-        """)    
+        """)
 
         btn1 = QPushButton("Random quote")
         btn1.clicked.connect(lambda: self.print_random_quote())
@@ -250,7 +246,7 @@ class MainWindow(QMainWindow):
     def on_folder_or_author_change(self):
         chosen_folder = self.folders_dropdown.currentText()
         chosen_author = self.authors_dropdown.currentText()
-        
+
         # gets the trigger widget, update authors dropdown if folder changed
         if self.sender() == self.folders_dropdown:
             if chosen_folder == constants.ANY_FOLDER:
@@ -305,6 +301,7 @@ class MainWindow(QMainWindow):
     #=================================================
     def clear(self):
         self.output.clear()
+        self.quote_printed = False
 
     #=================================================
     # FUNCTION: reset
@@ -325,6 +322,7 @@ class MainWindow(QMainWindow):
             self.on_folder_or_author_change()
             # reset toggle button to OFF visually and logically
             self.delay_author_toggle.setChecked(False)
+            self.quote_printed = False
             self.clear()
 
     #=================================================
@@ -345,11 +343,16 @@ class MainWindow(QMainWindow):
             self.filtered_books,
             length
         )
+        
+        # add space before previous print (but not before the first)
+        if self.quote_printed:
+            self.log("\n")
+        self.quote_printed = True
 
         if book is None:
             self.log(message)
             return
-        
+
         # get the random quote and print it
         random_quote, quotes_left = book_utils.get_random_quote(book, length)
         self.log(random_quote.text)
@@ -361,16 +364,16 @@ class MainWindow(QMainWindow):
 
     def _print_author_now(self, book, quotes_left):
         self.log(f"\n{book.title}   / {quotes_left} left /")
-        self.log(f"{'-'*len(book.title)}\n\n")
+        self.log(f"{'-'*len(book.title)}")
 
     def _schedule_author(self, book, quotes_left, quote_length, base_delay_ms=1000, ms_per_char=50):
         delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
         self.pending_author_data = (book, quotes_left)
-    
+
         # stop previous timer if running
         if self.author_timer.isActive():
             self.author_timer.stop()
-        
+
         self.author_timer.start(delay_ms)
 
     def _print_pending_author(self):
@@ -439,7 +442,7 @@ class MainWindow(QMainWindow):
         font_metrics = self.output.fontMetrics()
         avg_char_width = font_metrics.horizontalAdvance("X")
         # margin was added to the text output
-        ctrl_width_px = self.output.width() - 50
+        ctrl_width_px = self.output.width()-30
         columns = book_utils.calculate_columns_from_width(ctrl_width_px, avg_char_width)
         rows = round(columns * 0.2)
         space = "  "
@@ -473,7 +476,7 @@ class MainWindow(QMainWindow):
         sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, book_property)
         folder = self.folders_dropdown.currentText()
         filtered_books = book_utils.filter_books_by_folder(sorted_books, folder)
-        
+
         for book in filtered_books:
             line = book_utils.get_info_row_by_property(book, book_property, print_pages=(book_property == constants.PROP_PUBLISH_DATE))
             if line:
@@ -498,7 +501,7 @@ class MainWindow(QMainWindow):
                 line = book_utils.get_info_row_by_property(book, constants.PROP_PUBLISH_DATE, require_finished=True)
                 if line:
                     self.log(f"-->  {line}")
-        
+
         if not found_match:
             self.log(f'No book has valid "{book_property}" in FOLDER {folder}.')
 

@@ -55,6 +55,8 @@ class MainWindow(QMainWindow):
         self.pending_author_data = None
         self.quote_printed = False
 
+        self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
+        self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
 
         #=========================
         # header_layout
@@ -139,7 +141,7 @@ class MainWindow(QMainWindow):
         #=================================================
         self.output = QTextEdit()
         self.output.setReadOnly(True)
-        self.output.setFont(QFont("Consolas", 13))
+        self.output.setFont(QFont("Consolas", self.output_font_size))
         self.output.setStyleSheet("background-color: rgb(240,230,200);")
         self.output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
         self.output.document().setDocumentMargin(30)
@@ -184,32 +186,37 @@ class MainWindow(QMainWindow):
         btn7 = QPushButton("Clear window")
         btn7.clicked.connect(self.clear)
         btn8 = QPushButton("Book list by property")
-        btn8.clicked.connect(self.print_list_by_property)        
-                
+        btn8.clicked.connect(self.print_list_by_property)
+
         # Create buttons and combo box
-        btn_increase = QPushButton("▲")
-        btn_increase.setFixedWidth(150)
-        # btn_increase.clicked.connect(lambda: self.print_random_quote())
-        btn_decrease = QPushButton("▼")
-        # btn_decrease.clicked.connect(lambda: self.print_random_quote())
-        func_selector = QComboBox()
-        func_selector.addItems(["Font size", "Line spacing"])
-        
+        self.btn_increase = QPushButton("▲")
+        self.btn_increase.clicked.connect(lambda: self.on_adjust_button("increase"))
+        self.btn_decrease = QPushButton("▼")
+        self.btn_decrease.clicked.connect(lambda: self.on_adjust_button("decrease"))
+        self.mode_dropdown = QComboBox()
+        self.mode_dropdown.addItems(
+            [
+                f"Font size: {self.output_font_size}",
+                f"Line spacing: {self.line_height_percent} %"
+            ]
+        )
+        self.mode_dropdown.setCurrentIndex(0)
+
         # these are fixed horizontally
-        btn_increase.setFixedWidth(150)
-        btn_decrease.setFixedWidth(150)
-        func_selector.setFixedWidth(150)      
+        self.btn_increase.setFixedWidth(160)
+        self.btn_decrease.setFixedWidth(160)
+        self.mode_dropdown.setFixedWidth(160)
 
         #=================================================
         # grid_layout
         #=================================================
         grid_layout = QGridLayout()
         grid_buttons = [
-            btn1, btn2, btn3, btn_increase,
-            btn4, btn5, btn6, func_selector,
-            self.delay_author_toggle, btn7, btn8, btn_decrease
+            btn1, btn2, btn3, self.btn_increase,
+            btn4, btn5, btn6, self.mode_dropdown,
+            self.delay_author_toggle, btn7, btn8, self.btn_decrease
         ]
-        
+
         # set same values for all the buttons
         font_btn = btn1.font()
         font_btn.setPointSize(font_btn.pointSize() + 1)
@@ -301,18 +308,55 @@ class MainWindow(QMainWindow):
         self.books_dropdown.setCurrentIndex(0)
 
     #=================================================
+    # FUNCTION: adjust buttons function
+    #=================================================
+    def on_adjust_button(self, direction):
+        delta = 1 if direction == "increase" else -1
+    
+        if "Font" in self.mode_dropdown.currentText():
+            self.output_font_size = min(20, max(10, self.output_font_size + delta))
+            self.output.setFont(QFont("Consolas", self.output_font_size))
+        elif "Line" in self.mode_dropdown.currentText():
+            self.line_height_percent = min(200, max(100, self.line_height_percent + 10 * delta))
+            self.set_output_line_height(self.line_height_percent)
+        
+        self.set_mode_dropdown_text()
+        
+    def set_mode_dropdown_text(self):
+        self.mode_dropdown.setItemText(0, f"Font size: {self.output_font_size}")
+        self.mode_dropdown.setItemText(1, f"Line spacing: {self.line_height_percent} %")
+                
+    #=================================================
     # FUNCTION: log messages to the text box
     #=================================================
     def log(self, message):
-        # set line spacing multiplier for all text
-        cursor = self.output.textCursor()
-        fmt = QTextBlockFormat()
-        fmt.setLineHeight(120, QTextBlockFormat.ProportionalHeight.value)
-        fmt.setAlignment(Qt.AlignmentFlag.AlignJustify)
-        cursor.movePosition(QTextCursor.End)
-        cursor.setBlockFormat(fmt)
-        self.output.setTextCursor(cursor)
         self.output.append(message)
+        self.set_output_line_height(self.line_height_percent)
+            
+    def set_output_line_height(self, line_height_percent):
+        cursor = self.output.textCursor()
+        cursor.beginEditBlock()
+    
+        # iterate over all blocks in the document
+        block = self.output.document().firstBlock()
+        while block.isValid():
+            cursor.setPosition(block.position())
+            cursor.setPosition(block.position() + block.length() - 1, QTextCursor.KeepAnchor)
+    
+            block_fmt = QTextBlockFormat()
+            block_fmt.setLineHeight(line_height_percent, QTextBlockFormat.ProportionalHeight.value)
+            cursor.setBlockFormat(block_fmt)
+    
+            block = block.next()
+    
+        cursor.endEditBlock()
+        
+        # ensure the last line is visible
+        cursor.movePosition(QTextCursor.End)
+        self.output.setTextCursor(cursor)
+        self.output.ensureCursorVisible()
+        
+        self.line_height_percent = line_height_percent
 
     #=================================================
     # FUNCTION: clear
@@ -342,6 +386,13 @@ class MainWindow(QMainWindow):
             self.delay_author_toggle.setChecked(False)
             self.quote_printed = False
             self.clear()
+            # reset default values
+            self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
+            self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
+            self.output.setFont(QFont("Consolas", self.output_font_size))            
+            self.mode_dropdown.setCurrentIndex(0)
+            self.set_mode_dropdown_text()
+            
 
     #=================================================
     # BUTTON FUNCTIONS
@@ -361,7 +412,7 @@ class MainWindow(QMainWindow):
             self.filtered_books,
             length
         )
-        
+
         # add space before previous print (but not before the first)
         if self.quote_printed:
             self.log("\n")

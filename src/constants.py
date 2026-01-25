@@ -12,6 +12,8 @@ WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 #=================================================
 # misc
 #=================================================
+DEFAULT_LINE_SPACING_HEIGHT = 120
+DEFAULT_OUTPUT_FONT_SIZE = 13
 ONE_DAY_IN_SECONDS = 86400
 MAX_CHAR_IN_SHORT_QUOTE = 300
 MAX_SEC_BETWEEN_LAST_QUOTE_AND_READ_DATE = 7 * ONE_DAY_IN_SECONDS

@@ -184,22 +184,40 @@ class MainWindow(QMainWindow):
         btn7 = QPushButton("Clear window")
         btn7.clicked.connect(self.clear)
         btn8 = QPushButton("Book list by property")
-        btn8.clicked.connect(self.print_list_by_property)
+        btn8.clicked.connect(self.print_list_by_property)        
+                
+        # Create buttons and combo box
+        btn_increase = QPushButton("▲")
+        btn_increase.setFixedWidth(150)
+        # btn_increase.clicked.connect(lambda: self.print_random_quote())
+        btn_decrease = QPushButton("▼")
+        # btn_decrease.clicked.connect(lambda: self.print_random_quote())
+        func_selector = QComboBox()
+        func_selector.addItems(["Font size", "Line spacing"])
+        
+        # these are fixed horizontally
+        btn_increase.setFixedWidth(150)
+        btn_decrease.setFixedWidth(150)
+        func_selector.setFixedWidth(150)      
 
+        #=================================================
+        # grid_layout
+        #=================================================
+        grid_layout = QGridLayout()
+        grid_buttons = [
+            btn1, btn2, btn3, btn_increase,
+            btn4, btn5, btn6, func_selector,
+            self.delay_author_toggle, btn7, btn8, btn_decrease
+        ]
+        
+        # set same values for all the buttons
         font_btn = btn1.font()
         font_btn.setPointSize(font_btn.pointSize() + 1)
-        for b in [btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, self.delay_author_toggle]:
+        for b in grid_buttons:
             b.setFont(font_btn)
             b.setMinimumHeight(33)
 
-        grid_layout = QGridLayout()
-        grid_buttons = [
-            btn1, btn2, btn3,
-            btn4, btn5, btn6,
-            self.delay_author_toggle, btn7, btn8
-        ]
-
-        positions = [(i,j) for i in range(3) for j in range(3)]
+        positions = [(i,j) for i in range(3) for j in range(4)]
         for pos, btn in zip(positions, grid_buttons):
             grid_layout.addWidget(btn, pos[0], pos[1])
 

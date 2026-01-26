@@ -27,15 +27,30 @@ class MainWindow(QMainWindow):
     #=================================================
     def __init__(self):
         super().__init__()
+        self._init_window()
+        self._init_data()
+        self._init_state()
+        self._init_dropdowns()
+        self._init_buttons()
+        self._init_signals()
+        self._init_output()
+        self._build_main_layout()
+        self.show()
+
+    #=================================================
+    # init window
+    #=================================================
+    def _init_window(self):
         self.setWindowTitle(constants.GUI_TITLE)
         self.resize(*constants.WINDOW_SIZE)
 
-        panel = QWidget()
-        self.setCentralWidget(panel)
+        self.panel = QWidget()
+        self.setCentralWidget(self.panel)
 
-        #=================================================
-        # data preparation
-        #=================================================
+    #=================================================
+    # data preparatiton
+    #=================================================
+    def _init_data(self):
         self.filtered_books = []
         authors_set = set()
 
@@ -48,18 +63,118 @@ class MainWindow(QMainWindow):
         # sorted returns a list
         self.authors_with_quotes = sorted(authors_set)
 
+    #=================================================
+    # default state
+    #=================================================
+    def _init_state(self):
+        self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
+        self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
+        self.quote_printed = False
+
         # for delayed author print
-        self.author_timer = QTimer()
+        self.author_timer = QTimer(self)
         self.author_timer.setSingleShot(True)
         self.author_timer.timeout.connect(self._print_pending_author)
         self.pending_author_data = None
-        self.quote_printed = False
 
-        self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
-        self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
+    #=================================================
+    # ComboBox (dropdowns)
+    #=================================================
+    def _init_dropdowns(self):
+        self.folders_dropdown = QComboBox()
+        self.authors_dropdown = QComboBox()
+        self.books_dropdown = QComboBox()
+        self.folders_dropdown.addItems([constants.ANY_FOLDER] + sorted(list(book_collection.Folders.keys())))
+        self.authors_dropdown.addItems([constants.ANY_AUTHOR] + self.authors_with_quotes)
+        self.books_dropdown.addItems([constants.ANY_BOOK] + self.filtered_books)
 
-        #=========================
-        # header_layout
+        # increase font size for dropdowns
+        font = self.folders_dropdown.font()
+        font.setPointSize(font.pointSize() + 1)
+
+        for cb in (self.folders_dropdown, self.authors_dropdown, self.books_dropdown):
+            cb.setCurrentIndex(0)
+            # closed combobox text
+            cb.setFont(font)
+            # dropdown list items
+            cb.view().setFont(font)
+
+    #=================================================
+    # buttons
+    #=================================================
+    def _init_buttons(self):
+        self.delay_author_toggle = QPushButton("Random quotes: delay author")
+        self.delay_author_toggle.setCheckable(True)
+        self.delay_author_toggle.setChecked(False)
+        self.delay_author_toggle.setToolTip("ON: Author appears after a delay\nOFF: Author appears immediately")
+        self.delay_author_toggle.setStyleSheet("""
+            QPushButton { background-color: none; }
+            QPushButton:checked { background-color: rgb(180,230,180); }
+        """)
+
+        self.buttons = {
+            "random": QPushButton("Random quote"),
+            "every": QPushButton("Print every quote"),
+            "stats": QPushButton("Statistics"),
+            "short": QPushButton("Random short quote"),
+            "dist": QPushButton("Quote distribution"),
+            "search": QPushButton("Search"),
+            "clear": QPushButton("Clear window"),
+            "list": QPushButton("Book list by property"),
+        }
+
+        # adjustment buttons
+        self.btn_increase = QPushButton("▲")
+        self.btn_decrease = QPushButton("▼")
+
+        self.mode_dropdown = QComboBox()
+        self.mode_dropdown.addItems([
+            f"Font size: {self.output_font_size}",
+            f"Line spacing: {self.line_height_percent} %",
+        ])
+
+        for w in (self.btn_increase, self.btn_decrease, self.mode_dropdown):
+            w.setFixedWidth(160)
+
+        # grab the font from first button dictionary list without caring about the key
+        font = self.buttons["random"].font()
+        font.setPointSize(font.pointSize() + 1)
+
+        for btn in list(self.buttons.values()) + [
+            self.btn_increase, self.btn_decrease, self.delay_author_toggle
+        ]:
+            btn.setFont(font)
+            btn.setMinimumHeight(33)
+
+    #=================================================
+    # signals
+    #=================================================
+    def _init_signals(self):
+        # only the function reference is bound here
+        # the folder/author choice event triggers the authors and book lists update
+        self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
+        self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
+
+        self.delay_author_toggle.toggled.connect(self.on_toggle_delay_author)
+
+        self.buttons["random"].clicked.connect(self.print_random_quote)
+        # use lambda to defer immediate execution when an argument is passed
+        self.buttons["short"].clicked.connect(lambda: self.print_random_quote("short"))
+        self.buttons["every"].clicked.connect(self.print_every_quote)
+        self.buttons["stats"].clicked.connect(self.print_statistics)
+        self.buttons["dist"].clicked.connect(self.print_quote_distribution)
+        self.buttons["search"].clicked.connect(self.search)
+        self.buttons["clear"].clicked.connect(self.clear)
+        self.buttons["list"].clicked.connect(self.print_list_by_property)
+
+        # use lambda to defer immediate execution when an argument is passed
+        self.btn_increase.clicked.connect(lambda: self.on_adjust_button("increase"))
+        self.btn_decrease.clicked.connect(lambda: self.on_adjust_button("decrease"))
+
+    #=================================================
+    # header layout
+    #=================================================
+    def _build_header_layout(self):
         # +----------------------------------------------------------------------------------------------+
         # | dropdown_layout (QGridLayout 3x2)    |      logo widget                                      |
         # +----------------------------------------------------------------------------------------------+
@@ -67,78 +182,43 @@ class MainWindow(QMainWindow):
         # |  AUTHOR      [authors]               |  margin     |   == The Collection ==    |  margin     |
         # |  BOOK        [books]                 |             |   ====================    |             |
         # +----------------------------------------------------------------------------------------------+
-
-        #=================================================
-        # ComboBox objects (dropdowns)
-        #=================================================
-        self.folders_dropdown = QComboBox()
-        self.authors_dropdown = QComboBox()
-        self.books_dropdown = QComboBox()
-        self.folders_dropdown.addItems([constants.ANY_FOLDER] + sorted(list(book_collection.Folders.keys())))
-        self.authors_dropdown.addItems([constants.ANY_AUTHOR] + self.authors_with_quotes)
-        self.books_dropdown.addItems([constants.ANY_BOOK] + self.filtered_books)
-        self.folders_dropdown.setCurrentIndex(0)
-        self.authors_dropdown.setCurrentIndex(0)
-        self.books_dropdown.setCurrentIndex(0)
-
-        # only the function reference is bound here
-        # the folder/author choice event triggers the authors and book lists update
-        self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
-        self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
-
-        # increase font size for dropdowns
-        font = self.folders_dropdown.font()
-        font.setPointSize(font.pointSize() + 1)
-
-        # closed combobox text
-        self.folders_dropdown.setFont(font)
-        self.authors_dropdown.setFont(font)
-        self.books_dropdown.setFont(font)
-        # dropdown list items
-        self.folders_dropdown.view().setFont(font)
-        self.authors_dropdown.view().setFont(font)
-        self.books_dropdown.view().setFont(font)
-
-        # create the dropdown grid layout
         dropdown_layout = QGridLayout()
         # add left padding and space between columns
         dropdown_layout.setContentsMargins(30, 0, 0, 0)
         dropdown_layout.setHorizontalSpacing(30)
+
+        label_font = QFont("Consolas", 12)
+
         # addWidget(widget, row, column, rowSpan, columnSpan, alignment)
-        dropdown_layout.addWidget(QLabel("FOLDER", font=QFont("Consolas", 12)), 0, 0, alignment=Qt.AlignLeft)
+        dropdown_layout.addWidget(QLabel("FOLDER", font=label_font), 0, 0)
         dropdown_layout.addWidget(self.folders_dropdown, 0, 1)
-        dropdown_layout.addWidget(QLabel("AUTHOR", font=QFont("Consolas", 12)), 1, 0, alignment=Qt.AlignLeft)
+        dropdown_layout.addWidget(QLabel("AUTHOR", font=label_font), 1, 0)
         dropdown_layout.addWidget(self.authors_dropdown, 1, 1)
-        dropdown_layout.addWidget(QLabel("BOOK", font=QFont("Consolas", 12)), 2, 0, alignment=Qt.AlignLeft)
+        dropdown_layout.addWidget(QLabel("BOOK", font=label_font), 2, 0)
         dropdown_layout.addWidget(self.books_dropdown, 2, 1)
         # labels fixed, dropdowns expand
         dropdown_layout.setColumnStretch(0, 0)
         dropdown_layout.setColumnStretch(1, 1)
 
-        #=================================================
-        # logo and text layout
-        #=================================================
         string = f"== The Collection =="
         the_collection_logo = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
         logo_text = QLabel(the_collection_logo)
-        # logo_text.setFont(QFont("Courier New", 14))
         logo_text.setFont(QFont("Consolas", 14))
         logo_text.setAlignment(Qt.AlignCenter)
-        # prevent logo from expanding
         logo_text.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         logo_text.setContentsMargins(100, 0, 100, 0)
 
-        #=================================================
-        # finish header layout
-        #=================================================
         header_layout = QHBoxLayout()
         header_layout.addLayout(dropdown_layout, 1)
         header_layout.addWidget(logo_text)
         header_layout.setContentsMargins(0, 10, 0, 10)
 
-        #=================================================
-        # output layout
-        #=================================================
+        return header_layout
+
+    #=================================================
+    # output layout
+    #=================================================
+    def _init_output(self):
         self.output = QTextEdit()
         self.output.setReadOnly(True)
         self.output.setFont(QFont("Consolas", self.output_font_size))
@@ -147,8 +227,10 @@ class MainWindow(QMainWindow):
         self.output.document().setDocumentMargin(30)
 
 
-        #============
-        # grid_layout
+    #=================================================
+    # button grid
+    #=================================================
+    def _build_button_grid(self):
         # +-----------------------------------------------------------------------+
         # | Random quote          | Print every quote     | Statistics            |
         # |-----------------------|-----------------------|-----------------------|
@@ -156,90 +238,24 @@ class MainWindow(QMainWindow):
         # |-----------------------|-----------------------|-----------------------|
         # | Delay author toggle   | Clear window          | Book list by property |
         # +-----------------------------------------------------------------------+
-        self.delay_author_toggle = QPushButton("Random quotes: delay author")
-        self.delay_author_toggle.setCheckable(True)
-        self.delay_author_toggle.setChecked(False)
-        self.delay_author_toggle.setToolTip("ON: Author appears after a delay\nOFF: Author appears immediately")
-        self.delay_author_toggle.toggled.connect(self.on_toggle_delay_author)
-        # set background color based on checked state
-        self.delay_author_toggle.setStyleSheet("""
-            QPushButton {
-                background-color: none;
-            }
-            QPushButton:checked {
-                background-color: rgb(180,230,180);
-            }
-        """)
+        button_grid = QGridLayout()
 
-        btn1 = QPushButton("Random quote")
-        btn1.clicked.connect(lambda: self.print_random_quote())
-        btn2 = QPushButton("Print every quote")
-        btn2.clicked.connect(self.print_every_quote)
-        btn3 = QPushButton("Statistics")
-        btn3.clicked.connect(self.print_statistics)
-        btn4 = QPushButton("Random short quote")
-        btn4.clicked.connect(lambda: self.print_random_quote("short"))
-        btn5 = QPushButton("Quote distribution")
-        btn5.clicked.connect(self.print_quote_distribution)
-        btn6 = QPushButton("Search")
-        btn6.clicked.connect(self.search)
-        btn7 = QPushButton("Clear window")
-        btn7.clicked.connect(self.clear)
-        btn8 = QPushButton("Book list by property")
-        btn8.clicked.connect(self.print_list_by_property)
-
-        # Create buttons and combo box
-        self.btn_increase = QPushButton("▲")
-        self.btn_increase.clicked.connect(lambda: self.on_adjust_button("increase"))
-        self.btn_decrease = QPushButton("▼")
-        self.btn_decrease.clicked.connect(lambda: self.on_adjust_button("decrease"))
-        self.mode_dropdown = QComboBox()
-        self.mode_dropdown.addItems(
-            [
-                f"Font size: {self.output_font_size}",
-                f"Line spacing: {self.line_height_percent} %"
-            ]
-        )
-        self.mode_dropdown.setCurrentIndex(0)
-
-        # these are fixed horizontally
-        self.btn_increase.setFixedWidth(160)
-        self.btn_decrease.setFixedWidth(160)
-        self.mode_dropdown.setFixedWidth(160)
-
-        #=================================================
-        # grid_layout
-        #=================================================
-        grid_layout = QGridLayout()
-        grid_buttons = [
-            btn1, btn2, btn3, self.btn_increase,
-            btn4, btn5, btn6, self.mode_dropdown,
-            self.delay_author_toggle, btn7, btn8, self.btn_decrease
+        widgets = [
+            self.buttons["random"], self.buttons["every"], self.buttons["stats"], self.btn_increase,
+            self.buttons["short"],  self.buttons["dist"],  self.buttons["search"], self.mode_dropdown,
+            self.delay_author_toggle, self.buttons["clear"], self.buttons["list"], self.btn_decrease,
         ]
 
-        # set same values for all the buttons
-        font_btn = btn1.font()
-        font_btn.setPointSize(font_btn.pointSize() + 1)
-        for b in grid_buttons:
-            b.setFont(font_btn)
-            b.setMinimumHeight(33)
+        positions = [(i, j) for i in range(3) for j in range(4)]
+        for pos, w in zip(positions, widgets):
+            button_grid.addWidget(w, pos[0], pos[1])
 
-        positions = [(i,j) for i in range(3) for j in range(4)]
-        for pos, btn in zip(positions, grid_buttons):
-            grid_layout.addWidget(btn, pos[0], pos[1])
-
-        #=================================================
-        # reset_layout
-        #=================================================
-        reset_button = QPushButton("Reset")
-        reset_button.clicked.connect(self.reset)
-        reset_button.setToolTip("Reset all settings and clear the output")
-        reset_button.setFont(font_btn)
-        reset_button.setMinimumHeight(36)
-        reset_button.setStyleSheet("background-color: rgb(220,220,220);")
-
-        #=============
-        # full window
+        return button_grid
+    
+    #=================================================
+    # main_layout
+    #=================================================
+    def _build_main_layout(self):
         # +-------------------------------------------------+
         # | header_layout (dropdowns left, logo right)      |
         # +-------------------------------------------------+
@@ -250,13 +266,19 @@ class MainWindow(QMainWindow):
         # | reset_button (full-width reset button)          |
         # +-------------------------------------------------+
         main_layout = QVBoxLayout()
-        main_layout.addLayout(header_layout)
+        main_layout.addLayout(self._build_header_layout())
         main_layout.addWidget(self.output, 1)
-        main_layout.addLayout(grid_layout)
-        main_layout.addWidget(reset_button)
-        panel.setLayout(main_layout)
-
-        self.show()
+        main_layout.addLayout(self._build_button_grid())
+    
+        reset = QPushButton("Reset")
+        reset.setFont(self.buttons["random"].font())
+        reset.setMinimumHeight(36)
+        reset.setStyleSheet("background-color: rgb(220,220,220);")
+        reset.setToolTip("Reset all settings and clear the output")
+        reset.clicked.connect(self.reset)
+    
+        main_layout.addWidget(reset)
+        self.panel.setLayout(main_layout)
 
     #=================================================
     # FUNCTION: toggle button changer
@@ -312,50 +334,50 @@ class MainWindow(QMainWindow):
     #=================================================
     def on_adjust_button(self, direction):
         delta = 1 if direction == "increase" else -1
-    
+
         if "Font" in self.mode_dropdown.currentText():
             self.output_font_size = min(20, max(10, self.output_font_size + delta))
             self.output.setFont(QFont("Consolas", self.output_font_size))
         elif "Line" in self.mode_dropdown.currentText():
             self.line_height_percent = min(200, max(100, self.line_height_percent + 10 * delta))
             self.set_output_line_height(self.line_height_percent)
-        
+
         self.set_mode_dropdown_text()
-        
+
     def set_mode_dropdown_text(self):
         self.mode_dropdown.setItemText(0, f"Font size: {self.output_font_size}")
         self.mode_dropdown.setItemText(1, f"Line spacing: {self.line_height_percent} %")
-                
+
     #=================================================
     # FUNCTION: log messages to the text box
     #=================================================
     def log(self, message):
         self.output.append(message)
         self.set_output_line_height(self.line_height_percent)
-            
+
     def set_output_line_height(self, line_height_percent):
         cursor = self.output.textCursor()
         cursor.beginEditBlock()
-    
+
         # iterate over all blocks in the document
         block = self.output.document().firstBlock()
         while block.isValid():
             cursor.setPosition(block.position())
             cursor.setPosition(block.position() + block.length() - 1, QTextCursor.KeepAnchor)
-    
+
             block_fmt = QTextBlockFormat()
             block_fmt.setLineHeight(line_height_percent, QTextBlockFormat.ProportionalHeight.value)
             cursor.setBlockFormat(block_fmt)
-    
+
             block = block.next()
-    
+
         cursor.endEditBlock()
-        
+
         # ensure the last line is visible
         cursor.movePosition(QTextCursor.End)
         self.output.setTextCursor(cursor)
         self.output.ensureCursorVisible()
-        
+
         self.line_height_percent = line_height_percent
 
     #=================================================
@@ -389,10 +411,10 @@ class MainWindow(QMainWindow):
             # reset default values
             self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
             self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
-            self.output.setFont(QFont("Consolas", self.output_font_size))            
+            self.output.setFont(QFont("Consolas", self.output_font_size))
             self.mode_dropdown.setCurrentIndex(0)
             self.set_mode_dropdown_text()
-            
+
 
     #=================================================
     # BUTTON FUNCTIONS

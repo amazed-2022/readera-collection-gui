@@ -9,12 +9,10 @@ import sys
 from collections import Counter
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFont, QTextOption, QTextCursor, QTextBlockFormat
+from PySide6.QtGui import QFont, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget,
-    QVBoxLayout, QHBoxLayout, QGridLayout,
-    QLabel, QPushButton, QTextEdit, QComboBox,
-    QMessageBox, QInputDialog, QSizePolicy
+    QApplication, QComboBox, QGridLayout, QHBoxLayout, QLabel, QInputDialog,
+    QMainWindow, QMessageBox, QPushButton, QSizePolicy, QVBoxLayout, QTextEdit, QWidget
 )
 
 #=================================================
@@ -334,7 +332,13 @@ class MainWindow(QMainWindow):
         elif "Line" in self.mode_dropdown.currentText():
             self.line_height_percent = min(200, max(100, self.line_height_percent + 10 * delta))
             self.set_output_line_height(self.line_height_percent)
-
+        
+        # ensure the last line is visible
+        cursor = self.output.textCursor()                
+        cursor.movePosition(QTextCursor.End)
+        self.output.setTextCursor(cursor)
+        self.output.ensureCursorVisible()
+        # update dropdown text
         self.set_mode_dropdown_text()
 
     def set_mode_dropdown_text(self):
@@ -369,11 +373,6 @@ class MainWindow(QMainWindow):
 
         cursor.endEditBlock()
 
-        # ensure the last line is visible
-        cursor.movePosition(QTextCursor.End)
-        self.output.setTextCursor(cursor)
-        self.output.ensureCursorVisible()
-
     #=================================================
     # FUNCTION: clear
     #=================================================
@@ -385,30 +384,42 @@ class MainWindow(QMainWindow):
     # FUNCTION: reset
     #=================================================
     def reset(self):
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("Confirm Reset")
-        dlg.setText("Are you sure you want to reset everything?")
-        dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        dlg.setIcon(QMessageBox.Warning)
-        if dlg.exec() == QMessageBox.Yes:
-            self._flush_pending_author(print_data=False)
-            book_collection.build_the_collection()
-            self.folders_dropdown.setCurrentIndex(0)
-            self.authors_dropdown.setCurrentIndex(0)
-            self.books_dropdown.setCurrentIndex(0)
-            # build full dropdown lists again
-            self.on_folder_or_author_change()
-            # reset toggle button to OFF visually and logically
-            self.delay_author_toggle.setChecked(False)
-            self.quote_printed = False
-            self.clear()
-            # reset default values
-            self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
-            self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
-            self.output.setFont(QFont("Consolas", self.output_font_size))
-            self.mode_dropdown.setCurrentIndex(0)
-            self.set_mode_dropdown_text()
-
+        # simple confirmation dialog in one line
+        reply = QMessageBox.question(
+            self,
+            "Confirm Reset",
+            "Are you sure you want to reset everything?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+    
+        if reply != QMessageBox.Yes:
+            return
+    
+        # flush any pending author data
+        self._flush_pending_author(print_data=False)
+    
+        # rebuild collection and reset dropdowns
+        book_collection.build_the_collection()
+        self.folders_dropdown.setCurrentIndex(0)
+        self.authors_dropdown.setCurrentIndex(0)
+        self.books_dropdown.setCurrentIndex(0)
+        # build full dropdown lists again
+        self.on_folder_or_author_change()
+    
+        # reset UI state
+        self.delay_author_toggle.setChecked(False)
+        self.quote_printed = False
+        self.clear()
+    
+        # reset font and layout settings
+        self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
+        self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
+        self.output.setFont(QFont("Consolas", self.output_font_size))
+    
+        # reset mode dropdown
+        self.mode_dropdown.setCurrentIndex(0)
+        self.set_mode_dropdown_text()
 
     #=================================================
     # BUTTON FUNCTIONS
@@ -417,7 +428,8 @@ class MainWindow(QMainWindow):
     # FUNCTION: print random quote
     #=================================================
     def print_random_quote(self, length="any"):
-        self._flush_pending_author()
+        if self.pending_author_data:
+            self._flush_pending_author()
 
         selected_title = self.books_dropdown.currentText()
         delay_author = self.delay_author_toggle.isChecked()
@@ -467,7 +479,6 @@ class MainWindow(QMainWindow):
             book, quotes_left = self.pending_author_data
             self._print_author_now(book, quotes_left)
         self.pending_author_data = None
-        self.author_timer = None
 
     def _flush_pending_author(self, print_data=True):
         if self.author_timer.isActive():
@@ -730,15 +741,25 @@ class MainWindow(QMainWindow):
     # FUNCTION: search in quotes
     #=================================================
     def search(self):
-        self.clear()
+        # create normal/match text formats
+        fmt_normal = QTextCharFormat()
+        fmt_normal.setFontWeight(QFont.Normal)
+        fmt_normal.clearBackground()
+        
+        fmt_match = QTextCharFormat()
+        # fmt_match.setFontItalic(True)
+        fmt_match.setFontWeight(QFont.Bold)
+        
         # popup for user input
         text, ok = QInputDialog.getText(self, "Search", "Enter at least 3 characters:")
         if not ok:
             # user cancelled
             return
-        str_to_search = text.strip().lower()
-
+        else:
+            self.clear()
+        
         # check length
+        str_to_search = text.strip().lower()
         if len(str_to_search) < 3:
             self.log("Incorrect input. Please enter at least 3 characters.\n")
             return
@@ -759,23 +780,18 @@ class MainWindow(QMainWindow):
                     if not match_in_book:
                         self.log(f"{book.title}\n{'-'*len(book.title)}")
                         match_in_book = True
-
-                    # TEST
-                    self.highlight_bold(quote.text, str_to_search)
-                    # highlight the search term by uppercasing (you could also add color later)
-                    # highlighted_text = self.highlight(quote.text, str_to_search)
-                    # self.log(highlighted_text)
-                    # self.log('\n')
+                    self.log('\n')
+                    self.highlight(quote.text, str_to_search, fmt_normal, fmt_match)                    
                     counter += len(re.findall(str_to_search, quote_text))
 
         # print result summary
-        result = f"Matched {counter} time{'s' if counter != 1 else ''}."
+        result = f"\nMatched {counter} time{'s' if counter != 1 else ''}."
         self.log(result if counter else "No match found.")
         if counter:
             self.log('-'*len(result))
-        self.log('\n')
+        
 
-    def highlight_bold(self, text, term):
+    def highlight(self, text, term, fmt_normal, fmt_match):
         cursor = self.output.textCursor()
         cursor.movePosition(QTextCursor.End)
 
@@ -783,26 +799,14 @@ class MainWindow(QMainWindow):
         last_pos = 0
 
         for match in pattern.finditer(text):
-            # insert text before match (normal)
-            cursor.insertText(text[last_pos:match.start()])
-
-            # insert matched term in bold
-            fmt = QTextCharFormat()
-            fmt.setFontWeight(QFont.Bold)
-            fmt.setForeground(Qt.darkYellow)
-            # fmt.setBackground(Qt.yellow)
-            # fmt.setBackground(Qt.green)
-            cursor.insertText(text[match.start():match.end()], fmt)
-
+            # insert text before match (normal) and match with modified
+            cursor.insertText(text[last_pos:match.start()], fmt_normal)
+            cursor.insertText(text[match.start():match.end()], fmt_match)
             last_pos = match.end()
-
+        
         # insert the remaining text after last match
-        cursor.insertText(text[last_pos:])
+        cursor.insertText(text[last_pos:], fmt_normal)
         cursor.insertText('\n')
-
-    def highlight(self, text, term):
-        # replace all occurrences of term (case-insensitive) with uppercase
-        return re.sub(re.escape(term), lambda m: m.group(0).upper(), text, flags=re.IGNORECASE)
 
 #=================================================
 # MAIN

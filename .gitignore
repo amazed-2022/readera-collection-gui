@@ -3,3 +3,4 @@
 src/constants_local.py
 src/__build.txt
 *.zip
+*.txt

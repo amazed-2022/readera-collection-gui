@@ -226,7 +226,6 @@ class MainWindow(QMainWindow):
         self.output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
         self.output.document().setDocumentMargin(30)
 
-
     #=================================================
     # button grid
     #=================================================
@@ -362,13 +361,16 @@ class MainWindow(QMainWindow):
         # iterate over all blocks in the document
         block = self.output.document().firstBlock()
         while block.isValid():
+            # select block
             cursor.setPosition(block.position())
             cursor.setPosition(block.position() + block.length() - 1, QTextCursor.KeepAnchor)
 
+            # apply formatting
             block_fmt = QTextBlockFormat()
             block_fmt.setLineHeight(line_height_percent, QTextBlockFormat.ProportionalHeight.value)
             cursor.setBlockFormat(block_fmt)
-
+            
+            # move to the next paragraph (QTextBlock)
             block = block.next()
 
         cursor.endEditBlock()
@@ -377,8 +379,6 @@ class MainWindow(QMainWindow):
         cursor.movePosition(QTextCursor.End)
         self.output.setTextCursor(cursor)
         self.output.ensureCursorVisible()
-
-        self.line_height_percent = line_height_percent
 
     #=================================================
     # FUNCTION: clear
@@ -765,10 +765,13 @@ class MainWindow(QMainWindow):
                     if not match_in_book:
                         self.log(f"{book.title}\n{'-'*len(book.title)}")
                         match_in_book = True
+                    
+                    # TEST
+                    self.highlight_bold(quote.text, str_to_search)
                     # highlight the search term by uppercasing (you could also add color later)
-                    highlighted_text = self.highlight(quote.text, str_to_search)
-                    self.log(highlighted_text)
-                    self.log('\n')
+                    # highlighted_text = self.highlight(quote.text, str_to_search)
+                    # self.log(highlighted_text)
+                    # self.log('\n')
                     counter += len(re.findall(str_to_search, quote_text))
 
         # print result summary
@@ -777,11 +780,35 @@ class MainWindow(QMainWindow):
         if counter:
             self.log('-'*len(result))
         self.log('\n')
+        
+    def highlight_bold(self, text, term):
+        cursor = self.output.textCursor()
+        cursor.movePosition(QTextCursor.End)
+    
+        pattern = re.compile(re.escape(term), re.IGNORECASE)
+        last_pos = 0
+    
+        for match in pattern.finditer(text):
+            # insert text before match (normal)
+            cursor.insertText(text[last_pos:match.start()])
+            
+            # insert matched term in bold
+            fmt = QTextCharFormat()
+            fmt.setFontWeight(QFont.Bold)
+            fmt.setForeground(Qt.darkYellow)
+            # fmt.setBackground(Qt.yellow)
+            # fmt.setBackground(Qt.green)
+            cursor.insertText(text[match.start():match.end()], fmt)
+            
+            last_pos = match.end()
+        
+        # insert the remaining text after last match
+        cursor.insertText(text[last_pos:])
+        cursor.insertText('\n')
 
     def highlight(self, text, term):
         # replace all occurrences of term (case-insensitive) with uppercase
         return re.sub(re.escape(term), lambda m: m.group(0).upper(), text, flags=re.IGNORECASE)
-
 
 #=================================================
 # MAIN

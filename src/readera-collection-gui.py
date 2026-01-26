@@ -30,8 +30,8 @@ class MainWindow(QMainWindow):
         self._init_window()
         self._init_data()
         self._init_state()
-        self._init_dropdowns()
-        self._init_buttons()
+        self._init_filters()
+        self._init_actions()
         self._init_signals()
         self._init_output()
         self._build_main_layout()
@@ -78,9 +78,9 @@ class MainWindow(QMainWindow):
         self.pending_author_data = None
 
     #=================================================
-    # ComboBox (dropdowns)
+    # ComboBox filters (dropdowns)
     #=================================================
-    def _init_dropdowns(self):
+    def _init_filters(self):
         self.folders_dropdown = QComboBox()
         self.authors_dropdown = QComboBox()
         self.books_dropdown = QComboBox()
@@ -94,15 +94,15 @@ class MainWindow(QMainWindow):
 
         for cb in (self.folders_dropdown, self.authors_dropdown, self.books_dropdown):
             cb.setCurrentIndex(0)
-            # closed combobox text
+            # for closed combobox text
             cb.setFont(font)
-            # dropdown list items
+            # for dropdown list items
             cb.view().setFont(font)
 
     #=================================================
-    # buttons
+    # actions, adjustment
     #=================================================
-    def _init_buttons(self):
+    def _init_actions(self):
         self.delay_author_toggle = QPushButton("Random quotes: delay author")
         self.delay_author_toggle.setCheckable(True)
         self.delay_author_toggle.setChecked(False)
@@ -136,7 +136,7 @@ class MainWindow(QMainWindow):
         for w in (self.btn_increase, self.btn_decrease, self.mode_dropdown):
             w.setFixedWidth(160)
 
-        # grab the font from first button dictionary list without caring about the key
+        # grab the font of first button (from dictionary list)
         font = self.buttons["random"].font()
         font.setPointSize(font.pointSize() + 1)
 
@@ -150,15 +150,14 @@ class MainWindow(QMainWindow):
     # signals
     #=================================================
     def _init_signals(self):
-        # only the function reference is bound here
+        # only the function reference is bound here (no call operator "()" added)
         # the folder/author choice event triggers the authors and book lists update
         self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
         self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
-
         self.delay_author_toggle.toggled.connect(self.on_toggle_delay_author)
 
-        self.buttons["random"].clicked.connect(self.print_random_quote)
         # use lambda to defer immediate execution when an argument is passed
+        self.buttons["random"].clicked.connect(self.print_random_quote)
         self.buttons["short"].clicked.connect(lambda: self.print_random_quote("short"))
         self.buttons["every"].clicked.connect(self.print_every_quote)
         self.buttons["stats"].clicked.connect(self.print_statistics)
@@ -166,22 +165,19 @@ class MainWindow(QMainWindow):
         self.buttons["search"].clicked.connect(self.search)
         self.buttons["clear"].clicked.connect(self.clear)
         self.buttons["list"].clicked.connect(self.print_list_by_property)
-
-        # use lambda to defer immediate execution when an argument is passed
         self.btn_increase.clicked.connect(lambda: self.on_adjust_button("increase"))
         self.btn_decrease.clicked.connect(lambda: self.on_adjust_button("decrease"))
 
-    #=================================================
+    #===============
     # header layout
-    #=================================================
+    # +----------------------------------------------------------------------------------------------+
+    # | dropdown_layout (QGridLayout 3x2)    |      logo widget                                      |
+    # +----------------------------------------------------------------------------------------------+
+    # |  FOLDER      [folders]               |  fixed      |   ====================    |  fixed      |
+    # |  AUTHOR      [authors]               |  margin     |   == The Collection ==    |  margin     |
+    # |  BOOK        [books]                 |             |   ====================    |             |
+    # +----------------------------------------------------------------------------------------------+
     def _build_header_layout(self):
-        # +----------------------------------------------------------------------------------------------+
-        # | dropdown_layout (QGridLayout 3x2)    |      logo widget                                      |
-        # +----------------------------------------------------------------------------------------------+
-        # |  FOLDER      [folders]               |  fixed      |   ====================    |  fixed      |
-        # |  AUTHOR      [authors]               |  margin     |   == The Collection ==    |  margin     |
-        # |  BOOK        [books]                 |             |   ====================    |             |
-        # +----------------------------------------------------------------------------------------------+
         dropdown_layout = QGridLayout()
         # add left padding and space between columns
         dropdown_layout.setContentsMargins(30, 0, 0, 0)
@@ -226,17 +222,16 @@ class MainWindow(QMainWindow):
         self.output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
         self.output.document().setDocumentMargin(30)
 
-    #=================================================
+    #=============
     # button grid
-    #=================================================
+    # +-------------------------------------------------------------------------------------------+
+    # | Random quote          | Print every quote     | Statistics            |         ▲         |
+    # |-----------------------|-----------------------|-----------------------|-------------------|
+    # | Random short quote    | Quote distribution    | Search                |   mode_dropdown   |
+    # |-----------------------|-----------------------|-----------------------|-------------------|
+    # | Delay author toggle   | Clear window          | Book list by property |         ▼         |
+    # +-------------------------------------------------------------------------------------------+
     def _build_button_grid(self):
-        # +-----------------------------------------------------------------------+
-        # | Random quote          | Print every quote     | Statistics            |
-        # |-----------------------|-----------------------|-----------------------|
-        # | Random short quote    | Quote distribution    | Search                |
-        # |-----------------------|-----------------------|-----------------------|
-        # | Delay author toggle   | Clear window          | Book list by property |
-        # +-----------------------------------------------------------------------+
         button_grid = QGridLayout()
 
         widgets = [
@@ -250,32 +245,31 @@ class MainWindow(QMainWindow):
             button_grid.addWidget(w, pos[0], pos[1])
 
         return button_grid
-    
-    #=================================================
+
+    #=============
     # main_layout
-    #=================================================
+    # +-------------------------------------------------+
+    # | header_layout (dropdowns left, logo right)      |
+    # +-------------------------------------------------+
+    # | output_widget (text output)                     |
+    # +-------------------------------------------------+
+    # | grid_layout (3x4 buttons)                       |
+    # +-------------------------------------------------+
+    # | reset_button (full-width reset button)          |
+    # +-------------------------------------------------+
     def _build_main_layout(self):
-        # +-------------------------------------------------+
-        # | header_layout (dropdowns left, logo right)      |
-        # +-------------------------------------------------+
-        # | output_widget (text output)                     |
-        # +-------------------------------------------------+
-        # | grid_layout (3x3 buttons)                       |
-        # +-------------------------------------------------+
-        # | reset_button (full-width reset button)          |
-        # +-------------------------------------------------+
         main_layout = QVBoxLayout()
         main_layout.addLayout(self._build_header_layout())
         main_layout.addWidget(self.output, 1)
         main_layout.addLayout(self._build_button_grid())
-    
+
         reset = QPushButton("Reset")
         reset.setFont(self.buttons["random"].font())
         reset.setMinimumHeight(36)
         reset.setStyleSheet("background-color: rgb(220,220,220);")
         reset.setToolTip("Reset all settings and clear the output")
         reset.clicked.connect(self.reset)
-    
+
         main_layout.addWidget(reset)
         self.panel.setLayout(main_layout)
 
@@ -369,7 +363,7 @@ class MainWindow(QMainWindow):
             block_fmt = QTextBlockFormat()
             block_fmt.setLineHeight(line_height_percent, QTextBlockFormat.ProportionalHeight.value)
             cursor.setBlockFormat(block_fmt)
-            
+
             # move to the next paragraph (QTextBlock)
             block = block.next()
 
@@ -765,7 +759,7 @@ class MainWindow(QMainWindow):
                     if not match_in_book:
                         self.log(f"{book.title}\n{'-'*len(book.title)}")
                         match_in_book = True
-                    
+
                     # TEST
                     self.highlight_bold(quote.text, str_to_search)
                     # highlight the search term by uppercasing (you could also add color later)
@@ -780,18 +774,18 @@ class MainWindow(QMainWindow):
         if counter:
             self.log('-'*len(result))
         self.log('\n')
-        
+
     def highlight_bold(self, text, term):
         cursor = self.output.textCursor()
         cursor.movePosition(QTextCursor.End)
-    
+
         pattern = re.compile(re.escape(term), re.IGNORECASE)
         last_pos = 0
-    
+
         for match in pattern.finditer(text):
             # insert text before match (normal)
             cursor.insertText(text[last_pos:match.start()])
-            
+
             # insert matched term in bold
             fmt = QTextCharFormat()
             fmt.setFontWeight(QFont.Bold)
@@ -799,9 +793,9 @@ class MainWindow(QMainWindow):
             # fmt.setBackground(Qt.yellow)
             # fmt.setBackground(Qt.green)
             cursor.insertText(text[match.start():match.end()], fmt)
-            
+
             last_pos = match.end()
-        
+
         # insert the remaining text after last match
         cursor.insertText(text[last_pos:])
         cursor.insertText('\n')

@@ -22,7 +22,6 @@ If you enjoy using it, please consider supporting the developers by purchasing t
 
 ---
 ## Installation
-1. **Install wxPython** separately `pip install wxPython`
 2. **Install PySide6** separately `pip install PySide6`
 3. **Create a backup file** in the ReadEra app (Settings / Backup & Restore)
 4. **Transfer backup file to your PC** (Google Drive, Gmail, etc.)

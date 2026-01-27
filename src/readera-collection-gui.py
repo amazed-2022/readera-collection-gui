@@ -402,7 +402,7 @@ class MainWindow(QMainWindow):
         if reply != QMessageBox.Yes:
             return
     
-        # flush any pending author data
+        # flush any pending author data without print
         self._flush_pending_author(print_data=False)
     
         # rebuild collection and reset dropdowns
@@ -434,8 +434,8 @@ class MainWindow(QMainWindow):
     # FUNCTION: print random quote
     #=================================================
     def print_random_quote(self, length="any"):
-        if self.pending_author_data:
-            self._flush_pending_author()
+        # print any remaining author data
+        self._flush_pending_author()
 
         selected_title = self.books_dropdown.currentText()
         delay_author = self.delay_author_toggle.isChecked()
@@ -476,7 +476,8 @@ class MainWindow(QMainWindow):
         # stop previous timer if running
         if self.author_timer.isActive():
             self.author_timer.stop()
-
+        
+        # start the timer
         self.author_timer.start(delay_ms)
 
     def _print_pending_author(self):

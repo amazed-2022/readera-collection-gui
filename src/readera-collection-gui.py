@@ -126,10 +126,7 @@ class MainWindow(QMainWindow):
         self.btn_decrease = QPushButton("▼")
 
         self.mode_dropdown = QComboBox()
-        self.mode_dropdown.addItems([
-            f"Font size: {self.output_font_size}",
-            f"Line spacing: {self.line_height_percent} %",
-        ])
+        self.init_mode_dropdown()
 
         for w in (self.btn_increase, self.btn_decrease, self.mode_dropdown):
             w.setFixedWidth(160)
@@ -338,12 +335,21 @@ class MainWindow(QMainWindow):
         cursor.movePosition(QTextCursor.End)
         self.output.setTextCursor(cursor)
         self.output.ensureCursorVisible()
-        # update dropdown text
-        self.set_mode_dropdown_text()
+        # value was changed, update dropdown text
+        self.update_mode_dropdown_text()
 
-    def set_mode_dropdown_text(self):
-        self.mode_dropdown.setItemText(0, f"Font size: {self.output_font_size}")
-        self.mode_dropdown.setItemText(1, f"Line spacing: {self.line_height_percent} %")
+    def _mode_dropdown_items(self):
+        return [
+            f"Font size: {self.output_font_size}",
+            f"Line spacing: {self.line_height_percent} %",
+        ]
+    
+    def init_mode_dropdown(self):
+        self.mode_dropdown.addItems(self._mode_dropdown_items())
+    
+    def update_mode_dropdown_text(self):
+        for i, text in enumerate(self._mode_dropdown_items()):
+            self.mode_dropdown.setItemText(i, text)
 
     #=================================================
     # FUNCTION: log messages to the text box
@@ -419,7 +425,7 @@ class MainWindow(QMainWindow):
     
         # reset mode dropdown
         self.mode_dropdown.setCurrentIndex(0)
-        self.set_mode_dropdown_text()
+        self.update_mode_dropdown_text()
 
     #=================================================
     # BUTTON FUNCTIONS

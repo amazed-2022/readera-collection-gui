@@ -5,8 +5,8 @@
 #=================================================
 # GUI resolution
 #=================================================
-WINDOW_WIDTH = 1050
-WINDOW_HEIGHT = 1050
+WINDOW_WIDTH = 1200
+WINDOW_HEIGHT = 1000
 WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 
 #=================================================
@@ -97,13 +97,7 @@ PROP_FOLDER = "folder"
 PROP_RATINGS_COUNT = "ratings count"
 
 PROPERTIES = [
-            PROP_ADDED_ON,
             PROP_READING_NOW,
             PROP_FINISHED_LIST,
             PROP_READ_DURATION,
-            PROP_PUBLISH_DATE,
-            PROP_NUMBER_OF_QUOTES,
-            PROP_Q_PER_PAGE_RATIO,
-            PROP_RATING,
-            PROP_FOLDER
         ]

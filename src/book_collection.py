@@ -205,7 +205,7 @@ def build_the_collection():
 
                 # calculate the q/p ratio, avoid division by zero
                 if this_book.pages_count > 0:
-                    this_book.q_per_page = this_book.total_q / this_book.pages_count
+                    this_book.q_per_page = round(this_book.total_q / this_book.pages_count, 2)
 
             # check if current doc was finished or not
             read_at_timestamp = doc['data'].get('doc_have_read_time') / 1000

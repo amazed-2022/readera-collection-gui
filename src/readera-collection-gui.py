@@ -4,6 +4,7 @@
 import book_collection
 import book_utils
 from constants_loader import constants
+import datetime
 import re
 import sys
 from collections import Counter
@@ -11,9 +12,9 @@ from collections import Counter
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
-    QApplication, QComboBox, QGridLayout, QHBoxLayout, QLabel, QInputDialog,
-    QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget, QVBoxLayout,
-    QTableView, QTextEdit, QWidget
+    QApplication, QComboBox, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
+    QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
+    QVBoxLayout, QTableView, QTextEdit, QWidget
 )
 
 #=================================================
@@ -119,7 +120,7 @@ class MainWindow(QMainWindow):
             "dist": QPushButton("Quote distribution"),
             "search": QPushButton("Search"),
             "clear": QPushButton("Clear window"),
-            "list": QPushButton("Book list by property"),
+            "list": QPushButton("Book list"),
         }
 
         # adjustment buttons
@@ -160,7 +161,6 @@ class MainWindow(QMainWindow):
         self.buttons["dist"].clicked.connect(self.print_quote_distribution)
         self.buttons["search"].clicked.connect(self.search)
         self.buttons["clear"].clicked.connect(self.clear)
-        # self.buttons["list"].clicked.connect(self.print_list_by_property)
         self.buttons["list"].clicked.connect(self.update_book_list_table)
         self.btn_increase.clicked.connect(lambda: self.on_adjust_button("increase"))
         self.btn_decrease.clicked.connect(lambda: self.on_adjust_button("decrease"))
@@ -219,12 +219,39 @@ class MainWindow(QMainWindow):
         self.text_output = QTextEdit()
         self.text_output.setReadOnly(True)
         self.text_output.setFont(QFont("Consolas", self.output_font_size))
-        self.text_output.setStyleSheet("background-color: rgb(240,230,200);")
+        self.text_output.setStyleSheet("""
+            QTextEdit {
+                background-color: rgb(240,230,200);
+                color: rgb(30, 28, 24);
+                selection-background-color: rgb(205, 215, 185);
+                selection-color: rgb(40, 35, 25);
+            }
+        """)
         self.text_output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
         self.text_output.document().setDocumentMargin(30)
 
-        # column output
+        # column output, set colours
         self.table_output = QTableView()
+        self.table_output.setStyleSheet("""
+            QTableView {
+                background-color: rgb(240,230,200);
+                gridline-color: gray;
+            }
+            QTableView::item {
+                background-color: rgb(240,230,200);
+                color: rgb(30, 28, 24);
+            }
+            QTableView::item:selected {
+                background-color: rgb(205, 215, 185);
+                color: rgb(30, 28, 24);
+            }
+            QHeaderView::section {
+                background-color: rgb(220,210,180);
+                padding: 4px;
+                border: 1px solid gray;
+            }
+        """)
+        
         self.table_output.setSortingEnabled(True)
         self.table_output.setAlternatingRowColors(True)
         self.table_output.horizontalHeader().setStretchLastSection(True)
@@ -358,10 +385,7 @@ class MainWindow(QMainWindow):
             self.set_output_line_height(self.line_height_percent)
 
         # ensure the last line is visible
-        cursor = self.text_output.textCursor()
-        cursor.movePosition(QTextCursor.End)
-        self.text_output.setTextCursor(cursor)
-        self.text_output.ensureCursorVisible()
+        self.scroll_to_bottom()
         # value was changed, update dropdown text
         self.update_mode_dropdown_text()
 
@@ -415,8 +439,8 @@ class MainWindow(QMainWindow):
         # get user input
         book_property, ok = QInputDialog.getItem(
             self,
-            "Book Properties",
-            "Select a property to sort/filter books by:",
+            "Book List",
+            "Select list option:",
             constants.PROPERTIES,
             0,
             False)
@@ -431,12 +455,12 @@ class MainWindow(QMainWindow):
             "Title",
             "Year",
             "Rating",
-            "Ratings #",
+            "Ratings x1000",
             "Quotes",
             "Pages",
-            "Q/P",
+            "Quotes / pages",
             "Finished",
-            "Added on",
+            "Added",
         ]
 
         # create object and its header
@@ -445,23 +469,32 @@ class MainWindow(QMainWindow):
         displayed_indexes = [i for i, h in enumerate(headers) if h]  
         model.setHorizontalHeaderLabels([headers[i] for i in displayed_indexes])
         
+        # get filtered book instances
+        folder = self.folders_dropdown.currentText()
+        if folder == constants.ANY_FOLDER:
+            books_to_list = book_collection.The_Collection
+        else:
+            books_to_list = [b for b in book_collection.The_Collection if b.folder == folder]
+        
         # further filter books based on selected property
         if book_property == constants.PROP_READING_NOW:
-            books_for_table = [
-                book for book in self.filtered_books
+            books_to_list = [
+                book for book in books_to_list
                 if (book.activity_time != 0) and not book.is_read
             ]
         elif book_property in (constants.PROP_READ_DURATION, constants.PROP_FINISHED_LIST):
-            books_for_table = [book for book in self.filtered_books if book.is_read]
+            books_to_list = [book for book in books_to_list if book.is_read]
         else:
-            books_for_table = self.filtered_books
+            books_to_list = books_to_list
 
-        for book in books_for_table:
+        for book in books_to_list:
             # list for actual cell items
             row_cells = []
             
             if book_property == constants.PROP_READ_DURATION:
                 duration_str, pages_per_day = self._get_read_duration_data(book)
+                if not duration_str:
+                    continue
             else:
                 duration_str, pages_per_day = "", 0
         
@@ -472,11 +505,11 @@ class MainWindow(QMainWindow):
                 book.title.split("-", 1)[-1].strip(),
                 int(book.published_date),
                 float(book.rating),
-                int(book.ratings_count * 1000),
-                book.total_q,
-                book.pages_count,
+                book.ratings_count,
+                int(book.total_q),
+                int(book.pages_count),
                 book.q_per_page,
-                book.have_read_date.strftime('%Y-%b-%d') if book.is_read else "N/A",
+                book.have_read_date.strftime('%Y-%b-%d') if book.is_read else "-",
                 book.file_modified_date.strftime('%Y-%b-%d'),
             ]
             
@@ -486,12 +519,6 @@ class MainWindow(QMainWindow):
                 if isinstance(cell, (int, float)):
                     # store actual number for sorting
                     item.setData(cell, Qt.ItemDataRole.DisplayRole)
-                    # format large ints e.g., 56500 → "56,500"
-                    if isinstance(cell, int) and cell >= 10000:
-                        item.setText(f"{cell:,}")
-                    else:
-                        item.setText(str(cell))
-
                     item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 else:
                     # text columns
@@ -504,17 +531,12 @@ class MainWindow(QMainWindow):
             model.appendRow(row_cells)
 
         self.table_output.setModel(model)
-        ratings_index = displayed_indexes.index(headers.index("Ratings #"))
-        qpp_index = displayed_indexes.index(headers.index("Q/P"))
-        
-        self.table_output.horizontalHeaderItem(ratings_index).setToolTip("Ratings count")
-        self.table_output.horizontalHeaderItem(qpp_index).setToolTip("Quotes per page")
         self.show_table_output()
         
     def _get_read_duration_data(self, book):
         if (book.first_q_timestamp <= constants.START_DATE_FOR_READ_LIST or
-            (book.last_q_timestamp - book.first_q_timestamp) <= ONE_DAY_IN_SECONDS or
-            book.title in EXCLUDED_TITLES_FROM_READ_DURATION):
+            (book.last_q_timestamp - book.first_q_timestamp) <= constants.ONE_DAY_IN_SECONDS or
+            book.title in constants.EXCLUDED_TITLES_FROM_READ_DURATION):
             return "", 0
         
         # compute elapsed days if needed
@@ -611,15 +633,25 @@ class MainWindow(QMainWindow):
         # get the random quote and print it
         random_quote, quotes_left = book_utils.get_random_quote(book, length)
         self.log(random_quote.text)
+        # ensure the last line is visible
+        self.scroll_to_bottom()
 
         if not delay_author:
             self._print_author_now(book, quotes_left)
         else:
             self._schedule_author(book, quotes_left, len(random_quote.text))
+            
+    def scroll_to_bottom(self):
+        cursor = self.text_output.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        self.text_output.setTextCursor(cursor)
+        self.text_output.ensureCursorVisible()
 
     def _print_author_now(self, book, quotes_left):
         self.log(f"\n{book.title}   / {quotes_left} left /")
         self.log(f"{'-'*len(book.title)}")
+        # ensure the last line is visible
+        self.scroll_to_bottom()
 
     def _schedule_author(self, book, quotes_left, quote_length, base_delay_ms=1000, ms_per_char=50):
         delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
@@ -711,54 +743,6 @@ class MainWindow(QMainWindow):
         self.log(f"{space}{'-'*columns}→")
         self.log(f"{space}1{' '*(columns-len(str(book.pages_count))+1)}{book.pages_count}")
         self.log("")
-
-    #=================================================
-    # FUNCTION: print books list by property
-    #=================================================
-    def print_list_by_property(self):
-        found_match = False
-        self.clear()
-        item, ok = QInputDialog.getItem(
-            self,
-            "Book Properties",
-            "Select a property to sort/filter books by:",
-            constants.PROPERTIES,
-            0,
-            False)
-        if not ok:
-            return
-        book_property = item
-        sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, book_property)
-        folder = self.folders_dropdown.currentText()
-        filtered_books = book_utils.filter_books_by_folder(sorted_books, folder)
-
-        for book in filtered_books:
-            line = book_utils.get_info_row_by_property(book, book_property, print_pages=(book_property == constants.PROP_PUBLISH_DATE))
-            if line:
-                # only log if not None
-                self.log(f"-->  {line}")
-                found_match = True
-
-        # continued print for rating / finished list
-        if book_property == constants.PROP_RATING:
-            sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, constants.PROP_RATINGS_COUNT)
-            filtered_books = book_utils.filter_books_by_folder(sorted_books, folder)
-            self.log("\n")
-            for book in filtered_books:
-                line = book_utils.get_info_row_by_property(book, constants.PROP_RATINGS_COUNT)
-                if line:
-                    self.log(f"-->  {line}")
-        elif book_property == constants.PROP_FINISHED_LIST:
-            sorted_books = book_utils.sort_books_for_property(book_collection.The_Collection, constants.PROP_PUBLISH_DATE)
-            filtered_books = book_utils.filter_books_by_folder(sorted_books, folder)
-            self.log("\n")
-            for book in filtered_books:
-                line = book_utils.get_info_row_by_property(book, constants.PROP_PUBLISH_DATE, require_finished=True)
-                if line:
-                    self.log(f"-->  {line}")
-
-        if not found_match:
-            self.log(f'No book has valid "{book_property}" in FOLDER {folder}.')
 
     #=================================================
     # FUNCTION: print statistics

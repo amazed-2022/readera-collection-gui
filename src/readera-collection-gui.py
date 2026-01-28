@@ -9,10 +9,11 @@ import sys
 from collections import Counter
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFont, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
+from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QGridLayout, QHBoxLayout, QLabel, QInputDialog,
-    QMainWindow, QMessageBox, QPushButton, QSizePolicy, QVBoxLayout, QTextEdit, QWidget
+    QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget, QVBoxLayout,
+    QTableView, QTextEdit, QWidget
 )
 
 #=================================================
@@ -207,16 +208,40 @@ class MainWindow(QMainWindow):
         return header_layout
 
     #=================================================
-    # output layout
+    # output stack
     #=================================================
     def _init_output(self):
-        self.output = QTextEdit()
-        self.output.setReadOnly(True)
-        self.output.setFont(QFont("Consolas", self.output_font_size))
-        self.output.setStyleSheet("background-color: rgb(240,230,200);")
-        self.output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
-        self.output.document().setDocumentMargin(30)
-
+        # stacked widget for text and table view
+        self.output_stack = QStackedWidget()
+        
+        # text output
+        self.text_output = QTextEdit()
+        self.text_output.setReadOnly(True)
+        self.text_output.setFont(QFont("Consolas", self.output_font_size))
+        self.text_output.setStyleSheet("background-color: rgb(240,230,200);")
+        self.text_output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
+        self.text_output.document().setDocumentMargin(30)
+        
+        # column output
+        self.table_output = QTableView()
+        self.table_output.setSortingEnabled(True)
+        self.table_output.setAlternatingRowColors(True)
+        self.table_output.horizontalHeader().setStretchLastSection(True)
+        self.table_output.verticalHeader().setVisible(False)
+        self.table_output.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+        self.table_output.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        
+        # first added gets index 0 (shown by default)
+        self.output_stack.addWidget(self.text_output)
+        self.output_stack.addWidget(self.table_output)
+        
+    def show_text_output(self):
+        self.output_stack.setCurrentWidget(self.text_output)
+        
+    def show_table_output(self):
+        self.output_stack.setCurrentWidget(self.table_output)
+        self.table_output.resizeColumnsToContents()
+        
     #=============
     # button grid
     # +-------------------------------------------------------------------------------------------+
@@ -255,8 +280,9 @@ class MainWindow(QMainWindow):
     def _build_main_layout(self):
         main_layout = QVBoxLayout()
         main_layout.addLayout(self._build_header_layout())
-        main_layout.addWidget(self.output, 1)
+        main_layout.addWidget(self.output_stack, 1)
         main_layout.addLayout(self._build_button_grid())
+        self.output_stack.setCurrentIndex(0)
 
         reset = QPushButton("Reset")
         reset.setFont(self.buttons["random"].font())
@@ -325,16 +351,16 @@ class MainWindow(QMainWindow):
 
         if "Font" in self.mode_dropdown.currentText():
             self.output_font_size = min(20, max(10, self.output_font_size + delta))
-            self.output.setFont(QFont("Consolas", self.output_font_size))
+            self.text_output.setFont(QFont("Consolas", self.output_font_size))
         elif "Line" in self.mode_dropdown.currentText():
             self.line_height_percent = min(200, max(100, self.line_height_percent + 10 * delta))
             self.set_output_line_height(self.line_height_percent)
         
         # ensure the last line is visible
-        cursor = self.output.textCursor()                
+        cursor = self.text_output.textCursor()                
         cursor.movePosition(QTextCursor.End)
-        self.output.setTextCursor(cursor)
-        self.output.ensureCursorVisible()
+        self.text_output.setTextCursor(cursor)
+        self.text_output.ensureCursorVisible()
         # value was changed, update dropdown text
         self.update_mode_dropdown_text()
 
@@ -355,15 +381,17 @@ class MainWindow(QMainWindow):
     # FUNCTION: log messages to the text box
     #=================================================
     def log(self, message):
-        self.output.append(message)
+        # make sure text output is visible
+        self.show_text_output()
+        self.text_output.append(message)
         self.set_output_line_height(self.line_height_percent)
 
     def set_output_line_height(self, line_height_percent):
-        cursor = self.output.textCursor()
+        cursor = self.text_output.textCursor()
         cursor.beginEditBlock()
 
         # iterate over all blocks in the document
-        block = self.output.document().firstBlock()
+        block = self.text_output.document().firstBlock()
         while block.isValid():
             # select block
             cursor.setPosition(block.position())
@@ -378,12 +406,65 @@ class MainWindow(QMainWindow):
             block = block.next()
 
         cursor.endEditBlock()
+        
+    #=================================================
+    # FUNCTION: update book list
+    #=================================================
+    def update_book_list(self, books):
+        found_match = False
+        self.clear()
+        item, ok = QInputDialog.getItem(
+            self,
+            "Book Properties",
+            "Select a property to sort/filter books by:",
+            constants.PROPERTIES,
+            0,
+            False)
+        if not ok:
+            return
+        
+        model = QStandardItemModel()
+        model.setHorizontalHeaderLabels([
+            "Author",
+            "Title",
+            "Year",
+            "Rating",
+            "Ratings #",
+            "Quotes",
+            "Q/P",
+            "Added on"
+        ])
+        
+        numeric_cols = [3, 4, 6]
+    
+        items = []
+        for row in books:
+            item = QStandardItem()
+            
+            for i, cell in enumerate(row):
+                if i in numeric_cols:
+                    # store actual number
+                    item.setData(cell, Qt.ItemDataRole.DisplayRole)  
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                else:
+                    # text columns
+                    item.setText(str(cell))  
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        
+                items.append(item)
+        
+        model.appendRow(items)
+    
+        self.table_output.setModel(model)
+        self.table_output.horizontalHeaderItem(4).setToolTip("Ratings count")
+        self.table_output.horizontalHeaderItem(6).setToolTip("Quotes per page")
+        self.show_table_output()
 
     #=================================================
     # FUNCTION: clear
     #=================================================
     def clear(self):
-        self.output.clear()
+        self.text_output.clear()
         self.quote_printed = False
 
     #=================================================
@@ -421,7 +502,7 @@ class MainWindow(QMainWindow):
         # reset font and layout settings
         self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
         self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
-        self.output.setFont(QFont("Consolas", self.output_font_size))
+        self.text_output.setFont(QFont("Consolas", self.output_font_size))
     
         # reset mode dropdown
         self.mode_dropdown.setCurrentIndex(0)
@@ -542,10 +623,10 @@ class MainWindow(QMainWindow):
         self.log("-" * len(title))
         self.log("")
 
-        font_metrics = self.output.fontMetrics()
+        font_metrics = self.text_output.fontMetrics()
         avg_char_width = font_metrics.horizontalAdvance("X")
         # margin was added to the text output
-        ctrl_width_px = self.output.width()-30
+        ctrl_width_px = self.text_output.width()-30
         columns = book_utils.calculate_columns_from_width(ctrl_width_px, avg_char_width)
         rows = round(columns * 0.2)
         space = "  "
@@ -799,7 +880,7 @@ class MainWindow(QMainWindow):
         
 
     def highlight(self, text, term, fmt_normal, fmt_match):
-        cursor = self.output.textCursor()
+        cursor = self.text_output.textCursor()
         cursor.movePosition(QTextCursor.End)
 
         pattern = re.compile(re.escape(term), re.IGNORECASE)

@@ -160,7 +160,8 @@ class MainWindow(QMainWindow):
         self.buttons["dist"].clicked.connect(self.print_quote_distribution)
         self.buttons["search"].clicked.connect(self.search)
         self.buttons["clear"].clicked.connect(self.clear)
-        self.buttons["list"].clicked.connect(self.print_list_by_property)
+        # self.buttons["list"].clicked.connect(self.print_list_by_property)
+        self.buttons["list"].clicked.connect(self.update_book_list_table)
         self.btn_increase.clicked.connect(lambda: self.on_adjust_button("increase"))
         self.btn_decrease.clicked.connect(lambda: self.on_adjust_button("decrease"))
 
@@ -411,7 +412,7 @@ class MainWindow(QMainWindow):
     # FUNCTION: update book list
     #=================================================
     def update_book_list_table(self):
-        
+        # get user input
         book_property, ok = QInputDialog.getItem(
             self,
             "Book Properties",
@@ -460,7 +461,7 @@ class MainWindow(QMainWindow):
             row_cells = []
             
             if book_property == constants.PROP_READ_DURATION:
-                duration_str, pages_per_day = self._get_read_duration_string(book)
+                duration_str, pages_per_day = self._get_read_duration_data(book)
             else:
                 duration_str, pages_per_day = "", 0
         
@@ -510,7 +511,7 @@ class MainWindow(QMainWindow):
         self.table_output.horizontalHeaderItem(qpp_index).setToolTip("Quotes per page")
         self.show_table_output()
         
-    def _get_read_duration_string(self, book):
+    def _get_read_duration_data(self, book):
         if (book.first_q_timestamp <= constants.START_DATE_FOR_READ_LIST or
             (book.last_q_timestamp - book.first_q_timestamp) <= ONE_DAY_IN_SECONDS or
             book.title in EXCLUDED_TITLES_FROM_READ_DURATION):

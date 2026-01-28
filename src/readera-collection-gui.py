@@ -213,7 +213,7 @@ class MainWindow(QMainWindow):
     def _init_output(self):
         # stacked widget for text and table view
         self.output_stack = QStackedWidget()
-        
+
         # text output
         self.text_output = QTextEdit()
         self.text_output.setReadOnly(True)
@@ -221,7 +221,7 @@ class MainWindow(QMainWindow):
         self.text_output.setStyleSheet("background-color: rgb(240,230,200);")
         self.text_output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
         self.text_output.document().setDocumentMargin(30)
-        
+
         # column output
         self.table_output = QTableView()
         self.table_output.setSortingEnabled(True)
@@ -230,18 +230,18 @@ class MainWindow(QMainWindow):
         self.table_output.verticalHeader().setVisible(False)
         self.table_output.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self.table_output.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        
+
         # first added gets index 0 (shown by default)
         self.output_stack.addWidget(self.text_output)
         self.output_stack.addWidget(self.table_output)
-        
+
     def show_text_output(self):
         self.output_stack.setCurrentWidget(self.text_output)
-        
+
     def show_table_output(self):
         self.output_stack.setCurrentWidget(self.table_output)
         self.table_output.resizeColumnsToContents()
-        
+
     #=============
     # button grid
     # +-------------------------------------------------------------------------------------------+
@@ -355,9 +355,9 @@ class MainWindow(QMainWindow):
         elif "Line" in self.mode_dropdown.currentText():
             self.line_height_percent = min(200, max(100, self.line_height_percent + 10 * delta))
             self.set_output_line_height(self.line_height_percent)
-        
+
         # ensure the last line is visible
-        cursor = self.text_output.textCursor()                
+        cursor = self.text_output.textCursor()
         cursor.movePosition(QTextCursor.End)
         self.text_output.setTextCursor(cursor)
         self.text_output.ensureCursorVisible()
@@ -369,10 +369,10 @@ class MainWindow(QMainWindow):
             f"Font size: {self.output_font_size}",
             f"Line spacing: {self.line_height_percent} %",
         ]
-    
+
     def init_mode_dropdown(self):
         self.mode_dropdown.addItems(self._mode_dropdown_items())
-    
+
     def update_mode_dropdown_text(self):
         for i, text in enumerate(self._mode_dropdown_items()):
             self.mode_dropdown.setItemText(i, text)
@@ -406,14 +406,14 @@ class MainWindow(QMainWindow):
             block = block.next()
 
         cursor.endEditBlock()
-        
+
     #=================================================
     # FUNCTION: update book list
     #=================================================
     def update_book_list(self, books):
         found_match = False
         self.clear()
-        item, ok = QInputDialog.getItem(
+        book_property, ok = QInputDialog.getItem(
             self,
             "Book Properties",
             "Select a property to sort/filter books by:",
@@ -422,39 +422,69 @@ class MainWindow(QMainWindow):
             False)
         if not ok:
             return
-        
+
         model = QStandardItemModel()
-        model.setHorizontalHeaderLabels([
-            "Author",
-            "Title",
-            "Year",
-            "Rating",
-            "Ratings #",
-            "Quotes",
-            "Q/P",
-            "Added on"
-        ])
-        
-        numeric_cols = [3, 4, 6]
-    
-        items = []
-        for row in books:
-            item = QStandardItem()
-            
-            for i, cell in enumerate(row):
-                if i in numeric_cols:
-                    # store actual number
-                    item.setData(cell, Qt.ItemDataRole.DisplayRole)  
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-                else:
-                    # text columns
-                    item.setText(str(cell))  
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        
-                items.append(item)
-        
-        model.appendRow(items)
-    
+
+        if selection not in (constants.PROP_READING_NOW,
+            constants.PROP_FINISHED_LIST,
+            constants.PROP_READ_DURATION):
+            # create header
+            model.setHorizontalHeaderLabels([
+                "Author",
+                "Title",
+                "Year",
+                "Rating",
+                "Ratings #",
+                "Quotes",
+                "Q/P",
+                "Added on"
+            ])
+
+            # get filtered books
+            folder = self.folders_dropdown.currentText()
+            books_for_list = book_utils.filter_books_by_folder(book_collection.The_Collection, folder)
+
+
+            for book in books_for_list:
+                # list for cells
+                row_cells = []
+
+                row_data = [
+                    book.author,
+                    # [-1] takes the last part
+                    book.title.split("-", 1)[-1].strip(),
+                    int(book.published_date),
+                    float(book.rating),
+                    int(book.ratings_count*1000),
+                    book.total_q,
+                    book.q_per_page,
+                    book.file_modified_date.strftime('%Y-%b-%d')
+                ]
+
+                for cell in row_data:
+                    item = QStandardItem()
+                    if isinstance(cell, (int, float)):
+                        # store actual number for sorting
+                        item.setData(cell, Qt.ItemDataRole.DisplayRole)
+
+                        # only format large ints
+                        if isinstance(cell, int) and cell >= 10000:
+                            # e.g., 56500 → "56,500"
+                            item.setText(f"{cell:,}")
+                        else:
+                            item.setText(str(cell))
+
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                    else:
+                        # text columns
+                        item.setText(str(cell))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+
+                    row_cells.append(item)
+
+                # add finished row
+                model.appendRow(row_cells)
+
         self.table_output.setModel(model)
         self.table_output.horizontalHeaderItem(4).setToolTip("Ratings count")
         self.table_output.horizontalHeaderItem(6).setToolTip("Quotes per page")
@@ -479,13 +509,13 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
-    
+
         if reply != QMessageBox.Yes:
             return
-    
+
         # flush any pending author data without print
         self._flush_pending_author(print_data=False)
-    
+
         # rebuild collection and reset dropdowns
         book_collection.build_the_collection()
         self.folders_dropdown.setCurrentIndex(0)
@@ -493,17 +523,17 @@ class MainWindow(QMainWindow):
         self.books_dropdown.setCurrentIndex(0)
         # build full dropdown lists again
         self.on_folder_or_author_change()
-    
+
         # reset UI state
         self.delay_author_toggle.setChecked(False)
         self.quote_printed = False
         self.clear()
-    
+
         # reset font and layout settings
         self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
         self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
         self.text_output.setFont(QFont("Consolas", self.output_font_size))
-    
+
         # reset mode dropdown
         self.mode_dropdown.setCurrentIndex(0)
         self.update_mode_dropdown_text()
@@ -557,7 +587,7 @@ class MainWindow(QMainWindow):
         # stop previous timer if running
         if self.author_timer.isActive():
             self.author_timer.stop()
-        
+
         # start the timer
         self.author_timer.start(delay_ms)
 
@@ -833,11 +863,11 @@ class MainWindow(QMainWindow):
         fmt_normal = QTextCharFormat()
         fmt_normal.setFontWeight(QFont.Normal)
         fmt_normal.clearBackground()
-        
+
         fmt_match = QTextCharFormat()
         # fmt_match.setFontItalic(True)
         fmt_match.setFontWeight(QFont.Bold)
-        
+
         # popup for user input
         text, ok = QInputDialog.getText(self, "Search", "Enter at least 3 characters:")
         if not ok:
@@ -845,7 +875,7 @@ class MainWindow(QMainWindow):
             return
         else:
             self.clear()
-        
+
         # check length
         str_to_search = text.strip().lower()
         if len(str_to_search) < 3:
@@ -869,7 +899,7 @@ class MainWindow(QMainWindow):
                         self.log(f"{book.title}\n{'-'*len(book.title)}")
                         match_in_book = True
                     self.log('\n')
-                    self.highlight(quote.text, str_to_search, fmt_normal, fmt_match)                    
+                    self.highlight(quote.text, str_to_search, fmt_normal, fmt_match)
                     counter += len(re.findall(str_to_search, quote_text))
 
         # print result summary
@@ -877,7 +907,7 @@ class MainWindow(QMainWindow):
         self.log(result if counter else "No match found.")
         if counter:
             self.log('-'*len(result))
-        
+
 
     def highlight(self, text, term, fmt_normal, fmt_match):
         cursor = self.text_output.textCursor()
@@ -891,7 +921,7 @@ class MainWindow(QMainWindow):
             cursor.insertText(text[last_pos:match.start()], fmt_normal)
             cursor.insertText(text[match.start():match.end()], fmt_match)
             last_pos = match.end()
-        
+
         # insert the remaining text after last match
         cursor.insertText(text[last_pos:], fmt_normal)
         cursor.insertText('\n')

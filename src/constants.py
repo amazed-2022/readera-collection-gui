@@ -85,6 +85,7 @@ ANY_FOLDER = "Any folder.."
 ANY_AUTHOR = "Any author.."
 ANY_BOOK = "Any book.."
 
+PROP_ALL_BOOKS = "all books"
 PROP_ADDED_ON = "added on"
 PROP_READING_NOW = "reading now"
 PROP_FINISHED_LIST = "finished list"
@@ -97,7 +98,9 @@ PROP_FOLDER = "folder"
 PROP_RATINGS_COUNT = "ratings count"
 
 PROPERTIES = [
+            PROP_ALL_BOOKS,
             PROP_READING_NOW,
             PROP_FINISHED_LIST,
             PROP_READ_DURATION,
+
         ]

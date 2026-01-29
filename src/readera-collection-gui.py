@@ -10,16 +10,12 @@ import sys
 from collections import Counter
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import (
-    QBrush, QColor, QFont, QPainter, QStandardItem, QStandardItemModel,
-    QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
-)
+from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
     QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QTableView, QTextEdit, QWidget
 )
-from PySide6.QtCharts import QBarSeries, QBarSet, QChart, QChartView, QValueAxis
 
 #=================================================
 # MAIN WINDOW
@@ -162,8 +158,7 @@ class MainWindow(QMainWindow):
         self.buttons["short"].clicked.connect(lambda: self.print_random_quote("short"))
         self.buttons["every"].clicked.connect(self.print_every_quote)
         self.buttons["stats"].clicked.connect(self.print_statistics)
-        # self.buttons["dist"].clicked.connect(self.print_quote_distribution)
-        self.buttons["dist"].clicked.connect(self.show_quote_distribution_chart)
+        self.buttons["dist"].clicked.connect(self.print_quote_distribution)
         self.buttons["search"].clicked.connect(self.search)
         self.buttons["clear"].clicked.connect(self.clear)
         self.buttons["list"].clicked.connect(self.update_book_list_table)
@@ -263,21 +258,10 @@ class MainWindow(QMainWindow):
         self.table_output.verticalHeader().setVisible(False)
         self.table_output.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self.table_output.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        
-        # chart output
-        self._quote_chart_widget = QWidget()
-        chart_layout = QVBoxLayout(self._quote_chart_widget)
-        self._chart_view = QChartView()
-        self._chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
-        chart_layout.addWidget(self._chart_view)
 
-        # add widgets to stack
-        self.output_stack.addWidget(self.text_output)           # index 0
-        self.output_stack.addWidget(self.table_output)          # index 1
-        self.output_stack.addWidget(self._quote_chart_widget)   # index 2
-        
-        # show text by default
-        self.output_stack.setCurrentWidget(self.text_output)
+        # first added gets index 0 (shown by default)
+        self.output_stack.addWidget(self.text_output)
+        self.output_stack.addWidget(self.table_output)
 
     def show_text_output(self):
         self.output_stack.setCurrentWidget(self.text_output)
@@ -285,9 +269,6 @@ class MainWindow(QMainWindow):
     def show_table_output(self):
         self.output_stack.setCurrentWidget(self.table_output)
         self.table_output.resizeColumnsToContents()
-        
-    def show_chart_output(self):
-        self.output_stack.setCurrentWidget(self._quote_chart_widget)
 
     #=============
     # button grid
@@ -563,8 +544,7 @@ class MainWindow(QMainWindow):
                 (Qt.AlignmentFlag.AlignRight if is_number else Qt.AlignmentFlag.AlignLeft)
                 | Qt.AlignmentFlag.AlignVCenter
             )
-            
-            item.setEditable(False)
+
             items.append(item)
 
         return items
@@ -788,50 +768,6 @@ class MainWindow(QMainWindow):
         self.log(f"{space}{'-'*columns}→")
         self.log(f"{space}1{' '*(columns-len(str(book.pages_count))+1)}{book.pages_count}")
         self.log("")
-        
-    def show_quote_distribution_chart(self):
-        # get the book
-        selected_title = self.books_dropdown.currentText()
-        if selected_title == constants.ANY_BOOK:
-            self.log("Select a book from the list.")
-            return
-    
-        book = book_utils.get_book_by_title(book_collection.The_Collection, selected_title)
-        
-        # proportional columns: e.g., 1 bar per 5 pages, min 10 bars, max 100 bars
-        columns = max(10, min(book.pages_count // 5, 100))
-        mapped_distr = book_utils.compute_quote_distribution_for_chart(book, columns=columns)
-    
-        # build chart
-        bar_set = QBarSet("Quote Length")
-        bar_set.append(mapped_distr)
-        bar_set.setColor(QColor(230, 240, 210))  # lighter green color for bars
-        series = QBarSeries()
-        series.append(bar_set)
-        series.setBarWidth(0.8)  # ensure some spacing so X-axis labels are visible
-    
-        # create chart and add series
-        chart = QChart()
-        chart.addSeries(series)
-        chart.setTitle(f"Quote Distribution: {book.title}")
-        chart.setBackgroundBrush(QBrush(QColor(220, 210, 180)))
-    
-        # X-axis: categorical labels for each column
-        from PySide6.QtCharts import QBarCategoryAxis
-        axisX = QBarCategoryAxis()
-        axisX.append([str(i+1) for i in range(len(mapped_distr))])  # 1,2,3,... columns
-        chart.addAxis(axisX, Qt.AlignBottom)
-        series.attachAxis(axisX)
-        axisX.setLabelsVisible(True)
-        axisX.setLabelsAngle(0)  # optional: rotate if needed
-    
-        # hide Y-axis
-        # axisY = chart.axes(Qt.Orientation.Vertical)[0]
-        # axisY.hide()
-    
-        # update the existing chart view
-        self._chart_view.setChart(chart)
-        self.show_chart_output()
 
     #=================================================
     # FUNCTION: print statistics

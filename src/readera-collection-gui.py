@@ -11,15 +11,15 @@ from collections import Counter
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import (
-    QFont, QPainter, QStandardItem, QStandardItemModel, QTextBlockFormat,
-    QTextCharFormat, QTextCursor, QTextOption
+    QBrush, QColor, QFont, QPainter, QStandardItem, QStandardItemModel,
+    QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 )
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
     QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QTableView, QTextEdit, QWidget
 )
-from PyQt6.QtCharts import QBarSeries, QBarSet, QChart, QChartView, QValueAxis
+from PySide6.QtCharts import QBarSeries, QBarSet, QChart, QChartView, QValueAxis
 
 #=================================================
 # MAIN WINDOW
@@ -795,7 +795,7 @@ class MainWindow(QMainWindow):
         if selected_title == constants.ANY_BOOK:
             self.log("Select a book from the list.")
             return
-
+    
         book = book_utils.get_book_by_title(book_collection.The_Collection, selected_title)
         
         # proportional columns: e.g., 1 bar per 5 pages, min 10 bars, max 100 bars
@@ -805,23 +805,29 @@ class MainWindow(QMainWindow):
         # build chart
         bar_set = QBarSet("Quote Length")
         bar_set.append(mapped_distr)
+        bar_set.setColor(QColor(230, 240, 210))  # lighter green color for bars
         series = QBarSeries()
         series.append(bar_set)
+        series.setBarWidth(0.8)  # ensure some spacing so X-axis labels are visible
     
         # create chart and add series
         chart = QChart()
         chart.addSeries(series)
-        chart.createDefaultAxes()
         chart.setTitle(f"Quote Distribution: {book.title}")
-        
-        # set Y-axis scale dynamically based on data
-        axisY = QValueAxis()
-        axisY.setRange(0, max(mapped_distr)*1.1)  # 10% headroom
-        chart.setAxisY(axisY, series)
+        chart.setBackgroundBrush(QBrush(QColor(220, 210, 180)))
     
-        # show values on top of bars
-        bar_set.setLabelVisible(True)
-        bar_set.setLabelsAngle(-90)
+        # X-axis: categorical labels for each column
+        from PySide6.QtCharts import QBarCategoryAxis
+        axisX = QBarCategoryAxis()
+        axisX.append([str(i+1) for i in range(len(mapped_distr))])  # 1,2,3,... columns
+        chart.addAxis(axisX, Qt.AlignBottom)
+        series.attachAxis(axisX)
+        axisX.setLabelsVisible(True)
+        axisX.setLabelsAngle(0)  # optional: rotate if needed
+    
+        # hide Y-axis
+        # axisY = chart.axes(Qt.Orientation.Vertical)[0]
+        # axisY.hide()
     
         # update the existing chart view
         self._chart_view.setChart(chart)

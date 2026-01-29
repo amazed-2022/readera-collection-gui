@@ -758,7 +758,7 @@ class MainWindow(QMainWindow):
         # margin was added to the text output
         ctrl_width_px = self.text_output.width()-30
         columns = book_utils.calculate_columns_from_width(ctrl_width_px, avg_char_width)
-        rows = round(columns * 0.17)
+        rows = round(columns * 0.14)
         space = "  "
         # get distribution using utils
         mapped_distr = book_utils.compute_quote_distribution(book, columns=columns, rows=rows)
@@ -769,7 +769,6 @@ class MainWindow(QMainWindow):
             self.log(f"{space}|{row}")
         self.log(f"{space}{'-'*columns}→")
         self.log(f"{space}1{' '*(columns-len(str(book.pages_count))+1)}{book.pages_count}")
-        self.log("")
 
     #=================================================
     # FUNCTION: print statistics

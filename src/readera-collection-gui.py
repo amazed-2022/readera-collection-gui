@@ -563,7 +563,8 @@ class MainWindow(QMainWindow):
                 (Qt.AlignmentFlag.AlignRight if is_number else Qt.AlignmentFlag.AlignLeft)
                 | Qt.AlignmentFlag.AlignVCenter
             )
-
+            
+            item.setEditable(False)
             items.append(item)
 
         return items

@@ -28,14 +28,14 @@ class MainWindow(QMainWindow):
 
     #=================================================
     # QMainWindow
-    # +-- centralWidget (self.panel)
+    # +-- CentralWidget (self.panel)
     #     +-- QVBoxLayout (main_layout)
     #         +-- Header layout (QHBoxLayout)
     #         +-- Output stack (QStackedWidget)
     #         +-- Button grid (QGridLayout)
     #         +-- Reset button (QPushButton)
     #=================================================
-    
+
     #=================================================
     # initialization
     #=================================================
@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
         self._init_output()
         self._build_main_layout()
         self.show()
-            
+
     #=================================================
     # init window
     #=================================================
@@ -65,6 +65,7 @@ class MainWindow(QMainWindow):
     # data preparatiton
     #=================================================
     def _init_data(self):
+        self.filtered_authors = []
         self.filtered_books = []
         authors_set = set()
 
@@ -76,6 +77,7 @@ class MainWindow(QMainWindow):
 
         # sorted returns a list
         self.authors_with_quotes = sorted(authors_set)
+        self.filtered_authors = self.authors_with_quotes.copy()
 
     #=================================================
     # default state
@@ -101,12 +103,10 @@ class MainWindow(QMainWindow):
         self.folders_dropdown.addItems([constants.ANY_FOLDER] + sorted(book_collection.Folders.keys()))
         self.authors_dropdown.addItems([constants.ANY_AUTHOR] + self.authors_with_quotes)
         self.books_dropdown.addItems([constants.ANY_BOOK] + self.filtered_books)
-        
+
         # create searchable dropdowns
         self.authors_dropdown.setEditable(True)
         self.books_dropdown.setEditable(True)
-        self.authors_dropdown.lineEdit().textChanged.connect(self.on_text_changed)
-        self.books_dropdown.lineEdit().textChanged.connect(self.on_text_changed)
 
         # increase font size for dropdowns
         font = self.folders_dropdown.font()
@@ -171,6 +171,10 @@ class MainWindow(QMainWindow):
         # the folder/author choice event triggers the authors and book lists update
         self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
         self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
+        # authors and books are searchable
+        self.authors_dropdown.lineEdit().textChanged.connect(self.on_text_changed)
+        self.books_dropdown.lineEdit().textChanged.connect(self.on_text_changed)
+
         self.delay_author_toggle.toggled.connect(self.on_toggle_delay_author)
 
         # use lambda to defer immediate execution when an argument is passed
@@ -279,7 +283,7 @@ class MainWindow(QMainWindow):
         self.table_output.verticalHeader().setVisible(False)
         self.table_output.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self.table_output.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        
+
         # chart output
         self._quote_chart_widget = QWidget()
         chart_layout = QVBoxLayout(self._quote_chart_widget)
@@ -291,7 +295,7 @@ class MainWindow(QMainWindow):
         self.output_stack.addWidget(self.text_output)           # index 0
         self.output_stack.addWidget(self.table_output)          # index 1
         self.output_stack.addWidget(self._quote_chart_widget)   # index 2
-        
+
         # show text by default
         self.output_stack.setCurrentWidget(self.text_output)
 
@@ -301,7 +305,7 @@ class MainWindow(QMainWindow):
     def show_table_output(self):
         self.output_stack.setCurrentWidget(self.table_output)
         self.table_output.resizeColumnsToContents()
-        
+
     def show_chart_output(self):
         self.output_stack.setCurrentWidget(self._quote_chart_widget)
 
@@ -375,7 +379,7 @@ class MainWindow(QMainWindow):
         if self.sender() == self.folders_dropdown:
             if chosen_folder == constants.ANY_FOLDER:
                 # use full list (again)
-                authors = [constants.ANY_AUTHOR] + self.authors_with_quotes
+                self.filtered_authors = [constants.ANY_AUTHOR] + self.authors_with_quotes
             else:
                 # build list based on current folder (set comprehension)
                 folder_authors = {
@@ -385,10 +389,10 @@ class MainWindow(QMainWindow):
                     and book.total_q > 0
                 }
                 folder_authors = sorted(folder_authors)
-                authors = [constants.ANY_AUTHOR] + folder_authors
+                self.filtered_authors = [constants.ANY_AUTHOR] + folder_authors
 
             self.authors_dropdown.clear()
-            self.authors_dropdown.addItems(authors)
+            self.authors_dropdown.addItems(self.filtered_authors)
             self.authors_dropdown.setCurrentIndex(0)
             chosen_author = constants.ANY_AUTHOR
 
@@ -407,31 +411,30 @@ class MainWindow(QMainWindow):
         self.books_dropdown.setCurrentIndex(0)
 
     def on_text_changed(self):
-        sender = self.sender()
-        
-        if sender == self.authors_dropdown:
-            target = self.authors_dropdown
-        elif sender == self.books_dropdown:
-            target = self.books_dropdown
-        else:
-            return
-            
-        line_edit = target.lineEdit().text()
-        all_items = [target.itemText(i) for i in range(target.count())]
-        
+        is_author_call = self.sender() == self.authors_dropdown
+
+        target = self.authors_dropdown if is_author_call else self.books_dropdown
+        current_items = self.filtered_authors if is_author_call else self.filtered_books
+
         target.blockSignals(True)
         target.clear()
-            
-        for item in all_items:
-            if line_edit.lower() in item.lower():
-                target.addItem(item)
-        
+
+        line_edit = target.lineEdit().text()
+        text = line_edit.lower()
+
+        if not text:
+            target.addItems(current_items)
+        else:
+            for item in current_items:
+                if text in item.lower():
+                    target.addItem(item)
+
         target.blockSignals(False)
-        
+
         # keep the typed text and cursor position
         target.lineEdit().setText(line_edit)
         target.lineEdit().setCursorPosition(len(line_edit))
-            
+
         # optionally show the dropdown automatically
         target.showPopup()
 
@@ -504,7 +507,7 @@ class MainWindow(QMainWindow):
         book_property = self._get_selected_book_property()
         if not book_property:
             return
-        
+
         # build headers based on input
         headers, displayed_indexes = self._build_headers(book_property)
 
@@ -608,7 +611,7 @@ class MainWindow(QMainWindow):
                 (Qt.AlignmentFlag.AlignRight if is_number else Qt.AlignmentFlag.AlignLeft)
                 | Qt.AlignmentFlag.AlignVCenter
             )
-            
+
             item.setEditable(False)
             items.append(item)
 
@@ -637,7 +640,7 @@ class MainWindow(QMainWindow):
     #=================================================
     # FUNCTION: clear
     #=================================================
-    def clear(self):        
+    def clear(self):
         current = self.output_stack.currentWidget()
 
         if current is self.text_output:
@@ -833,7 +836,7 @@ class MainWindow(QMainWindow):
         self.log(f"{space}{'-'*columns}→")
         self.log(f"{space}1{' '*(columns-len(str(book.pages_count))+1)}{book.pages_count}")
         self.log("")
-        
+
     def show_quote_distribution_chart(self):
         # get the book
         selected_title = self.books_dropdown.currentText()
@@ -842,32 +845,32 @@ class MainWindow(QMainWindow):
             return
 
         book = book_utils.get_book_by_title(book_collection.The_Collection, selected_title)
-        
+
         # proportional columns: e.g., 1 bar per 5 pages, min 10 bars, max 100 bars
         columns = max(10, min(book.pages_count // 5, 100))
         mapped_distr = book_utils.compute_quote_distribution_for_chart(book, columns=columns)
-    
+
         # build chart
         bar_set = QBarSet("Quote Length")
         bar_set.append(mapped_distr)
         series = QBarSeries()
         series.append(bar_set)
-    
+
         # create chart and add series
         chart = QChart()
         chart.addSeries(series)
         chart.createDefaultAxes()
         chart.setTitle(f"Quote Distribution: {book.title}")
-        
+
         # set Y-axis scale dynamically based on data
         axisY = QValueAxis()
         axisY.setRange(0, max(mapped_distr)*1.1)  # 10% headroom
         chart.setAxisY(axisY, series)
-    
+
         # show values on top of bars
         bar_set.setLabelVisible(True)
         bar_set.setLabelsAngle(-90)
-    
+
         # update the existing chart view
         self._chart_view.setChart(chart)
         self.show_chart_output()

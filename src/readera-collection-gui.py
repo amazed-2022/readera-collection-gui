@@ -251,7 +251,7 @@ class MainWindow(QMainWindow):
                 border: 1px solid gray;
             }
         """)
-        
+
         self.table_output.setSortingEnabled(True)
         self.table_output.setAlternatingRowColors(True)
         self.table_output.horizontalHeader().setStretchLastSection(True)
@@ -437,17 +437,39 @@ class MainWindow(QMainWindow):
     #=================================================
     def update_book_list_table(self):
         # get user input
-        book_property, ok = QInputDialog.getItem(
+        book_property = self._get_selected_book_property()
+        if not book_property:
+            return
+        
+        # build headers based on input
+        headers, displayed_indexes = self._build_headers(book_property)
+
+        model = QStandardItemModel()
+        model.setHorizontalHeaderLabels([headers[i] for i in displayed_indexes])
+
+        # get filtered book instances
+        for book in self._get_filtered_books(book_property):
+            row = self._build_row_items(book, book_property, displayed_indexes)
+            if row:
+                model.appendRow(row)
+
+        self.table_output.setModel(model)
+        self.table_output.clearSelection()
+        self.table_output.scrollToTop()
+        self.show_table_output()
+
+    def _get_selected_book_property(self):
+        prop, ok = QInputDialog.getItem(
             self,
             "Book List",
             "Select list option:",
             constants.PROPERTIES,
             0,
-            False)
-        if not ok:
-            return
-        
-        # set headers and data 
+            False
+        )
+        return prop if ok else None
+
+    def _build_headers(self, book_property):
         headers = [
             "" if book_property != constants.PROP_READ_DURATION else "Read duration",
             "" if book_property != constants.PROP_READ_DURATION else "Pages / day",
@@ -462,103 +484,106 @@ class MainWindow(QMainWindow):
             "Finished",
             "Added",
         ]
-
-        # create object and its header
-        model = QStandardItemModel()
         # keep only non-empty headers and keep track of indexes
-        displayed_indexes = [i for i, h in enumerate(headers) if h]  
-        model.setHorizontalHeaderLabels([headers[i] for i in displayed_indexes])
-        
-        # get filtered book instances
+        indexes = [i for i, h in enumerate(headers) if h]
+        return headers, indexes
+
+    def _get_filtered_books(self, book_property):
         folder = self.folders_dropdown.currentText()
-        if folder == constants.ANY_FOLDER:
-            books_to_list = book_collection.The_Collection
-        else:
-            books_to_list = [b for b in book_collection.The_Collection if b.folder == folder]
-        
+
+        books = (
+            book_collection.The_Collection
+            if folder == constants.ANY_FOLDER
+            else [b for b in book_collection.The_Collection if b.folder == folder]
+        )
         # further filter books based on selected property
         if book_property == constants.PROP_READING_NOW:
-            books_to_list = [
-                book for book in books_to_list
-                if (book.activity_time != 0) and not book.is_read
-            ]
-        elif book_property in (constants.PROP_READ_DURATION, constants.PROP_FINISHED_LIST):
-            books_to_list = [book for book in books_to_list if book.is_read]
+            return [b for b in books if b.activity_time and not b.is_read]
+
+        if book_property in (constants.PROP_READ_DURATION, constants.PROP_FINISHED_LIST):
+            return [b for b in books if b.is_read]
+
+        return books
+
+    def _build_row_items(self, book, book_property, displayed_indexes):
+        if book_property == constants.PROP_READ_DURATION:
+            duration, pages_per_day = self._get_read_duration_data(book)
+            if not duration:
+                return None
         else:
-            books_to_list = books_to_list
+            duration, pages_per_day = "", 0
 
-        for book in books_to_list:
-            # list for actual cell items
-            row_cells = []
-            
-            if book_property == constants.PROP_READ_DURATION:
-                duration_str, pages_per_day = self._get_read_duration_data(book)
-                if not duration_str:
-                    continue
-            else:
-                duration_str, pages_per_day = "", 0
-        
-            row_data = [
-                duration_str,
-                pages_per_day,
-                book.author,
-                book.title.split("-", 1)[-1].strip(),
-                int(book.published_date),
-                float(book.rating),
-                book.ratings_count,
-                int(book.total_q),
-                int(book.pages_count),
-                book.q_per_page,
-                book.have_read_date.strftime('%Y-%b-%d') if book.is_read else "-",
-                book.file_modified_date.strftime('%Y-%b-%d'),
-            ]
-            
-            for i in displayed_indexes:
-                item = QStandardItem()
-                cell = row_data[i]
-                if isinstance(cell, (int, float)):
-                    # store actual number for sorting
-                    item.setData(cell, Qt.ItemDataRole.DisplayRole)
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-                else:
-                    # text columns
-                    item.setText(str(cell))
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        row_data = [
+            duration,
+            pages_per_day,
+            book.author,
+            book.title.split("-", 1)[-1].strip(),
+            int(book.published_date),
+            float(book.rating),
+            book.ratings_count,
+            int(book.total_q),
+            int(book.pages_count),
+            book.q_per_page,
+            book.have_read_date.strftime('%Y-%b-%d') if book.is_read else "-",
+            book.file_modified_date.strftime('%Y-%b-%d'),
+        ]
 
-                row_cells.append(item)
+        items = []
+        for i in displayed_indexes:
+            item = QStandardItem()
+            value = row_data[i]
 
-            # add finished row
-            model.appendRow(row_cells)
+            is_number = isinstance(value, (int, float))
 
-        self.table_output.setModel(model)
-        self.show_table_output()
-        
+            item.setData(
+                value if is_number else str(value),
+                Qt.ItemDataRole.DisplayRole
+            )
+
+            item.setTextAlignment(
+                (Qt.AlignmentFlag.AlignRight if is_number else Qt.AlignmentFlag.AlignLeft)
+                | Qt.AlignmentFlag.AlignVCenter
+            )
+
+            items.append(item)
+
+        return items
+
     def _get_read_duration_data(self, book):
         if (book.first_q_timestamp <= constants.START_DATE_FOR_READ_LIST or
             (book.last_q_timestamp - book.first_q_timestamp) <= constants.ONE_DAY_IN_SECONDS or
             book.title in constants.EXCLUDED_TITLES_FROM_READ_DURATION):
             return "", 0
-        
+
         # compute elapsed days if needed
         dt_first = datetime.datetime.fromtimestamp(book.first_q_timestamp)
         elapsed_days = (book.have_read_date - dt_first).days + 1
-    
+
         if dt_first.year == book.have_read_date.year:
             duration_str = f"{dt_first.strftime('%Y %b.%d')} - {book.have_read_date.strftime('%b.%d')}"
         else:
             duration_str = f"{dt_first.strftime('%Y %b.%d')} - {book.have_read_date.strftime('%Y %b.%d')}"
-        
+
         pages_per_day = int((book.pages_count / elapsed_days) + 0.5) if elapsed_days > 0 else 0
-        
+
         # return tuple
         return duration_str, pages_per_day
 
     #=================================================
     # FUNCTION: clear
     #=================================================
-    def clear(self):
-        self.text_output.clear()
-        self.quote_printed = False
+    def clear(self):        
+        current = self.output_stack.currentWidget()
+
+        if current is self.text_output:
+            self.text_output.clear()
+            self.quote_printed = False
+        elif current is self.table_output:
+            model = self.table_output.model()
+            if model:
+                model.removeRows(0, model.rowCount())
+                self.table_output.clearSelection()
+                self.table_output.scrollToTop()
 
     #=================================================
     # FUNCTION: reset
@@ -640,7 +665,7 @@ class MainWindow(QMainWindow):
             self._print_author_now(book, quotes_left)
         else:
             self._schedule_author(book, quotes_left, len(random_quote.text))
-            
+
     def scroll_to_bottom(self):
         cursor = self.text_output.textCursor()
         cursor.movePosition(QTextCursor.End)

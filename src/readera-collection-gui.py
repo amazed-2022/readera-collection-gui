@@ -478,6 +478,7 @@ class MainWindow(QMainWindow):
             "Year",
             "Rating",
             "Ratings x1000",
+            "Folder",
             "Quotes",
             "Pages",
             "Quotes / pages",
@@ -521,6 +522,7 @@ class MainWindow(QMainWindow):
             int(book.published_date),
             float(book.rating),
             book.ratings_count,
+            book.folder,
             int(book.total_q),
             int(book.pages_count),
             book.q_per_page,
@@ -544,7 +546,7 @@ class MainWindow(QMainWindow):
                 (Qt.AlignmentFlag.AlignRight if is_number else Qt.AlignmentFlag.AlignLeft)
                 | Qt.AlignmentFlag.AlignVCenter
             )
-
+            item.setEditable(False)
             items.append(item)
 
         return items
@@ -756,7 +758,7 @@ class MainWindow(QMainWindow):
         # margin was added to the text output
         ctrl_width_px = self.text_output.width()-30
         columns = book_utils.calculate_columns_from_width(ctrl_width_px, avg_char_width)
-        rows = round(columns * 0.2)
+        rows = round(columns * 0.17)
         space = "  "
         # get distribution using utils
         mapped_distr = book_utils.compute_quote_distribution(book, columns=columns, rows=rows)

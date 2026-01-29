@@ -5,8 +5,8 @@
 #=================================================
 # GUI resolution
 #=================================================
-WINDOW_WIDTH = 1200
-WINDOW_HEIGHT = 1000
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 960
 WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 
 #=================================================
@@ -86,16 +86,9 @@ ANY_AUTHOR = "Any author.."
 ANY_BOOK = "Any book.."
 
 PROP_ALL_BOOKS = "all books"
-PROP_ADDED_ON = "added on"
 PROP_READING_NOW = "reading now"
 PROP_FINISHED_LIST = "finished list"
 PROP_READ_DURATION = "read duration"
-PROP_PUBLISH_DATE = "publish date"
-PROP_NUMBER_OF_QUOTES = "number of quotes"
-PROP_Q_PER_PAGE_RATIO = "quote/page ratio"
-PROP_RATING = "rating"
-PROP_FOLDER = "folder"
-PROP_RATINGS_COUNT = "ratings count"
 
 PROPERTIES = [
             PROP_ALL_BOOKS,

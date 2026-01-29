@@ -115,6 +115,27 @@ def compute_quote_distribution(book, columns=50, rows=10):
         mapped_distr = [rows * (x - old_min) / (old_max - old_min) for x in q_distr]
 
     return mapped_distr
+    
+    
+def compute_quote_distribution_for_chart(book, columns=50):
+    """
+    Compute a distribution of quote lengths over the book pages.
+    Returns a list of total quote lengths per column (raw values).
+    """
+    # how many pages per column
+    res = book.pages_count / columns
+    q_distr = [0] * columns
+    quotes = book.get_all_quotes_list()
+
+    # accumulate quote lengths per column
+    for i in range(columns):
+        start_page = res * i
+        end_page = res * (i + 1)
+        for quote in quotes:
+            if start_page < quote.page <= end_page:
+                q_distr[i] += len(quote.text)
+
+    return q_distr
 
 
 def calculate_columns_from_width(ctrl_width_px, avg_char_width, min_columns=30, ratio=0.94):

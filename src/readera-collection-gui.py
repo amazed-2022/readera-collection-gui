@@ -27,6 +27,16 @@ from PyQt6.QtCharts import QBarSeries, QBarSet, QChart, QChartView, QValueAxis
 class MainWindow(QMainWindow):
 
     #=================================================
+    # QMainWindow
+    # +-- centralWidget (self.panel)
+    #     +-- QVBoxLayout (main_layout)
+    #         +-- Header layout (QHBoxLayout)
+    #         +-- Output stack (QStackedWidget)
+    #         +-- Button grid (QGridLayout)
+    #         +-- Reset button (QPushButton)
+    #=================================================
+    
+    #=================================================
     # initialization
     #=================================================
     def __init__(self):
@@ -40,7 +50,7 @@ class MainWindow(QMainWindow):
         self._init_output()
         self._build_main_layout()
         self.show()
-
+            
     #=================================================
     # init window
     #=================================================
@@ -88,9 +98,15 @@ class MainWindow(QMainWindow):
         self.folders_dropdown = QComboBox()
         self.authors_dropdown = QComboBox()
         self.books_dropdown = QComboBox()
-        self.folders_dropdown.addItems([constants.ANY_FOLDER] + sorted(list(book_collection.Folders.keys())))
+        self.folders_dropdown.addItems([constants.ANY_FOLDER] + sorted(book_collection.Folders.keys()))
         self.authors_dropdown.addItems([constants.ANY_AUTHOR] + self.authors_with_quotes)
         self.books_dropdown.addItems([constants.ANY_BOOK] + self.filtered_books)
+        
+        # create searchable dropdowns
+        self.authors_dropdown.setEditable(True)
+        self.books_dropdown.setEditable(True)
+        self.authors_dropdown.lineEdit().textChanged.connect(self.on_text_changed)
+        self.books_dropdown.lineEdit().textChanged.connect(self.on_text_changed)
 
         # increase font size for dropdowns
         font = self.folders_dropdown.font()
@@ -389,6 +405,35 @@ class MainWindow(QMainWindow):
         self.books_dropdown.clear()
         self.books_dropdown.addItems(self.filtered_books)
         self.books_dropdown.setCurrentIndex(0)
+
+    def on_text_changed(self):
+        sender = self.sender()
+        
+        if sender == self.authors_dropdown:
+            target = self.authors_dropdown
+        elif sender == self.books_dropdown:
+            target = self.books_dropdown
+        else:
+            return
+            
+        line_edit = target.lineEdit().text()
+        all_items = [target.itemText(i) for i in range(target.count())]
+        
+        target.blockSignals(True)
+        target.clear()
+            
+        for item in all_items:
+            if line_edit.lower() in item.lower():
+                target.addItem(item)
+        
+        target.blockSignals(False)
+        
+        # keep the typed text and cursor position
+        target.lineEdit().setText(line_edit)
+        target.lineEdit().setCursorPosition(len(line_edit))
+            
+        # optionally show the dropdown automatically
+        target.showPopup()
 
     #=================================================
     # FUNCTION: adjust buttons function

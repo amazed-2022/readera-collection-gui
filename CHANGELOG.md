@@ -4,11 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.0] – 2026-02
 ### Changed
-- Switched GUI framework from wxPython to PySide6
-- Output is now a QStackedWidget() (stacked view for multiple pages)
-- Book lists are now displayed in a table-based layout
-- Added font size and line spacing adjustment settings for improved readability
-- Search results now highlight matching terms in bold for easier visibility
+- **Switched GUI framework** from **wxPython** to **PySide6**
+- Output is now a **QStackedWidget()** (stacked view for multiple pages)
+- **Book lists** are now table-based, so rows can be sorted in any order
+- Added **font size** and **line spacing** adjustment settings for improved readability
+- Search results now **highlight matching terms in bold** for easier visibility
   
 ## [1.1.0] – 2026-01
 ### Added

@@ -501,9 +501,16 @@ class MainWindow(QMainWindow):
         if book_property == constants.PROP_READING_NOW:
             return [b for b in books if b.activity_time and not b.is_read]
 
-        if book_property in (constants.PROP_READ_DURATION, constants.PROP_FINISHED_LIST):
+        if book_property == constants.PROP_FINISHED_LIST:
             return [b for b in books if b.is_read]
-
+            
+        if book_property == constants.PROP_READ_DURATION:
+            return sorted(
+                (b for b in books if b.is_read),
+                key=lambda b: b.first_q_timestamp,
+                reverse=True
+            )
+            
         return books
 
     def _build_row_items(self, book, book_property, displayed_indexes):

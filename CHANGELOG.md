@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.0] – 2026-02
 ### Changed
-- Changed GUI framework from wxPython to PySide6
+- Switched GUI framework from wxPython to PySide6
+- Output is now a QStackedWidget() (stacked view for multiple pages)
+- Book lists are now displayed in a table-based layout
   
 ## [1.1.0] – 2026-01
 ### Added

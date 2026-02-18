@@ -67,7 +67,9 @@ To use all features of `readera-collection-cli`, the following should be ensured
   - Random quote
   - Delay author
   - Reset
-<img width="768" alt="image" src="https://github.com/user-attachments/assets/62dbe9b2-ba2e-44fa-a492-d87073802eeb" />
+
+<img width="640" alt="image" src="https://github.com/user-attachments/assets/1d77204d-00ad-473a-be70-ed72bcc85a86" />
+
 
 ## License
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  

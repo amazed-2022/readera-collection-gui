@@ -6,7 +6,6 @@ import book_utils
 from constants_loader import constants
 import datetime
 import re
-import sys
 from collections import Counter
 
 from PySide6.QtCore import Qt, QTimer
@@ -48,7 +47,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.panel)
 
     #=================================================
-    # data preparatiton
+    # data preparation
     #=================================================
     def _init_data(self):
         self.filtered_books = []
@@ -182,12 +181,19 @@ class MainWindow(QMainWindow):
 
         label_font = QFont("Consolas", 12)
 
+
         # addWidget(widget, row, column, rowSpan, columnSpan, alignment)
-        dropdown_layout.addWidget(QLabel("FOLDER", font=label_font), 0, 0)
+        label = QLabel("FOLDER")
+        label.setFont(QFont("Consolas", 12))
+        dropdown_layout.addWidget(label, 0, 0)
         dropdown_layout.addWidget(self.folders_dropdown, 0, 1)
-        dropdown_layout.addWidget(QLabel("AUTHOR", font=label_font), 1, 0)
+        label = QLabel("AUTHOR")
+        label.setFont(QFont("Consolas", 12))
+        dropdown_layout.addWidget(label, 1, 0)
         dropdown_layout.addWidget(self.authors_dropdown, 1, 1)
-        dropdown_layout.addWidget(QLabel("BOOK", font=label_font), 2, 0)
+        label = QLabel("BOOK")
+        label.setFont(QFont("Consolas", 12))
+        dropdown_layout.addWidget(label, 2, 0)
         dropdown_layout.addWidget(self.books_dropdown, 2, 1)
         # labels fixed, dropdowns expand
         dropdown_layout.setColumnStretch(0, 0)
@@ -197,8 +203,8 @@ class MainWindow(QMainWindow):
         the_collection_logo = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
         logo_text = QLabel(the_collection_logo)
         logo_text.setFont(QFont("Consolas", 14))
-        logo_text.setAlignment(Qt.AlignCenter)
-        logo_text.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        logo_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
         logo_text.setContentsMargins(100, 0, 100, 0)
 
         header_layout = QHBoxLayout()
@@ -227,7 +233,7 @@ class MainWindow(QMainWindow):
                 selection-color: rgb(40, 35, 25);
             }
         """)
-        self.text_output.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
+        self.text_output.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         self.text_output.document().setDocumentMargin(30)
 
         # column output, set colours
@@ -420,11 +426,11 @@ class MainWindow(QMainWindow):
         while block.isValid():
             # select block
             cursor.setPosition(block.position())
-            cursor.setPosition(block.position() + block.length() - 1, QTextCursor.KeepAnchor)
+            cursor.setPosition(block.position() + block.length() - 1, QTextCursor.MoveMode.KeepAnchor)
 
             # apply formatting
             block_fmt = QTextBlockFormat()
-            block_fmt.setLineHeight(line_height_percent, QTextBlockFormat.ProportionalHeight.value)
+            block_fmt.setLineHeight(line_height_percent, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
             cursor.setBlockFormat(block_fmt)
 
             # move to the next paragraph (QTextBlock)
@@ -603,11 +609,11 @@ class MainWindow(QMainWindow):
             self,
             "Confirm Reset",
             "Are you sure you want to reset everything?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
         )
 
-        if reply != QMessageBox.Yes:
+        if reply != QMessageBox.StandardButton.Yes:
             return
 
         # flush any pending author data without print
@@ -677,7 +683,7 @@ class MainWindow(QMainWindow):
 
     def scroll_to_bottom(self):
         cursor = self.text_output.textCursor()
-        cursor.movePosition(QTextCursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         self.text_output.setTextCursor(cursor)
         self.text_output.ensureCursorVisible()
 
@@ -729,10 +735,10 @@ class MainWindow(QMainWindow):
             self.log("Book not found.")
             return
 
-		# get and export all quotes to file
+        # get and export all quotes to file
         quotes = book_utils.get_and_export_quotes(book, f"{book.title}.txt")
 
-		# print to textbox
+        # print to textbox
         self.log(book.title)
         self.log('-' * len(book.title))
 
@@ -768,11 +774,11 @@ class MainWindow(QMainWindow):
         rows = round(columns * 0.14)
         space = "  "
         # get distribution using utils
-        mapped_distr = book_utils.compute_quote_distribution(book, columns=columns, rows=rows)
+        mapped_distribution = book_utils.compute_quote_distribution(book, columns=columns, rows=rows)
         # draw diagram
         self.log(f"{space}↑")
         for i in range(rows):
-            row = ''.join('*' if mapped_distr[j] >= (rows-i) else ' ' for j in range(columns))
+            row = ''.join('*' if mapped_distribution[j] >= (rows-i) else ' ' for j in range(columns))
             self.log(f"{space}|{row}")
         self.log(f"{space}{'-'*columns}→")
         self.log(f"{space}1{' '*(columns-len(str(book.pages_count))+1)}{book.pages_count}")
@@ -919,12 +925,12 @@ class MainWindow(QMainWindow):
     def search(self):
         # create normal/match text formats
         fmt_normal = QTextCharFormat()
-        fmt_normal.setFontWeight(QFont.Normal)
+        fmt_normal.setFontWeight(QFont.Weight.Normal)
         fmt_normal.clearBackground()
 
         fmt_match = QTextCharFormat()
         # fmt_match.setFontItalic(True)
-        fmt_match.setFontWeight(QFont.Bold)
+        fmt_match.setFontWeight(QFont.Weight.Bold)
 
         # popup for user input
         text, ok = QInputDialog.getText(self, "Search", "Enter at least 3 characters:")
@@ -969,7 +975,7 @@ class MainWindow(QMainWindow):
 
     def highlight(self, text, term, fmt_normal, fmt_match):
         cursor = self.text_output.textCursor()
-        cursor.movePosition(QTextCursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
 
         pattern = re.compile(re.escape(term), re.IGNORECASE)
         last_pos = 0

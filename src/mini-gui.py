@@ -4,17 +4,15 @@
 import book_collection
 import book_utils
 from constants_loader import constants
-import datetime
-import re
-import sys
-from collections import Counter
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog, font
+from tkinter import ttk, messagebox, font
 
 #=================================================
 # MAIN WINDOW
 #=================================================
 class MainWindow(tk.Tk):
+
+    # attributes defined here would be class attributes, shared by all instances
 
     #=================================================
     # initialization
@@ -23,15 +21,15 @@ class MainWindow(tk.Tk):
         super().__init__()
 
         #=================================================
-        # give type info and initialize the attributes
+        # instance attributes: type hints and init
         #=================================================
         self.filtered_books: list[str] = []
         self.authors_with_quotes: list[str] = []
 
         self.quote_printed: bool = False
-        self.pending_author_data: tuple[Book, int] | None = None
+        self.pending_author_data: tuple[book_collection.Book, int] | None = None
         # Tkinter "timer" placeholder (stores after() ID)
-        self.author_timer_id: int | None = None
+        self.author_timer_id: str | None = None
 
         self.header_frame: ttk.Frame
         self.text_frame: ttk.Frame
@@ -214,7 +212,7 @@ class MainWindow(tk.Tk):
         string = f"== The Collection =="
         logo_text = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
         logo_frame = ttk.Frame(self.header_frame)
-        logo_label = ttk.Label(logo_frame, text=logo_text, font=("Consolas", 14), anchor="center").pack()
+        ttk.Label(logo_frame, text=logo_text, font=("Consolas", 14), anchor="center").pack()
         logo_frame.pack(side="left", fill="x", padx=20)
 
     #=================================================
@@ -298,14 +296,15 @@ class MainWindow(tk.Tk):
             self._print_author_now(book, quotes_left)
         else:
             self._schedule_author(book, quotes_left, len(random_quote.text))
+        return None
 
-    def _print_author_now(self, book: "Book", quotes_left: int) -> None:
+    def _print_author_now(self, book: book_collection.Book, quotes_left: int) -> None:
         self.log(f"\n{book.title}   / {quotes_left} left /")
         self.log(f"{'-'*len(book.title)}")
 
     def _schedule_author(
         self,
-        book: "Book",
+        book: book_collection.Book,
         quotes_left: int,
         quote_length: int,
         base_delay_ms: int = 1000,
@@ -319,6 +318,7 @@ class MainWindow(tk.Tk):
             self.after_cancel(self.author_timer_id)
 
         # start the timer
+        # Type checker warning is incorrect — no extra arguments are needed here
         self.author_timer_id = self.after(delay_ms, self._print_pending_author)
 
     def _print_pending_author(self) -> None:
@@ -354,10 +354,10 @@ class MainWindow(tk.Tk):
             self.log("Book not found.")
             return
 
-		# get and export all quotes to file
+        # get and export all quotes to file
         quotes = book_utils.get_and_export_quotes(book, f"{book.title}.txt")
 
-		# print to textbox
+        # print to textbox
         self.log(book.title)
         self.log('-' * len(book.title))
 
@@ -404,6 +404,8 @@ class MainWindow(tk.Tk):
 
         self.quote_printed = False
         self.clear()
+
+        return None
 
     def on_folder_or_author_change(self, source: str) -> None:
         chosen_folder = self.folders_dropdown.get()

@@ -76,7 +76,7 @@ class MainWindow(tk.Tk):
 
         # desired window size
         width = 850
-        height = 768
+        height = 850
 
         # get screen size
         screen_width = self.winfo_screenwidth()

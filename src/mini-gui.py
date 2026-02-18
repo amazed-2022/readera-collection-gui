@@ -75,7 +75,7 @@ class MainWindow(tk.Tk):
         self.title("mini-gui")
 
         # desired window size
-        width = 1024
+        width = 850
         height = 768
 
         # get screen size
@@ -216,7 +216,7 @@ class MainWindow(tk.Tk):
         logo_text = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
         logo_frame = ttk.Frame(self.header_frame)
         logo_label = ttk.Label(logo_frame, text=logo_text, font=("Consolas", 14), anchor="center").pack()
-        logo_frame.pack(side="right", fill="x", padx=75)
+        logo_frame.pack(side="left", fill="x", padx=20)
 
     #=================================================
     # text output

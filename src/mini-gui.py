@@ -366,7 +366,7 @@ class MainWindow(tk.Tk):
             header = f"{i+1} / {len(quotes)}  (p.{quote.page})"
             self.log(header)
             self.log(quote.text)
-            self.log("")
+            self.log("\n")
 
     #=================================================
     # clear
@@ -451,3 +451,4 @@ if __name__ == "__main__":
     if error:
         window.log(f"Error reading JSON file: {error}\n")
     window.mainloop()
+

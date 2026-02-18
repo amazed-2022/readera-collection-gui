@@ -59,6 +59,16 @@ To use all features of `readera-collection-cli`, the following should be ensured
 
 <img width="900" alt="kép" src="https://github.com/user-attachments/assets/7eaa9cef-f822-4603-b012-b60aa07a4d90" />
 
+## mini-gui
+- Uses built-in `tkinter` for GUI.
+- Reduced functionality compared to full version.
+- Includes only basic buttons:
+  - Print every quote
+  - Random quote
+  - Delay author
+  - Reset
+<img width="768" alt="image" src="https://github.com/user-attachments/assets/ab1839bc-984d-4fe0-852d-c48fe35db306" />
+
 
 ## License
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  

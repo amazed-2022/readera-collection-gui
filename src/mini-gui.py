@@ -168,7 +168,7 @@ class MainWindow(tk.Tk):
         self.delay_author_toggle = tk.BooleanVar(value=False)
         self.delay_author_btn = tk.Checkbutton(
             self.buttons_frame,
-            text="Random quotes:\ndelay author",
+            text="Delay author",
             variable=self.delay_author_toggle,
             font=self.default_font,
             command=self._on_delay_author_toggle

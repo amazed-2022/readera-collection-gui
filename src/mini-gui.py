@@ -52,9 +52,9 @@ class MainWindow(tk.Tk):
         # set up Font objects for the GUI
         #=================================================
         self.default_font: font.Font = font.nametofont("TkDefaultFont").copy()
-        self.big_font: font.Font = font.nametofont("TkDefaultFont").copy()
+        self.button_font: font.Font = font.nametofont("TkDefaultFont").copy()
         self.default_font.configure(size=10)
-        self.big_font.configure(size=12)
+        self.button_font.configure(size=11)
 
         #=================================================
         # call init functions and start loop
@@ -66,7 +66,6 @@ class MainWindow(tk.Tk):
         self._init_buttons()
         self._init_signals()
         self._build_main_frame()
-        # self.mainloop()
 
     #=================================================
     # main window
@@ -147,7 +146,7 @@ class MainWindow(tk.Tk):
     def _init_buttons(self) -> None:
         # custom style
         style = ttk.Style()
-        style.configure("Big.TButton", font=self.big_font, padding=(15,15))
+        style.configure("Big.TButton", font=self.button_font, padding=(15,15))
 
         self.every_q_btn = ttk.Button(
             self.buttons_frame,
@@ -223,7 +222,7 @@ class MainWindow(tk.Tk):
     #=================================================
     def _build_text_frame(self) -> None:
         # create text widget and scrollbar
-        text_font = font.Font(family="Consolas", size=12)
+        text_font = font.Font(family="Consolas", size=13)
         self.text_output = tk.Text(
             self.text_frame,
             wrap="word",

@@ -22,25 +22,56 @@ class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.default_font = font.nametofont("TkDefaultFont").copy()
-        self.big_font = font.nametofont("TkDefaultFont").copy()
+        #=================================================
+        # give type info and initialize the attributes
+        #=================================================
+        self.filtered_books: list[str] = []
+        self.authors_with_quotes: list[str] = []
+
+        self.quote_printed: bool = False
+        self.pending_author_data: tuple[Book, int] | None = None
+        # Tkinter "timer" placeholder (stores after() ID)
+        self.author_timer_id: int | None = None
+
+        self.header_frame: ttk.Frame
+        self.text_frame: ttk.Frame
+        self.buttons_frame: ttk.Frame
+        self.filters_frame: ttk.Frame
+        self.folders_dropdown: ttk.Combobox
+        self.authors_dropdown: ttk.Combobox
+        self.books_dropdown: ttk.Combobox
+
+        self.every_q_btn: ttk.Button
+        self.random_q_btn: ttk.Button 
+        self.delay_author_toggle: tk.BooleanVar
+        self.delay_author_btn: ttk.Button
+        self.reset_btn: ttk.Button
+        self.text_output: tk.Text
+
+        #=================================================
+        # set up Font objects for the GUI
+        #=================================================
+        self.default_font: font.Font = font.nametofont("TkDefaultFont").copy()
+        self.big_font: font.Font = font.nametofont("TkDefaultFont").copy()
         self.default_font.configure(size=10)
         self.big_font.configure(size=12)
 
+        #=================================================
+        # call init functions and start loop
+        #=================================================
         self._init_window()
         self._init_sub_frames()
         self._init_data()
-        self._init_state()
         self._init_filters()
         self._init_buttons()
         self._init_signals()
         self._build_main_frame()
-        self.mainloop()
+        # self.mainloop()
 
     #=================================================
     # main window
     #=================================================
-    def _init_window(self):
+    def _init_window(self) -> None:
         self.title("mini-gui")
 
         # desired window size
@@ -63,7 +94,7 @@ class MainWindow(tk.Tk):
     #=================================================
     # sub frames
     #=================================================
-    def _init_sub_frames(self):
+    def _init_sub_frames(self) -> None:
         self.header_frame = ttk.Frame(self.panel)
         self.header_frame.pack(side="top", fill="x", padx=10, pady=10)
 
@@ -76,8 +107,7 @@ class MainWindow(tk.Tk):
     #=================================================
     # data preparation
     #=================================================
-    def _init_data(self):
-        self.filtered_books = []
+    def _init_data(self) -> None:
         authors_set = set()
         for book in book_collection.The_Collection:
             if book.total_q > 0:
@@ -86,19 +116,9 @@ class MainWindow(tk.Tk):
         self.authors_with_quotes = sorted(authors_set)
 
     #=================================================
-    # default state
-    #=================================================
-    def _init_state(self):
-        self.quote_printed = False
-        self.pending_author_data = None
-
-        # Tkinter "timer" placeholder (stores after() ID)
-        self.author_timer_id = None
-
-    #=================================================
     # ComboBox filters (dropdowns)
     #=================================================
-    def _init_filters(self):
+    def _init_filters(self) -> None:
         self.filters_frame = ttk.Frame(self.header_frame)
         self.folders_dropdown = ttk.Combobox(
             self.filters_frame,
@@ -124,10 +144,25 @@ class MainWindow(tk.Tk):
     #=================================================
     # init buttons
     #=================================================
-    def _init_buttons(self):
+    def _init_buttons(self) -> None:
         # custom style
         style = ttk.Style()
         style.configure("Big.TButton", font=self.big_font, padding=(15,15))
+
+        self.every_q_btn = ttk.Button(
+            self.buttons_frame,
+            text="Print every quote",
+            command=self.print_every_quote,
+            style="Big.TButton"
+        )
+
+        # just three buttons
+        self.random_q_btn = ttk.Button(
+            self.buttons_frame,
+            text="Random quote",
+            command=self.print_random_quote,
+            style="Big.TButton"
+        )
 
         # this will be a special Tkinter variable
         self.delay_author_toggle = tk.BooleanVar(value=False)
@@ -139,29 +174,14 @@ class MainWindow(tk.Tk):
             command=self._on_delay_author_toggle
         )
 
-        # just three buttons
-        self.random_q_btn = ttk.Button(
-            self.buttons_frame,
-            text="Random quote",
-            command=self.print_random_quote,
-            style="Big.TButton"
-        )
-
-        self.every_q_btn = ttk.Button(
-            self.buttons_frame,
-            text="Print every quote",
-            command=self.print_every_quote,
-            style="Big.TButton"
-        )
-
         self.reset_btn = ttk.Button(
             self.buttons_frame,
             text="Reset",
             command=self.reset,
             style="Big.TButton"
         )
-        
-    def _on_delay_author_toggle(self):
+
+    def _on_delay_author_toggle(self) -> None:
         checked = self.delay_author_toggle.get()
         if not checked and self.pending_author_data:
             self._flush_pending_author()
@@ -169,14 +189,14 @@ class MainWindow(tk.Tk):
     #=================================================
     # signals (event bindings)
     #=================================================
-    def _init_signals(self):
+    def _init_signals(self) -> None:
         self.folders_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_folder_or_author_change("folder"))
         self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_folder_or_author_change("author"))
 
     #=================================================
     # header layout
     #=================================================
-    def _build_header_frame(self):
+    def _build_header_frame(self) -> None:
         # pack into parent frame, which is header frame
         self.filters_frame.pack(side="left", fill="x", padx=25)
 
@@ -201,7 +221,7 @@ class MainWindow(tk.Tk):
     #=================================================
     # text output
     #=================================================
-    def _build_text_frame(self):
+    def _build_text_frame(self) -> None:
         # create text widget and scrollbar
         text_font = font.Font(family="Consolas", size=12)
         self.text_output = tk.Text(
@@ -213,17 +233,17 @@ class MainWindow(tk.Tk):
             pady=15,
             bg="#F0E6C8"
         )
-        self.scrollbar = ttk.Scrollbar(self.text_frame, orient="vertical", command=self.text_output.yview)
-        self.text_output.configure(yscrollcommand=self.scrollbar.set)
-        
+        scrollbar = ttk.Scrollbar(self.text_frame, orient="vertical", command=self.text_output.yview)
+        self.text_output.configure(yscrollcommand=scrollbar.set)
+
         # pack text widget and pack scrollbar to the right
         self.text_output.pack(side="left", fill="both", expand=True)
-        self.scrollbar.pack(side="right", fill="y")
+        scrollbar.pack(side="right", fill="y")
 
     #=================================================
     # button grid
     #=================================================
-    def _build_button_frame(self):
+    def _build_button_frame(self) -> None:
         self.every_q_btn.pack(side="left", padx=25)
         self.random_q_btn.pack(side="left", padx=10)
         self.delay_author_btn.pack(side="left", padx=10)
@@ -232,7 +252,7 @@ class MainWindow(tk.Tk):
     #=================================================
     # main layout
     #=================================================
-    def _build_main_frame(self):
+    def _build_main_frame(self) -> None:
         self._build_header_frame()
         self._build_text_frame()
         self._build_button_frame()
@@ -240,7 +260,7 @@ class MainWindow(tk.Tk):
     #=================================================
     # log messages to the text widget
     #=================================================
-    def log(self, message):
+    def log(self, message: str) -> None:
         self.text_output.config(state="normal")
         self.text_output.insert("end", f"{message}\n")
         self.text_output.see("end")
@@ -249,7 +269,7 @@ class MainWindow(tk.Tk):
     #=================================================
     # print random quotes
     #=================================================
-    def print_random_quote(self, length="any"):
+    def print_random_quote(self) -> None:
         # print any remaining author data
         self._flush_pending_author()
 
@@ -259,8 +279,7 @@ class MainWindow(tk.Tk):
         book, message = book_utils.get_book_for_random_quote(
             book_collection.The_Collection,
             selected_title,
-            self.filtered_books,
-            length
+            self.filtered_books
         )
 
         # add space before previous print (but not before the first)
@@ -270,10 +289,10 @@ class MainWindow(tk.Tk):
 
         if book is None:
             self.log(message)
-            return
+            return None
 
         # get the random quote and print it
-        random_quote, quotes_left = book_utils.get_random_quote(book, length)
+        random_quote, quotes_left = book_utils.get_random_quote(book)
         self.log(random_quote.text)
 
         if not delay_author:
@@ -281,30 +300,37 @@ class MainWindow(tk.Tk):
         else:
             self._schedule_author(book, quotes_left, len(random_quote.text))
 
-    def _print_author_now(self, book, quotes_left):
+    def _print_author_now(self, book: "Book", quotes_left: int) -> None:
         self.log(f"\n{book.title}   / {quotes_left} left /")
         self.log(f"{'-'*len(book.title)}")
 
-    def _schedule_author(self, book, quotes_left, quote_length, base_delay_ms=1000, ms_per_char=50):
+    def _schedule_author(
+        self,
+        book: "Book",
+        quotes_left: int,
+        quote_length: int,
+        base_delay_ms: int = 1000,
+        ms_per_char: int = 50
+    ) -> None:
         delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
         self.pending_author_data = (book, quotes_left)
-    
+
         # stop previous timer if running
         if self.author_timer_id is not None:
             self.after_cancel(self.author_timer_id)
-    
+
         # start the timer
         self.author_timer_id = self.after(delay_ms, self._print_pending_author)
 
-    def _print_pending_author(self):
+    def _print_pending_author(self) -> None:
         if self.pending_author_data:
             # unpack the stored tuple
             book, quotes_left = self.pending_author_data
             self._print_author_now(book, quotes_left)
         self.pending_author_data = None
-        self.author_timer_id = None  
+        self.author_timer_id = None
 
-    def _flush_pending_author(self, print_data=True):
+    def _flush_pending_author(self, print_data: bool = True) -> None:
         if self.author_timer_id is not None:
             self.after_cancel(self.author_timer_id)
             self.author_timer_id = None
@@ -316,7 +342,7 @@ class MainWindow(tk.Tk):
     #=================================================
     # print random quote
     #=================================================
-    def print_every_quote(self):
+    def print_every_quote(self) -> None:
         self.clear()
 
         selected_title = self.books_dropdown.get()
@@ -341,28 +367,28 @@ class MainWindow(tk.Tk):
             self.log(header)
             self.log(quote.text)
             self.log("")
-            
+
     #=================================================
     # clear
     #=================================================
-    def clear(self):
+    def clear(self) -> None:
         self.text_output.config(state="normal")
         self.text_output.delete("1.0", "end")
         self.text_output.config(state="disabled")
-        
+
     #=================================================
     # reset
     #=================================================
-    def reset(self):
+    def reset(self) -> None:
         reply = messagebox.askyesno(
             "Confirm Reset",
             "Are you sure you want to reset everything?",
             parent=self
-        )   
-        
+        )
+
         if not reply:
-            return
-            
+            return None
+
         # rebuild collection and reset dropdowns
         book_collection.build_the_collection()
         self.folders_dropdown.current(0)
@@ -370,20 +396,20 @@ class MainWindow(tk.Tk):
         self.books_dropdown.current(0)
         # build full dropdown lists again
         self.on_folder_or_author_change("folder")
-        
+
         # in Tkinter:
         # `command=` runs only on user interaction (mouse/keyboard click)
         # `.set()` changes the associated BooleanVar value only
         # `.set()` does NOT trigger the `command` callback
         self.delay_author_toggle.set(False)
-        
+
         self.quote_printed = False
         self.clear()
-        
-    def on_folder_or_author_change(self, source):
+
+    def on_folder_or_author_change(self, source: str) -> None:
         chosen_folder = self.folders_dropdown.get()
         chosen_author = self.authors_dropdown.get()
-    
+
         # update authors dropdown, if folder changed
         if source == "folder":
             if chosen_folder == constants.ANY_FOLDER:
@@ -397,14 +423,14 @@ class MainWindow(tk.Tk):
                 }
                 folder_authors = sorted(folder_authors)
                 authors = [constants.ANY_AUTHOR] + folder_authors
-    
+
             self.authors_dropdown["values"] = authors
             self.authors_dropdown.current(0)
             chosen_author = constants.ANY_AUTHOR
-    
+
         # update books dropdown
         self.filtered_books = [constants.ANY_BOOK]
-    
+
         for book in book_collection.The_Collection:
             if chosen_folder != constants.ANY_FOLDER and book.folder != chosen_folder:
                 continue
@@ -412,7 +438,7 @@ class MainWindow(tk.Tk):
                 continue
             if book.total_q > 0:
                 self.filtered_books.append(book.title)
-    
+
         self.books_dropdown["values"] = self.filtered_books
         self.books_dropdown.current(0)
 
@@ -423,6 +449,5 @@ if __name__ == "__main__":
     error = book_collection.build_the_collection()
     window = MainWindow()
     if error:
-        window.text_output.config(state="normal")
-        window.text_output.insert("end", f"Error reading JSON file: {error}\n")
-        window.text_output.config(state="disabled")
+        window.log(f"Error reading JSON file: {error}\n")
+    window.mainloop()

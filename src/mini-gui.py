@@ -244,9 +244,9 @@ class MainWindow(tk.Tk):
     # button grid
     #=================================================
     def _build_button_frame(self) -> None:
-        self.every_q_btn.pack(side="left", padx=25)
-        self.random_q_btn.pack(side="left", padx=10)
-        self.delay_author_btn.pack(side="left", padx=10)
+        self.every_q_btn.pack(side="left", padx=(25,0))
+        self.random_q_btn.pack(side="left", padx=(15,0))
+        self.delay_author_btn.pack(side="left", padx=(15,0))
         self.reset_btn.pack(side="right", padx=25)
 
     #=================================================
@@ -451,4 +451,3 @@ if __name__ == "__main__":
     if error:
         window.log(f"Error reading JSON file: {error}\n")
     window.mainloop()
-

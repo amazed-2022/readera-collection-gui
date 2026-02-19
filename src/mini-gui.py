@@ -249,11 +249,11 @@ class MainWindow(tk.Tk):
     # button frame
     #=================================================
     def _build_buttons_frame(self) -> None:
-        self.every_q_btn.pack(side="left", padx=(25,0))
-        self.random_q_btn.pack(side="left", padx=(15,0))
-        self.delay_author_btn.pack(side="left", padx=(15,0))
-        self.reset_btn.pack(side="right", padx=(0,25))
-        self.clear_btn.pack(side="right", padx=(0,15))
+        self.every_q_btn.pack(side="left", padx=(25, 0))
+        self.random_q_btn.pack(side="left", padx=(15, 0))
+        self.delay_author_btn.pack(side="left", padx=(15, 0))
+        self.reset_btn.pack(side="right", padx=(0, 25))
+        self.clear_btn.pack(side="right", padx=(0, 15))
 
     #=================================================
     # log messages to the text widget
@@ -289,7 +289,7 @@ class MainWindow(tk.Tk):
 
         if book is None:
             self.log(message)
-            return None
+            return
 
         # get the random quote and print it
         random_quote, quotes_left = book_utils.get_random_quote(book)
@@ -299,7 +299,6 @@ class MainWindow(tk.Tk):
             self._print_author_now(book, quotes_left)
         else:
             self._schedule_author(book, quotes_left, len(random_quote.text))
-        return None
 
     def _print_author_now(self, book: book_collection.Book, quotes_left: int) -> None:
         self.log(f"\n{book.title}   / {quotes_left} left /")
@@ -398,7 +397,7 @@ class MainWindow(tk.Tk):
         )
 
         if not reply:
-            return None
+            return
 
         # rebuild collection and reset dropdowns
         book_collection.build_the_collection()
@@ -413,9 +412,7 @@ class MainWindow(tk.Tk):
         # .set() changes the associated BooleanVar value only
         # .set() does NOT trigger the command callback
         self.delay_author_toggle.set(False)
-
         self.clear_text_output()
-        return None
 
     #=================================================
     # combobox change

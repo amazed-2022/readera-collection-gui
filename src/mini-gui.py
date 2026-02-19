@@ -217,12 +217,16 @@ class MainWindow(tk.Tk):
         self.authors_dropdown.grid(row=1, column=1)
         self.books_dropdown.grid(row=2, column=1)
 
-        # logo on the right
+        # logo next to the dropdowns
         string = f"== The Collection =="
         logo_text = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
-        logo_frame = ttk.Frame(self.header_frame)
-        ttk.Label(logo_frame, text=logo_text, font=("Consolas", 14), anchor="center").pack()
-        logo_frame.pack(side="left", fill="x", padx=20)
+        logo = ttk.Label(
+            self.header_frame,
+            text=logo_text,
+            font=("Consolas", 14),
+            anchor="center"
+        )
+        logo.pack(side="left", fill="x", padx=(20, 0))
 
     #=================================================
     # text output
@@ -340,7 +344,7 @@ class MainWindow(tk.Tk):
             book, quotes_left = self.pending_author_data
             self._print_author_now(book, quotes_left)
         self.pending_author_data = None
-        
+
     def _on_delay_author_toggle(self) -> None:
         checked = self.delay_author_toggle.get()
         if not checked and self.pending_author_data:
@@ -468,5 +472,3 @@ if __name__ == "__main__":
     if error:
         window.log(f"Error reading JSON file: {error}\n")
     window.mainloop()
-
-

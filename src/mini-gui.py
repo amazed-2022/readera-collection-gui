@@ -171,7 +171,7 @@ class MainWindow(tk.Tk):
             variable=self.delay_author_toggle,
             font=self.default_font,
         )
-        
+
         self.clear_btn = ttk.Button(
             self.buttons_frame,
             text="Clear",
@@ -182,7 +182,7 @@ class MainWindow(tk.Tk):
             self.buttons_frame,
             text="Reset",
             style="Big.TButton"
-        )        
+        )
 
     def _on_delay_author_toggle(self) -> None:
         checked = self.delay_author_toggle.get()
@@ -195,7 +195,7 @@ class MainWindow(tk.Tk):
     def _init_signals(self) -> None:
         self.folders_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_folder_or_author_change("folder"))
         self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_folder_or_author_change("author"))
-        
+
         self.every_q_btn.configure(command=self.print_every_quote)
         self.random_q_btn.configure(command=self.print_random_quote)
         self.delay_author_btn.configure(command=self._on_delay_author_toggle)
@@ -352,7 +352,7 @@ class MainWindow(tk.Tk):
     def print_every_quote(self) -> None:
         # set back clear state
         self.clear_text_output()
-        
+
         selected_title = self.books_dropdown.get()
         if selected_title == constants.ANY_BOOK:
             self.log("Select a book from the list.")
@@ -369,7 +369,7 @@ class MainWindow(tk.Tk):
         # print to textbox
         self.log(book.title)
         self.log('-' * len(book.title))
-        
+
         num_of_quotes = len(quotes)
         for i, quote in enumerate(quotes):
             header = f"{i+1} / {num_of_quotes}  (p.{quote.page})"
@@ -446,10 +446,15 @@ class MainWindow(tk.Tk):
         self.filtered_books = [constants.ANY_BOOK]
 
         for book in book_collection.The_Collection:
+            # skip books that don't match the selected folder
             if chosen_folder != constants.ANY_FOLDER and book.folder != chosen_folder:
                 continue
+
+            # skip books that don't match the selected author
             if chosen_author != constants.ANY_AUTHOR and book.author != chosen_author:
                 continue
+
+            # at this point, the book matches all filters
             if book.total_q > 0:
                 self.filtered_books.append(book.title)
 

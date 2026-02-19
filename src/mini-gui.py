@@ -184,11 +184,6 @@ class MainWindow(tk.Tk):
             style="Big.TButton"
         )
 
-    def _on_delay_author_toggle(self) -> None:
-        checked = self.delay_author_toggle.get()
-        if not checked and self.pending_author_data:
-            self._flush_pending_author()
-
     #=================================================
     # signals (event bindings)
     #=================================================
@@ -345,6 +340,11 @@ class MainWindow(tk.Tk):
             book, quotes_left = self.pending_author_data
             self._print_author_now(book, quotes_left)
         self.pending_author_data = None
+        
+    def _on_delay_author_toggle(self) -> None:
+        checked = self.delay_author_toggle.get()
+        if not checked and self.pending_author_data:
+            self._flush_pending_author()
 
     #=================================================
     # print random quote

@@ -32,9 +32,9 @@ class MainWindow(tk.Tk):
         self.author_timer_id: str | None = None
 
         self.header_frame: ttk.Frame
+        self.filters_frame: ttk.Frame
         self.text_frame: ttk.Frame
         self.buttons_frame: ttk.Frame
-        self.filters_frame: ttk.Frame
         self.folders_dropdown: ttk.Combobox
         self.authors_dropdown: ttk.Combobox
         self.books_dropdown: ttk.Combobox
@@ -467,3 +467,4 @@ if __name__ == "__main__":
     if error:
         window.log(f"Error reading JSON file: {error}\n")
     window.mainloop()
+

@@ -153,7 +153,6 @@ class MainWindow(tk.Tk):
         self.every_q_btn = ttk.Button(
             self.buttons_frame,
             text="Print every quote",
-            command=self.print_every_quote,
             style="Big.TButton"
         )
 
@@ -161,7 +160,6 @@ class MainWindow(tk.Tk):
         self.random_q_btn = ttk.Button(
             self.buttons_frame,
             text="Random quote",
-            command=self.print_random_quote,
             style="Big.TButton"
         )
 
@@ -172,15 +170,19 @@ class MainWindow(tk.Tk):
             text="Delay author",
             variable=self.delay_author_toggle,
             font=self.default_font,
-            command=self._on_delay_author_toggle
+        )
+        
+        self.clear_btn = ttk.Button(
+            self.buttons_frame,
+            text="Clear",
+            style="Big.TButton"
         )
 
         self.reset_btn = ttk.Button(
             self.buttons_frame,
             text="Reset",
-            command=self.reset,
             style="Big.TButton"
-        )
+        )        
 
     def _on_delay_author_toggle(self) -> None:
         checked = self.delay_author_toggle.get()
@@ -193,6 +195,12 @@ class MainWindow(tk.Tk):
     def _init_signals(self) -> None:
         self.folders_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_folder_or_author_change("folder"))
         self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_folder_or_author_change("author"))
+        
+        self.every_q_btn.configure(command=self.print_every_quote)
+        self.random_q_btn.configure(command=self.print_random_quote)
+        self.delay_author_btn.configure(command=self._on_delay_author_toggle)
+        self.clear_btn.configure(command=self.clear_text_output)
+        self.reset_btn.configure(command=self.reset)
 
     #=================================================
     # header frame
@@ -249,8 +257,8 @@ class MainWindow(tk.Tk):
         self.every_q_btn.pack(side="left", padx=(25,0))
         self.random_q_btn.pack(side="left", padx=(15,0))
         self.delay_author_btn.pack(side="left", padx=(15,0))
-        self.reset_btn.pack(side="right", padx=25)
-
+        self.reset_btn.pack(side="right", padx=(0,25))
+        self.clear_btn.pack(side="right", padx=(0,15))
 
     #=================================================
     # log messages to the text widget
@@ -280,6 +288,8 @@ class MainWindow(tk.Tk):
         # add space before previous print (but not before the first)
         if self.quote_printed:
             self.log("\n")
+        else:
+            self.clear_text_output()
         self.quote_printed = True
 
         if book is None:
@@ -340,8 +350,9 @@ class MainWindow(tk.Tk):
     # print random quote
     #=================================================
     def print_every_quote(self) -> None:
-        self.clear()
-
+        # set back clear state
+        self.clear_text_output()
+        
         selected_title = self.books_dropdown.get()
         if selected_title == constants.ANY_BOOK:
             self.log("Select a book from the list.")
@@ -358,17 +369,20 @@ class MainWindow(tk.Tk):
         # print to textbox
         self.log(book.title)
         self.log('-' * len(book.title))
-
+        
+        num_of_quotes = len(quotes)
         for i, quote in enumerate(quotes):
-            header = f"{i+1} / {len(quotes)}  (p.{quote.page})"
+            header = f"{i+1} / {num_of_quotes}  (p.{quote.page})"
             self.log(header)
             self.log(quote.text)
-            self.log("\n")
+            if i < (num_of_quotes-1):
+                self.log("\n")
 
     #=================================================
-    # clear
+    # clear text output
     #=================================================
-    def clear(self) -> None:
+    def clear_text_output(self) -> None:
+        self.quote_printed = False
         self.text_output.config(state="normal")
         self.text_output.delete("1.0", "end")
         self.text_output.config(state="disabled")
@@ -395,16 +409,17 @@ class MainWindow(tk.Tk):
         self.on_folder_or_author_change("folder")
 
         # in Tkinter:
-        # `command=` runs only on user interaction (mouse/keyboard click)
-        # `.set()` changes the associated BooleanVar value only
-        # `.set()` does NOT trigger the `command` callback
+        # command= runs only on user interaction (mouse/keyboard click)
+        # .set() changes the associated BooleanVar value only
+        # .set() does NOT trigger the command callback
         self.delay_author_toggle.set(False)
 
-        self.quote_printed = False
-        self.clear()
-
+        self.clear_text_output()
         return None
 
+    #=================================================
+    # combobox change
+    #=================================================
     def on_folder_or_author_change(self, source: str) -> None:
         chosen_folder = self.folders_dropdown.get()
         chosen_author = self.authors_dropdown.get()

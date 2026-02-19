@@ -65,7 +65,7 @@ class MainWindow(tk.Tk):
         self._init_signals()
         self._build_header_frame()
         self._build_text_frame()
-        self._build_button_frame()
+        self._build_buttons_frame()
 
     #=================================================
     # main window
@@ -102,7 +102,7 @@ class MainWindow(tk.Tk):
 
         self.buttons_frame = ttk.Frame(self.panel)
         self.buttons_frame.pack(side="top", fill="x", pady=(20,20))
-        
+
     #=================================================
     # data preparation
     #=================================================
@@ -137,7 +137,7 @@ class MainWindow(tk.Tk):
             font=self.default_font,
             width=60
         )
-        
+
         self.folders_dropdown.current(0)
         self.authors_dropdown.current(0)
         self.books_dropdown.current(0)
@@ -205,9 +205,10 @@ class MainWindow(tk.Tk):
         folder_label = ttk.Label(self.filters_frame, text="FOLDER", font=self.default_font)
         author_label = ttk.Label(self.filters_frame, text="AUTHOR", font=self.default_font)
         book_label = ttk.Label(self.filters_frame, text="BOOK", font=self.default_font)
-        folder_label.grid(row=0, column=0, padx=(0,20), pady=6, sticky="w")
-        author_label.grid(row=1, column=0, padx=(0,20), pady=6, sticky="w")
-        book_label.grid(row=2, column=0, padx=(0,20), pady=6, sticky="w")
+        grid_opts = {"column": 0, "padx": (0, 20), "pady": 6, "sticky": "w"}
+        folder_label.grid(row=0, **grid_opts)
+        author_label.grid(row=1, **grid_opts)
+        book_label.grid(row=2, **grid_opts)
         self.folders_dropdown.grid(row=0, column=1)
         self.authors_dropdown.grid(row=1, column=1)
         self.books_dropdown.grid(row=2, column=1)
@@ -244,12 +245,12 @@ class MainWindow(tk.Tk):
     #=================================================
     # button frame
     #=================================================
-    def _build_button_frame(self) -> None:
+    def _build_buttons_frame(self) -> None:
         self.every_q_btn.pack(side="left", padx=(25,0))
         self.random_q_btn.pack(side="left", padx=(15,0))
         self.delay_author_btn.pack(side="left", padx=(15,0))
         self.reset_btn.pack(side="right", padx=25)
-        
+
 
     #=================================================
     # log messages to the text widget

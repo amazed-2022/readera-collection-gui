@@ -40,7 +40,7 @@ class MainWindow(tk.Tk):
         self.books_dropdown: ttk.Combobox
 
         self.every_q_btn: ttk.Button
-        self.random_q_btn: ttk.Button 
+        self.random_q_btn: ttk.Button
         self.delay_author_toggle: tk.BooleanVar
         self.delay_author_btn: ttk.Button
         self.reset_btn: ttk.Button
@@ -55,7 +55,7 @@ class MainWindow(tk.Tk):
         self.button_font.configure(size=11)
 
         #=================================================
-        # call init functions and start loop
+        # call init, build functions and start loop
         #=================================================
         self._init_window()
         self._init_sub_frames()
@@ -63,7 +63,9 @@ class MainWindow(tk.Tk):
         self._init_filters()
         self._init_buttons()
         self._init_signals()
-        self._build_main_frame()
+        self._build_header_frame()
+        self._build_text_frame()
+        self._build_button_frame()
 
     #=================================================
     # main window
@@ -96,11 +98,11 @@ class MainWindow(tk.Tk):
         self.header_frame.pack(side="top", fill="x", padx=10, pady=10)
 
         self.text_frame = ttk.Frame(self.panel)
-        self.text_frame.pack(fill="both", expand=True, padx=(15, 15))
+        self.text_frame.pack(side="top", fill="both", expand=True, padx=(15, 15))
 
         self.buttons_frame = ttk.Frame(self.panel)
-        self.buttons_frame.pack(fill="x", pady=(20,20))
-
+        self.buttons_frame.pack(side="top", fill="x", pady=(20,20))
+        
     #=================================================
     # data preparation
     #=================================================
@@ -135,8 +137,10 @@ class MainWindow(tk.Tk):
             font=self.default_font,
             width=60
         )
-        for cb in (self.folders_dropdown, self.authors_dropdown, self.books_dropdown):
-            cb.current(0)
+        
+        self.folders_dropdown.current(0)
+        self.authors_dropdown.current(0)
+        self.books_dropdown.current(0)
 
     #=================================================
     # init buttons
@@ -191,7 +195,7 @@ class MainWindow(tk.Tk):
         self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_folder_or_author_change("author"))
 
     #=================================================
-    # header layout
+    # header frame
     #=================================================
     def _build_header_frame(self) -> None:
         # pack into parent frame, which is header frame
@@ -238,21 +242,14 @@ class MainWindow(tk.Tk):
         scrollbar.pack(side="right", fill="y")
 
     #=================================================
-    # button grid
+    # button frame
     #=================================================
     def _build_button_frame(self) -> None:
         self.every_q_btn.pack(side="left", padx=(25,0))
         self.random_q_btn.pack(side="left", padx=(15,0))
         self.delay_author_btn.pack(side="left", padx=(15,0))
         self.reset_btn.pack(side="right", padx=25)
-
-    #=================================================
-    # main layout
-    #=================================================
-    def _build_main_frame(self) -> None:
-        self._build_header_frame()
-        self._build_text_frame()
-        self._build_button_frame()
+        
 
     #=================================================
     # log messages to the text widget

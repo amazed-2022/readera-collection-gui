@@ -39,12 +39,13 @@ class MainWindow(tk.Tk):
         self.authors_dropdown: ttk.Combobox
         self.books_dropdown: ttk.Combobox
 
+        self.text_output: tk.Text
+
         self.every_q_btn: ttk.Button
         self.random_q_btn: ttk.Button
-        self.delay_author_toggle: tk.BooleanVar
         self.delay_author_btn: ttk.Button
+        self.delay_author_toggle: tk.BooleanVar
         self.reset_btn: ttk.Button
-        self.text_output: tk.Text
 
         #=================================================
         # set up Font objects for the GUI
@@ -467,4 +468,5 @@ if __name__ == "__main__":
     if error:
         window.log(f"Error reading JSON file: {error}\n")
     window.mainloop()
+
 

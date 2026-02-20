@@ -324,7 +324,7 @@ class MainWindow(tk.Tk):
         if self.author_timer_id is not None:
             self.after_cancel(self.author_timer_id)
 
-        # start the timer
+        # start the timer (id is like: "after#0", "after#1", etc.)
         # Type checker warning is incorrect — no extra arguments are needed here
         self.author_timer_id = self.after(delay_ms, self._print_pending_author)
 
@@ -386,6 +386,7 @@ class MainWindow(tk.Tk):
     # clear text output
     #=================================================
     def clear_text_output(self) -> None:
+        self._flush_pending_author(print_data=False)
         self.quote_printed = False
         self.text_output.config(state="normal")
         self.text_output.delete("1.0", "end")

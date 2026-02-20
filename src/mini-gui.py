@@ -472,4 +472,9 @@ if __name__ == "__main__":
     window = MainWindow()
     if error:
         window.log(f"Error reading JSON file: {error}\n")
+    else:
+        window.log(
+            f"This collection contains {book_collection.All_Quotes_Count}"
+            f" quotes from {len(window.filtered_books)} books.\n\n"
+        )
     window.mainloop()

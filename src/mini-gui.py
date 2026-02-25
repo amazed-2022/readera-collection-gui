@@ -45,6 +45,7 @@ class MainWindow(tk.Tk):
         self.random_q_btn: ttk.Button
         self.delay_author_btn: ttk.Button
         self.delay_author_toggle: tk.BooleanVar
+        self.clear_btn: ttk.Button
         self.reset_btn: ttk.Button
 
         #=================================================
@@ -474,7 +475,7 @@ if __name__ == "__main__":
         window.log(f"Error reading JSON file: {error}\n")
     else:
         window.log(
-            f"This collection contains {book_collection.All_Quotes_Count}"
+            f"This collection has {book_collection.All_Quotes_Count}"
             f" quotes from {len(window.filtered_books)} books.\n\n"
         )
     window.mainloop()

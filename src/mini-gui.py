@@ -3,8 +3,10 @@
 #=================================================
 import book_collection
 import book_utils
-from constants_loader import constants
+import os
 import tkinter as tk
+
+from constants_loader import constants
 from tkinter import ttk, messagebox, font
 
 #=================================================
@@ -74,6 +76,17 @@ class MainWindow(tk.Tk):
     #=================================================
     def _init_window(self) -> None:
         self.title("mini-gui")
+        
+        # add icon if available
+        icon_path = "media/icon.png"
+        if os.path.exists(icon_path):
+            try:
+                self.icon_img = tk.PhotoImage(file=icon_path)
+                self.iconphoto(True, self.icon_img)
+            except Exception as e:
+                print(f"Warning: Could not load icon: {e}")
+        else:
+            print(f"Warning: Icon file not found: {icon_path}")
 
         # desired window size
         width = 850

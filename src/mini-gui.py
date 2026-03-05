@@ -35,6 +35,7 @@ class MainWindow(tk.Tk):
 
         self.header_frame: ttk.Frame
         self.filters_frame: ttk.Frame
+        self.logo_frame: ttk.Frame
         self.text_frame: ttk.Frame
         self.buttons_frame: ttk.Frame
         self.folders_dropdown: ttk.Combobox
@@ -76,7 +77,7 @@ class MainWindow(tk.Tk):
     #=================================================
     def _init_window(self) -> None:
         self.title("mini-gui")
-        
+
         # add icon if available
         icon_path = "media/icon.png"
         if os.path.exists(icon_path):
@@ -110,13 +111,28 @@ class MainWindow(tk.Tk):
     #=================================================
     def _init_sub_frames(self) -> None:
         self.header_frame = ttk.Frame(self.panel)
-        self.header_frame.pack(side="top", fill="x", padx=10, pady=10)
-
         self.text_frame = ttk.Frame(self.panel)
-        self.text_frame.pack(side="top", fill="both", expand=True, padx=(15, 15))
-
         self.buttons_frame = ttk.Frame(self.panel)
-        self.buttons_frame.pack(side="top", fill="x", pady=(20,20))
+
+        # grid and configure main panel
+        self.header_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
+        self.text_frame.grid(row=1, column=0, sticky="nsew", padx=(15, 15))
+        self.buttons_frame.grid(row=2, column=0, sticky="ew", pady=(20,20))
+        self.panel.rowconfigure(1, weight=1)
+        self.panel.columnconfigure(0, weight=1)
+
+        # create further sub-frames
+        self.filters_frame = ttk.Frame(self.header_frame)
+        self.logo_frame = ttk.Frame(self.header_frame)
+        self.header_frame.columnconfigure(0, weight=0)
+        self.header_frame.columnconfigure(1, weight=1)
+
+        # grid and configure header frame
+        self.filters_frame.grid(row=0, column=0, sticky="ew", padx=(25,0))
+        self.logo_frame.grid(row=0, column=1, sticky="ew", padx=0)
+        self.logo_frame.columnconfigure(0, weight=1)
+        self.logo_frame.columnconfigure(1, weight=0)
+        self.logo_frame.columnconfigure(2, weight=1)
 
     #=================================================
     # data preparation
@@ -133,7 +149,6 @@ class MainWindow(tk.Tk):
     # ComboBox filters (dropdowns)
     #=================================================
     def _init_filters(self) -> None:
-        self.filters_frame = ttk.Frame(self.header_frame)
         self.folders_dropdown = ttk.Combobox(
             self.filters_frame,
             values=[constants.ANY_FOLDER] + sorted(list(book_collection.Folders.keys())),
@@ -216,9 +231,6 @@ class MainWindow(tk.Tk):
     # header frame
     #=================================================
     def _build_header_frame(self) -> None:
-        # pack into parent frame, which is header frame
-        self.filters_frame.pack(side="left", fill="x", padx=25)
-
         # populate filters_frame with labels and dropdowns
         folder_label = ttk.Label(self.filters_frame, text="FOLDER", font=self.default_font)
         author_label = ttk.Label(self.filters_frame, text="AUTHOR", font=self.default_font)
@@ -235,12 +247,12 @@ class MainWindow(tk.Tk):
         string = f"== The Collection =="
         logo_text = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
         logo = ttk.Label(
-            self.header_frame,
+            self.logo_frame,
             text=logo_text,
             font=("Consolas", 14),
             anchor="center"
         )
-        logo.pack(side="left", fill="x", padx=(20, 0))
+        logo.grid(row=0, column=1, sticky="ew", padx=20)
 
     #=================================================
     # text output

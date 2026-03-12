@@ -289,10 +289,11 @@ class MainWindow(tk.Tk):
     #=================================================
     # log messages to the text widget
     #=================================================
-    def log(self, message: str) -> None:
+    def log(self, message: str, scroll_to_end: bool = True) -> None:
         self.text_output.config(state="normal")
         self.text_output.insert("end", f"{message}\n")
-        self.text_output.see("end")
+        if scroll_to_end:
+            self.text_output.see("end")
         self.text_output.config(state="disabled")
 
     #=================================================
@@ -331,9 +332,14 @@ class MainWindow(tk.Tk):
         else:
             self._schedule_author(book, quotes_left, len(random_quote.text))
 
-    def _print_author_now(self, book: book_collection.Book, quotes_left: int) -> None:
-        self.log(f"\n{book.title}   / {quotes_left} left /")
-        self.log(f"{'-'*len(book.title)}")
+    def _print_author_now(
+        self,
+        book: book_collection.Book,
+        quotes_left: int,
+        scroll_to_end: bool = True
+    ) -> None:
+        self.log(f"\n{book.title}   / {quotes_left} left /", scroll_to_end)
+        self.log(f"{'-'*len(book.title)}", scroll_to_end)
 
     def _schedule_author(
         self,
@@ -358,7 +364,7 @@ class MainWindow(tk.Tk):
         if self.pending_author_data:
             # unpack the stored tuple
             book, quotes_left = self.pending_author_data
-            self._print_author_now(book, quotes_left)
+            self._print_author_now(book, quotes_left, scroll_to_end=False)
         self.pending_author_data = None
         self.author_timer_id = None
 

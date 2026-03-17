@@ -116,8 +116,8 @@ class MainWindow(tk.Tk):
 
         # grid and configure main panel
         self.header_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
-        self.text_frame.grid(row=1, column=0, sticky="nsew", padx=(15, 15))
-        self.buttons_frame.grid(row=2, column=0, sticky="ew", pady=(20,20))
+        self.text_frame.grid(row=1, column=0, sticky="nsew", padx=15)
+        self.buttons_frame.grid(row=2, column=0, sticky="ew", pady=18)
         self.panel.rowconfigure(1, weight=1)
         self.panel.columnconfigure(0, weight=1)
 
@@ -128,7 +128,7 @@ class MainWindow(tk.Tk):
         self.header_frame.columnconfigure(1, weight=1)
 
         # grid and configure header frame
-        self.filters_frame.grid(row=0, column=0, sticky="ew", padx=(25,0))
+        self.filters_frame.grid(row=0, column=0, sticky="ew", padx=(25, 0))
         self.logo_frame.grid(row=0, column=1, sticky="ew", padx=0)
         self.logo_frame.columnconfigure(0, weight=1)
         self.logo_frame.columnconfigure(1, weight=0)
@@ -273,8 +273,12 @@ class MainWindow(tk.Tk):
         self.text_output.configure(yscrollcommand=scrollbar.set)
 
         # pack text widget and pack scrollbar to the right
-        self.text_output.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.text_output.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        
+        # give extra space to text widget, scrollbar column stays fixed
+        self.text_frame.grid_rowconfigure(0, weight=1)
+        self.text_frame.grid_columnconfigure(0, weight=1)
 
     #=================================================
     # button frame

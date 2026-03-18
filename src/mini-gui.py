@@ -41,7 +41,6 @@ class MainWindow(tk.Tk):
         self.folders_dropdown: ttk.Combobox
         self.authors_dropdown: ttk.Combobox
         self.books_dropdown: ttk.Combobox
-
         self.text_output: tk.Text
 
         self.every_q_btn: ttk.Button
@@ -60,7 +59,7 @@ class MainWindow(tk.Tk):
         self.button_font.configure(size=11)
 
         #=================================================
-        # call init, build functions and start loop
+        # call init, build functions
         #=================================================
         self._init_window()
         self._init_sub_frames()

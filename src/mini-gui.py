@@ -127,8 +127,8 @@ class MainWindow(tk.Tk):
         # grid and configure header frame
         self.filters_frame.grid(row=0, column=0, sticky="ew", padx=(25, 0))
         self.logo_frame.grid(row=0, column=1, sticky="ew", padx=0)
-        self.header_frame.columnconfigure(0, weight=1)
-        self.header_frame.columnconfigure(1, weight=1)
+        self.header_frame.columnconfigure(0, weight=15)
+        self.header_frame.columnconfigure(1, weight=10)
         
     #=================================================
     # data preparation

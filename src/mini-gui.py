@@ -123,16 +123,13 @@ class MainWindow(tk.Tk):
         # create further sub-frames
         self.filters_frame = ttk.Frame(self.header_frame)
         self.logo_frame = ttk.Frame(self.header_frame)
-        self.header_frame.columnconfigure(0, weight=0)
-        self.header_frame.columnconfigure(1, weight=1)
 
         # grid and configure header frame
         self.filters_frame.grid(row=0, column=0, sticky="ew", padx=(25, 0))
         self.logo_frame.grid(row=0, column=1, sticky="ew", padx=0)
-        self.logo_frame.columnconfigure(0, weight=1)
-        self.logo_frame.columnconfigure(1, weight=0)
-        self.logo_frame.columnconfigure(2, weight=1)
-
+        self.header_frame.columnconfigure(0, weight=1)
+        self.header_frame.columnconfigure(1, weight=1)
+        
     #=================================================
     # data preparation
     #=================================================
@@ -151,20 +148,17 @@ class MainWindow(tk.Tk):
         self.folders_dropdown = ttk.Combobox(
             self.filters_frame,
             values=[constants.ANY_FOLDER] + sorted(list(book_collection.Folders.keys())),
-            font=self.default_font,
-            width=60
+            font=self.default_font
         )
         self.authors_dropdown = ttk.Combobox(
             self.filters_frame,
             values=[constants.ANY_AUTHOR] + self.authors_with_quotes,
-            font=self.default_font,
-            width=60
+            font=self.default_font
         )
         self.books_dropdown = ttk.Combobox(
             self.filters_frame,
             values=[constants.ANY_BOOK] + self.filtered_books,
-            font=self.default_font,
-            width=60
+            font=self.default_font
         )
 
         self.folders_dropdown.current(0)
@@ -234,13 +228,17 @@ class MainWindow(tk.Tk):
         folder_label = ttk.Label(self.filters_frame, text="FOLDER", font=self.default_font)
         author_label = ttk.Label(self.filters_frame, text="AUTHOR", font=self.default_font)
         book_label = ttk.Label(self.filters_frame, text="BOOK", font=self.default_font)
+        
         grid_opts = {"column": 0, "padx": (0, 20), "pady": 6, "sticky": "w"}
         folder_label.grid(row=0, **grid_opts)
         author_label.grid(row=1, **grid_opts)
         book_label.grid(row=2, **grid_opts)
-        self.folders_dropdown.grid(row=0, column=1)
-        self.authors_dropdown.grid(row=1, column=1)
-        self.books_dropdown.grid(row=2, column=1)
+        self.folders_dropdown.grid(row=0, column=1, sticky="ew")
+        self.authors_dropdown.grid(row=1, column=1, sticky="ew")
+        self.books_dropdown.grid(row=2, column=1, sticky="ew")
+        
+        # allow dropdown widgets (in column 1) to stretch when space is available
+        self.filters_frame.columnconfigure(1, weight=1)
 
         # logo next to the dropdowns
         string = f"== The Collection =="
@@ -252,6 +250,9 @@ class MainWindow(tk.Tk):
             anchor="center"
         )
         logo.grid(row=0, column=1, sticky="ew", padx=20)
+        self.logo_frame.columnconfigure(0, weight=1)
+        self.logo_frame.columnconfigure(1, weight=0)
+        self.logo_frame.columnconfigure(2, weight=1)
 
     #=================================================
     # text output

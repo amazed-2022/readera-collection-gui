@@ -129,7 +129,7 @@ class MainWindow(tk.Tk):
         self.logo_frame.grid(row=0, column=1, sticky="ew", padx=0)
         self.header_frame.columnconfigure(0, weight=15)
         self.header_frame.columnconfigure(1, weight=10)
-        
+
     #=================================================
     # data preparation
     #=================================================
@@ -228,7 +228,7 @@ class MainWindow(tk.Tk):
         folder_label = ttk.Label(self.filters_frame, text="FOLDER", font=self.default_font)
         author_label = ttk.Label(self.filters_frame, text="AUTHOR", font=self.default_font)
         book_label = ttk.Label(self.filters_frame, text="BOOK", font=self.default_font)
-        
+
         grid_opts = {"column": 0, "padx": (0, 20), "pady": 6, "sticky": "w"}
         folder_label.grid(row=0, **grid_opts)
         author_label.grid(row=1, **grid_opts)
@@ -236,7 +236,7 @@ class MainWindow(tk.Tk):
         self.folders_dropdown.grid(row=0, column=1, sticky="ew")
         self.authors_dropdown.grid(row=1, column=1, sticky="ew")
         self.books_dropdown.grid(row=2, column=1, sticky="ew")
-        
+
         # allow dropdown widgets (in column 1) to stretch when space is available
         self.filters_frame.columnconfigure(1, weight=1)
 
@@ -275,7 +275,7 @@ class MainWindow(tk.Tk):
         # pack text widget and pack scrollbar to the right
         self.text_output.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
-        
+
         # give extra space to text widget, scrollbar column stays fixed
         self.text_frame.grid_rowconfigure(0, weight=1)
         self.text_frame.grid_columnconfigure(0, weight=1)
@@ -284,11 +284,16 @@ class MainWindow(tk.Tk):
     # button frame
     #=================================================
     def _build_buttons_frame(self) -> None:
-        self.every_q_btn.pack(side="left", padx=(25, 0))
-        self.random_q_btn.pack(side="left", padx=(15, 0))
-        self.delay_author_btn.pack(side="left", padx=(15, 0))
-        self.reset_btn.pack(side="right", padx=(0, 25))
-        self.clear_btn.pack(side="right", padx=(0, 15))
+        # left buttons
+        self.every_q_btn.grid(row=0, column=0, padx=(25, 0), sticky="ew")
+        self.random_q_btn.grid(row=0, column=1, padx=(15, 0), sticky="ew")
+        self.delay_author_btn.grid(row=0, column=2, padx=(15, 0))
+        # right buttons
+        self.clear_btn.grid(row=0, column=3, padx=(50, 0), sticky="ew")
+        self.reset_btn.grid(row=0, column=4, padx=(15, 25), sticky="ew")
+
+        for i in range(5):
+            self.buttons_frame.columnconfigure(i, weight=0 if i == 2 else 1)
 
     #=================================================
     # log messages to the text widget

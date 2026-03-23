@@ -1,5 +1,5 @@
 #=================================================
-# IMPORT 
+# IMPORT
 #=================================================
 import book_collection
 import book_utils
@@ -88,7 +88,12 @@ class MainWindow(tk.Tk):
         else:
             print(f"Warning: Icon file not found: {icon_path}")
 
-        # desired window size
+        # main panel
+        self.set_default_window_size()
+        self.panel = ttk.Frame(self)
+        self.panel.pack(fill="both", expand=True)
+        
+    def set_default_window_size(self):
         width = 850
         height = 850
 
@@ -100,10 +105,6 @@ class MainWindow(tk.Tk):
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
         self.geometry(f"{width}x{height}+{x}+{y}")
-
-        # main panel
-        self.panel = ttk.Frame(self)
-        self.panel.pack(fill="both", expand=True)
 
     #=================================================
     # sub frames
@@ -289,11 +290,15 @@ class MainWindow(tk.Tk):
         self.random_q_btn.grid(row=0, column=1, padx=(15, 0), sticky="ew")
         self.delay_author_btn.grid(row=0, column=2, padx=(15, 0))
         # right buttons
-        self.clear_btn.grid(row=0, column=3, padx=(50, 0), sticky="ew")
-        self.reset_btn.grid(row=0, column=4, padx=(15, 25), sticky="ew")
+        self.clear_btn.grid(row=0, column=4, padx=(15, 0), sticky="ew")
+        self.reset_btn.grid(row=0, column=5, padx=(15, 25), sticky="ew")
 
-        for i in range(5):
-            self.buttons_frame.columnconfigure(i, weight=0 if i == 2 else 1)
+        self.buttons_frame.columnconfigure(0, weight=1)  # every quote
+        self.buttons_frame.columnconfigure(1, weight=1)  # random quote
+        self.buttons_frame.columnconfigure(2, weight=0)  # toggle
+        self.buttons_frame.columnconfigure(3, weight=10) # spacer
+        self.buttons_frame.columnconfigure(4, weight=1)  # clear
+        self.buttons_frame.columnconfigure(5, weight=1)  # reset
 
     #=================================================
     # log messages to the text widget
@@ -460,6 +465,7 @@ class MainWindow(tk.Tk):
         # .set() does NOT trigger the command callback
         self.delay_author_toggle.set(False)
         self.clear_text_output()
+        self.set_default_window_size()
 
     #=================================================
     # combobox change

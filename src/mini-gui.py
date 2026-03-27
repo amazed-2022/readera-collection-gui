@@ -92,10 +92,10 @@ class MainWindow(tk.Tk):
         self.set_default_window_size()
         self.panel = ttk.Frame(self)
         self.panel.pack(fill="both", expand=True)
-        
+
     def set_default_window_size(self):
-        width = 850
-        height = 850
+        width = 750
+        height = 600
 
         # get screen size
         screen_width = self.winfo_screenwidth()

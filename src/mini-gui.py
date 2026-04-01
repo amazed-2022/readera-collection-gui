@@ -414,7 +414,7 @@ class MainWindow(tk.Tk):
             return
 
         # get and export all quotes to file
-        quotes = book_utils.get_and_export_quotes(book, f"{book.title}.txt")
+        quotes = book_utils.get_and_export_quotes(book, "")
 
         # print to textbox
         self.log(book.title)

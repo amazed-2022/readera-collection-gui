@@ -74,14 +74,15 @@ def get_and_export_quotes(book, filename):
     Return and export all quotes from a book to a text file.
     """
     quotes = get_quotes_sorted_by_page(book)
+    
+    if filename:
+        with open(filename, "w", encoding="utf8") as f:
+            f.write(f"{book.title}\n")
+            f.write(f"{'-' * len(book.title)}\n")
 
-    with open(filename, "w", encoding="utf8") as f:
-        f.write(f"{book.title}\n")
-        f.write(f"{'-' * len(book.title)}\n")
-
-        for i, quote in enumerate(quotes):
-            header = f"{i + 1} / {len(quotes)}  (p.{quote.page})"
-            f.write(f"{header}\n{quote.text}\n\n")
+            for i, quote in enumerate(quotes):
+                header = f"{i + 1} / {len(quotes)}  (p.{quote.page})"
+                f.write(f"{header}\n{quote.text}\n\n")
 
     return quotes
 

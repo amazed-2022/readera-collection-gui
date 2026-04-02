@@ -412,9 +412,9 @@ class MainWindow(tk.Tk):
         if book is None:
             self.log("Book not found.")
             return
-
-        # get and export all quotes to file
-        quotes = book_utils.get_and_export_quotes(book, "")
+        
+        # book exists, get quotes for printing
+        quotes = book_utils.get_quotes_sorted_by_page(book)
 
         # print to textbox
         self.log(book.title)

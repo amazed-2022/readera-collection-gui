@@ -519,6 +519,7 @@ class MainWindow(tk.Tk):
 # MAIN
 #=================================================
 if __name__ == "__main__":
+    print("mini-gui is running...")
     error = book_collection.build_the_collection()
     window = MainWindow()
     if error:

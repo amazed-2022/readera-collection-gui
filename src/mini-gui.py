@@ -393,8 +393,12 @@ class MainWindow(tk.Tk):
 
     def _on_delay_author_toggle(self) -> None:
         checked = self.delay_author_toggle.get()
-        if not checked and self.pending_author_data:
-            self._flush_pending_author()
+        if not checked:
+            if self.pending_author_data:
+                self._flush_pending_author()
+            else:
+                # make already printed author visible
+                self.text_output.see("end")
 
     #=================================================
     # print random quote
@@ -412,7 +416,7 @@ class MainWindow(tk.Tk):
         if book is None:
             self.log("Book not found.")
             return
-        
+
         # book exists, get quotes for printing
         quotes = book_utils.get_quotes_sorted_by_page(book)
 

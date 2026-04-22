@@ -432,6 +432,9 @@ class MainWindow(tk.Tk):
             if i < (num_of_quotes-1):
                 self.log("\n")
 
+        # scroll back to the top
+        self.text_output.see("1.0")
+
     #=================================================
     # clear text output
     #=================================================

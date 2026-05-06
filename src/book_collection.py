@@ -106,8 +106,7 @@ class Book:
 
 class BookCollection:
     def __init__(self):
-        # The Collection basically will be a simple list
-        # containing the Book instances
+        # The Collection basically will be a simple list containing the Book instances
         self.books: list[Book] = []
         self.folders: dict[str, set] = {}
         self.all_quotes_count = 0

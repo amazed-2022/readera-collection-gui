@@ -524,14 +524,14 @@ class MainWindow(tk.Tk):
 #=================================================
 if __name__ == "__main__":
     print("mini-gui is running...")
-    collection = BookCollection()
-    error = collection.build_the_collection()
-    window = MainWindow(collection)
+    The_Collection = BookCollection()
+    error = The_Collection.build_the_collection()
+    window = MainWindow(The_Collection)
     if error:
         window.log(f"Error reading JSON file: {error}\n")
     else:
         window.log(
-            f"This collection has {collection.all_quotes_count}"
-            f" quotes from {len(collection.books)} books.\n\n"
+            f"This collection has {The_Collection.all_quotes_count}"
+            f" quotes from {len(The_Collection.books)} books.\n\n"
         )
     window.mainloop()

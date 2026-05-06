@@ -1,7 +1,7 @@
 #=================================================
 # IMPORT
 #=================================================
-import book_collection
+from book_collection import BookCollection, Book
 import book_utils
 import os
 import tkinter as tk
@@ -19,17 +19,18 @@ class MainWindow(tk.Tk):
     #=================================================
     # initialization
     #=================================================
-    def __init__(self):
+    def __init__(self, collection: BookCollection):
         super().__init__()
 
         #=================================================
         # instance attributes: type hints and init
         #=================================================
+        self.collection: BookCollection = collection
         self.filtered_books: list[str] = []
         self.authors_with_quotes: list[str] = []
 
         self.quote_printed: bool = False
-        self.pending_author_data: tuple[book_collection.Book, int] | None = None
+        self.pending_author_data: tuple[Book, int] | None = None
         # Tkinter "timer" placeholder (stores after() ID)
         self.author_timer_id: str | None = None
 
@@ -136,7 +137,7 @@ class MainWindow(tk.Tk):
     #=================================================
     def _init_data(self) -> None:
         authors_set = set()
-        for book in book_collection.The_Collection:
+        for book in self.collection.books:
             if book.total_q > 0:
                 self.filtered_books.append(book.title)
                 authors_set.add(book.author)
@@ -148,7 +149,7 @@ class MainWindow(tk.Tk):
     def _init_filters(self) -> None:
         self.folders_dropdown = ttk.Combobox(
             self.filters_frame,
-            values=[constants.ANY_FOLDER] + sorted(list(book_collection.Folders.keys())),
+            values=[constants.ANY_FOLDER] + sorted(list(self.collection.folders.keys())),
             font=self.default_font
         )
         self.authors_dropdown = ttk.Combobox(
@@ -321,7 +322,7 @@ class MainWindow(tk.Tk):
         delay_author = self.delay_author_toggle.get()
 
         book, message = book_utils.get_book_for_random_quote(
-            book_collection.The_Collection,
+            self.collection.books,
             selected_title,
             self.filtered_books
         )
@@ -348,7 +349,7 @@ class MainWindow(tk.Tk):
 
     def _print_author_now(
         self,
-        book: book_collection.Book,
+        book: Book,
         quotes_left: int,
         scroll_to_end: bool = True
     ) -> None:
@@ -357,7 +358,7 @@ class MainWindow(tk.Tk):
 
     def _schedule_author(
         self,
-        book: book_collection.Book,
+        book: Book,
         quotes_left: int,
         quote_length: int,
         base_delay_ms: int = 1000,
@@ -412,7 +413,7 @@ class MainWindow(tk.Tk):
             self.log("Select a book from the list.")
             return
 
-        book = book_utils.get_book_by_title(book_collection.The_Collection, selected_title)
+        book = book_utils.get_book_by_title(self.collection.books, selected_title)
         if book is None:
             self.log("Book not found.")
             return
@@ -459,7 +460,7 @@ class MainWindow(tk.Tk):
             return
 
         # rebuild collection and reset dropdowns
-        book_collection.build_the_collection()
+        self.collection.build_the_collection()
         self.folders_dropdown.current(0)
         self.authors_dropdown.current(0)
         self.books_dropdown.current(0)
@@ -488,7 +489,7 @@ class MainWindow(tk.Tk):
             else:
                 folder_authors = {
                     book.author
-                    for book in book_collection.The_Collection
+                    for book in self.collection.books
                     if book.folder == chosen_folder
                     and book.total_q > 0
                 }
@@ -502,7 +503,7 @@ class MainWindow(tk.Tk):
         # update books dropdown
         self.filtered_books = [constants.ANY_BOOK]
 
-        for book in book_collection.The_Collection:
+        for book in self.collection.books:
             # skip books that don't match the selected folder
             if chosen_folder != constants.ANY_FOLDER and book.folder != chosen_folder:
                 continue
@@ -523,13 +524,14 @@ class MainWindow(tk.Tk):
 #=================================================
 if __name__ == "__main__":
     print("mini-gui is running...")
-    error = book_collection.build_the_collection()
-    window = MainWindow()
+    collection = BookCollection()
+    error = collection.build_the_collection()
+    window = MainWindow(collection)
     if error:
         window.log(f"Error reading JSON file: {error}\n")
     else:
         window.log(
-            f"This collection has {book_collection.All_Quotes_Count}"
-            f" quotes from {len(window.filtered_books)} books.\n\n"
+            f"This collection has {collection.all_quotes_count}"
+            f" quotes from {len(collection.books)} books.\n\n"
         )
     window.mainloop()

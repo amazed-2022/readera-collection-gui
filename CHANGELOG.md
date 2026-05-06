@@ -4,17 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.0] – 2026-05
 ### Added
-- **mini.gui**
-  - Uses built-in tkinter for GUI
-  - Reduced functionality compared to full version
-  - Includes only basic buttons
+- **mini-gui**
+  - Uses built-in `tkinter` for a lightweight interface
+  - Reduced functionality compared to the full version
+  - Provides only basic navigation buttons
 
 ### Changed
-- Switched GUI framework from wxPython to PySide6
-- Output is now a QStackedWidget (stacked view for multiple pages)
-- Book lists are now table-based, so rows can be sorted in any order
+- Switched GUI framework from `wxPython` to `PySide6`
+- Output is now a `QStackedWidget` (stacked view for multiple pages)
+- Book lists are now table-based, allowing sortable rows
 - Added font size and line spacing adjustment settings for improved readability
-- Search results now highlight matching terms in bold for easier visibility
+- Search results now highlight matching terms in **bold** for better visibility
   
 ## [1.1.0] – 2026-01
 ### Added

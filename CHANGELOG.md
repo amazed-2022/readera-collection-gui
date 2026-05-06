@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.0.0] – 2026-02
+## [2.0.0] – 2026-05
 ### Added
 - **mini.gui**
   - Uses built-in tkinter for GUI

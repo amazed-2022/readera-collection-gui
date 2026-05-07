@@ -1,13 +1,14 @@
 #=================================================
 # IMPORT
 #=================================================
-import book_collection
 import book_utils
 from constants_loader import constants
 import datetime
 import re
-from collections import Counter
+import sys
 
+from book_collection import BookCollection, Book
+from collections import Counter
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
@@ -24,8 +25,19 @@ class MainWindow(QMainWindow):
     #=================================================
     # initialization
     #=================================================
-    def __init__(self):
+    def __init__(self, collection: BookCollection):
         super().__init__()
+
+        #=================================================
+        # instance attributes: type hints and init
+        #=================================================
+        self.collection: BookCollection = collection
+        self.filtered_books: list[str] = []
+        self.authors_with_quotes: list[str] = []
+
+        #=================================================
+        # call init and build functions
+        #=================================================
         self._init_window()
         self._init_data()
         self._init_state()
@@ -50,11 +62,10 @@ class MainWindow(QMainWindow):
     # data preparation
     #=================================================
     def _init_data(self):
-        self.filtered_books = []
         authors_set = set()
 
         # filtered books start with full list
-        for book in book_collection.The_Collection:
+        for book in self.collection.books:
             if book.total_q > 0:
                 self.filtered_books.append(book.title)
                 authors_set.add(book.author)
@@ -83,7 +94,7 @@ class MainWindow(QMainWindow):
         self.folders_dropdown = QComboBox()
         self.authors_dropdown = QComboBox()
         self.books_dropdown = QComboBox()
-        self.folders_dropdown.addItems([constants.ANY_FOLDER] + sorted(list(book_collection.Folders.keys())))
+        self.folders_dropdown.addItems([constants.ANY_FOLDER] + sorted(list(self.collection.folders.keys())))
         self.authors_dropdown.addItems([constants.ANY_AUTHOR] + self.authors_with_quotes)
         self.books_dropdown.addItems([constants.ANY_BOOK] + self.filtered_books)
 
@@ -351,9 +362,8 @@ class MainWindow(QMainWindow):
                 # build list based on current folder (set comprehension)
                 folder_authors = {
                     book.author
-                    for book in book_collection.The_Collection
-                    if book.folder == chosen_folder
-                    and book.total_q > 0
+                    for book in self.collection.books
+                    if book.folder == chosen_folder and book.total_q > 0
                 }
                 folder_authors = sorted(folder_authors)
                 authors = [constants.ANY_AUTHOR] + folder_authors
@@ -365,7 +375,7 @@ class MainWindow(QMainWindow):
 
         # update books based on current folder and author
         self.filtered_books = [constants.ANY_BOOK]
-        for book in book_collection.The_Collection:
+        for book in self.collection.books:
             if chosen_folder != constants.ANY_FOLDER and book.folder != chosen_folder:
                 continue
             if chosen_author != constants.ANY_AUTHOR and book.author != chosen_author:
@@ -446,7 +456,7 @@ class MainWindow(QMainWindow):
         book_property = self._get_selected_book_property()
         if not book_property:
             return
-        
+
         # build headers based on input
         headers, displayed_indexes = self._build_headers(book_property)
 
@@ -499,9 +509,9 @@ class MainWindow(QMainWindow):
         folder = self.folders_dropdown.currentText()
 
         books = (
-            book_collection.The_Collection
+            self.collection.books
             if folder == constants.ANY_FOLDER
-            else [b for b in book_collection.The_Collection if b.folder == folder]
+            else [b for b in self.collection.books if b.folder == folder]
         )
         # further filter books based on selected property
         if book_property == constants.PROP_READING_NOW:
@@ -509,14 +519,14 @@ class MainWindow(QMainWindow):
 
         if book_property == constants.PROP_FINISHED_LIST:
             return [b for b in books if b.is_read]
-            
+
         if book_property == constants.PROP_READ_DURATION:
             return sorted(
                 (b for b in books if b.is_read),
                 key=lambda b: b.first_q_timestamp,
                 reverse=True
             )
-            
+
         return books
 
     def _build_row_items(self, book, book_property, displayed_indexes):
@@ -587,7 +597,7 @@ class MainWindow(QMainWindow):
     #=================================================
     # FUNCTION: clear
     #=================================================
-    def clear(self):        
+    def clear(self):
         current = self.output_stack.currentWidget()
 
         if current is self.text_output:
@@ -620,7 +630,7 @@ class MainWindow(QMainWindow):
         self._flush_pending_author(print_data=False)
 
         # rebuild collection and reset dropdowns
-        book_collection.build_the_collection()
+        self.collection.build_the_collection()
         self.folders_dropdown.setCurrentIndex(0)
         self.authors_dropdown.setCurrentIndex(0)
         self.books_dropdown.setCurrentIndex(0)
@@ -655,7 +665,7 @@ class MainWindow(QMainWindow):
         delay_author = self.delay_author_toggle.isChecked()
 
         book, message = book_utils.get_book_for_random_quote(
-            book_collection.The_Collection,
+            self.collection.books,
             selected_title,
             self.filtered_books,
             length
@@ -730,7 +740,7 @@ class MainWindow(QMainWindow):
             self.log("Select a book from the list.")
             return
 
-        book = book_utils.get_book_by_title(book_collection.The_Collection, selected_title)
+        book = book_utils.get_book_by_title(self.collection.books, selected_title)
         if book is None:
             self.log("Book not found.")
             return
@@ -760,7 +770,7 @@ class MainWindow(QMainWindow):
             self.log("Select a book from the list.")
             return
 
-        book = book_utils.get_book_by_title(book_collection.The_Collection, selected_title)
+        book = book_utils.get_book_by_title(self.collection.books, selected_title)
         title = book.title
         self.log(title)
         self.log("-" * len(title))
@@ -794,7 +804,7 @@ class MainWindow(QMainWindow):
 
         # gather book counts
         books_with_quotes, books_20th, books_21st, books_read_count = 0, 0, 0, 0
-        for book in book_collection.The_Collection:
+        for book in self.collection.books:
             if book.total_q > 0:
                 books_with_quotes += 1
             if 1900 <= book.published_date < 2000:
@@ -805,7 +815,7 @@ class MainWindow(QMainWindow):
                 books_read_count += 1
 
             # gather folders statistics
-            for folder in book_collection.Folders:
+            for folder in self.collection.folders:
                 if book.folder == folder:
                     folder_q_count[folder] = folder_q_count.get(folder, 0) + book.total_q
                     folder_book_count[folder] = folder_book_count.get(folder, 0) + 1
@@ -819,7 +829,7 @@ class MainWindow(QMainWindow):
         #=================================================
         string = "Statistics"
         self.log(f"{string}\n{'-'*len(string)}\n")
-        books_count = len(book_collection.The_Collection)
+        books_count = len(self.collection.books)
         self.print_stat_line("Books in The Collection", f"{books_count:4d} / 100%")
         if books_21st:
             self.print_stat_line("Books from the 21st century", f"{books_21st:4d} / {self.get_percentage_string(books_21st, books_count)}")
@@ -835,13 +845,13 @@ class MainWindow(QMainWindow):
         #=================================================
         # quotes
         #=================================================
-        self.print_stat_line("Quotes in total", f"{book_collection.All_Quotes_Count:4d} / 100%")
-        string = f"{book_collection.Short_Quotes_Count:4d} / {self.get_percentage_string(book_collection.Short_Quotes_Count, book_collection.All_Quotes_Count)}"
+        self.print_stat_line("Quotes in total", f"{self.collection.all_quotes_count:4d} / 100%")
+        string = f"{self.collection.short_quotes_count:4d} / {self.get_percentage_string(self.collection.short_quotes_count, self.collection.all_quotes_count)}"
         self.print_stat_line(f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters", string)
-        self.print_stat_line("Quotes per book on average", f"{round(book_collection.All_Quotes_Count / books_with_quotes):4d}", blank_line=True)
+        self.print_stat_line("Quotes per book on average", f"{round(self.collection.all_quotes_count / books_with_quotes):4d}", blank_line=True)
 
         folder_q_count = dict(sorted(folder_q_count.items(), key=lambda item: item[1], reverse=True))
-        self.print_folder_dict(folder_q_count, book_collection.All_Quotes_Count)
+        self.print_folder_dict(folder_q_count, self.collection.all_quotes_count)
 
         #=================================================
         # authors
@@ -856,8 +866,8 @@ class MainWindow(QMainWindow):
             cumulative += count
             self.print_stat_line(
                 f" --> {author}",
-                f"{count:4d} / {self.get_percentage_string(count, book_collection.All_Quotes_Count, digit=2)}"
-                f" / {self.get_percentage_string(cumulative, book_collection.All_Quotes_Count, digit=2)}"
+                f"{count:4d} / {self.get_percentage_string(count, self.collection.all_quotes_count, digit=2)}"
+                f" / {self.get_percentage_string(cumulative, self.collection.all_quotes_count, digit=2)}"
             )
             if i >= 15:
                 break
@@ -869,7 +879,7 @@ class MainWindow(QMainWindow):
         self.log(f"\n\n{string}\n{'-'*len(string)}")
 
         all_quotes_list = []
-        for book in book_collection.The_Collection:
+        for book in self.collection.books:
             all_quotes_list += book.get_all_quotes_list()
         all_text = ' '.join(quote.text for quote in all_quotes_list)
 
@@ -883,7 +893,7 @@ class MainWindow(QMainWindow):
         # get word counts for each book, omitted words from top_30 will be
         # also counted, but there will be no match during later check
         book_word_counts = {}
-        for book in book_collection.The_Collection:
+        for book in self.collection.books:
             quotes_text = ' '.join(quote.text for quote in book.get_all_quotes_list()).lower()
             word_counts = Counter(re.findall(r'\b\w{4,}\b', quotes_text))
             book_word_counts[book.title] = word_counts
@@ -893,7 +903,7 @@ class MainWindow(QMainWindow):
             # find the book with the most occurrence of the word
             max_count = 0
             book_string = ""
-            for book in book_collection.The_Collection:
+            for book in self.collection.books:
                 word_count = book_word_counts[book.title].get(word, 0)
                 if word_count > max_count:
                     max_count = word_count
@@ -948,9 +958,9 @@ class MainWindow(QMainWindow):
 
         selected_title = self.books_dropdown.currentText()
         if selected_title == constants.ANY_BOOK:
-            books = [book for book in book_collection.The_Collection if book.title in self.filtered_books]
+            books = [book for book in self.collection.books if book.title in self.filtered_books]
         else:
-            book = book_utils.get_book_by_title(book_collection.The_Collection, selected_title)
+            book = book_utils.get_book_by_title(self.collection.books, selected_title)
             books = [book] if book else []
 
         counter = 0
@@ -994,10 +1004,10 @@ class MainWindow(QMainWindow):
 # MAIN
 #=================================================
 if __name__ == "__main__":
-    import sys
-    error = book_collection.build_the_collection()
+    The_Collection = BookCollection()
+    error = The_Collection.build_the_collection()
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = MainWindow(The_Collection)
     if error:
         window.log(f"Error reading JSON file: {error}")
     sys.exit(app.exec())

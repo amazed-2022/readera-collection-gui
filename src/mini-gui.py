@@ -60,7 +60,7 @@ class MainWindow(tk.Tk):
         self.button_font.configure(size=11)
 
         #=================================================
-        # call init, build functions
+        # call init and build functions
         #=================================================
         self._init_window()
         self._init_sub_frames()

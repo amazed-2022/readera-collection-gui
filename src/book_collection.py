@@ -21,6 +21,7 @@ class Quote:
     def __repr__(self):
         return f"Quote(text={self.text}, page_number={self.page})"
 
+
 class Book:
     def __init__(self, title):
         self.title = title
@@ -101,7 +102,6 @@ class Book:
     #=================================================
     def __repr__(self):
         return f"Book(title={self.title}, quotes={len(self.quotes)})"
-
 
 
 class BookCollection:

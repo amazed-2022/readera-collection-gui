@@ -106,7 +106,7 @@ class Book:
 
 class BookCollection:
     def __init__(self):
-        # The Collection basically will be a simple list containing the Book instances
+        # The Collection is stored as an instance attribute
         self.books: list[Book] = []
         self.folders: dict[str, set] = {}
         self.all_quotes_count = 0
@@ -119,62 +119,62 @@ class BookCollection:
     def build_the_collection(self):
         # return value
         error = None
-    
+
         # reset state
         self.books = []
         self.folders = {}
         self.all_quotes_count = 0
         self.short_quotes_count = 0
-    
+
         # open and read the JSON file
         try:
             with open('library.json', 'r', encoding="utf8") as file:
                 data = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError) as error:
             return error
-    
+
         # get the folders dictionary, each value will be a set of book IDs
         for coll in data['colls']:
             self.folders[coll['data']['coll_title']] = set(coll['docs'])
-    
+
         for doc in data['docs']:
             if doc['data']['doc_active'] == 1:
                 # Use regex to remove non-alphabet characters from the beginning of the title
                 book_title = re.sub(r"^[^a-zA-Z]+", "", doc['data']['doc_file_name_title'])
-    
+
                 # handle renamed books, book_title is the default return
                 book_title = constants.BOOK_RENAME_DICTIONARY.get(book_title, book_title)
                 # remove funny character (Zero Width Space)
                 book_title = book_title.replace('\u200b', '').strip()
-    
+
                 # add the book to The Collection (which is a list of instances)
                 this_book = Book(book_title)
                 self.books.append(this_book)
-    
+
                 # store additional data
                 this_book.file_id = doc['uri']
                 this_book.author = doc['data'].get('user_authors') or doc['data'].get('doc_authors')
                 this_book.annotation = doc['data'].get('doc_annotation', "")
-    
+
                 # store file date as a date object, activity time as a simple timestamp
                 aux_date = datetime.datetime.fromtimestamp(doc['data'].get('file_modified_time') / 1000)
                 this_book.file_modified_date = aux_date
                 this_book.activity_time = doc['data'].get('doc_activity_time')
-    
+
                 # get the folder, if available
                 if self.folders:
                     for folder, ids in self.folders.items():
                         if this_book.file_id in ids:
                             this_book.folder = folder
                             break
-    
+
                 # get pages count if available
                 try:
                     doc_data = json.loads(doc['data']['doc_position'])
                     this_book.pages_count = doc_data['pagesCount']
                 except (KeyError, ValueError, IndexError, TypeError, AttributeError):
                     this_book.pages_count = 0
-    
+
                 # get goodreads data if available
                 try:
                     review_note = doc['reviews'][0]['note_body']
@@ -185,7 +185,7 @@ class BookCollection:
                     this_book.published_date = 0
                     this_book.rating = 0.0
                     this_book.ratings_count = 0.0
-    
+
                 # get the citations
                 if len(doc['citations']) > 0:
                     quote_dates = []
@@ -193,16 +193,16 @@ class BookCollection:
                         q_is_long = len(citation['note_body']) > constants.MAX_CHAR_IN_SHORT_QUOTE
                         this_book.add_quote(citation['note_body'], citation['note_page'], q_is_long)
                         quote_dates.append(citation['note_insert_time'])
-    
+
                     # sort the dates list to easily access first and last, convert to seconds
                     quote_dates.sort()
                     this_book.first_q_timestamp = quote_dates[0] / 1000
                     this_book.last_q_timestamp = quote_dates[-1] / 1000
-    
+
                     # calculate the q/p ratio, avoid division by zero
                     if this_book.pages_count > 0:
                         this_book.q_per_page = round(this_book.total_q / this_book.pages_count, 2)
-    
+
                 # check if current doc was finished or not
                 read_at_timestamp = doc['data'].get('doc_have_read_time') / 1000
                 if doc['data'].get('doc_have_read_time') != 0:
@@ -220,16 +220,16 @@ class BookCollection:
                         aux_date = datetime.datetime.fromtimestamp(constants.DEFAULT_DATE_FOR_READ_DATE)
                 else:
                     aux_date = datetime.datetime.fromtimestamp(0)
-    
+
                 # add the constructed date
                 this_book.have_read_date = aux_date
-    
+
         # gather titles, authors and quote counts
         for book in self.books:
             self.all_quotes_count += book.total_q
             self.short_quotes_count += book.total_short_q
-    
+
         # alphabetical order by title
         self.books.sort(key=lambda book: book.title)
-    
+
         return error

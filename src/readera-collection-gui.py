@@ -7,7 +7,7 @@ import datetime
 import re
 import sys
 
-from book_collection import BookCollection, Book
+from book_collection import BookCollection
 from collections import Counter
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
@@ -190,9 +190,6 @@ class MainWindow(QMainWindow):
         dropdown_layout.setContentsMargins(30, 0, 0, 0)
         dropdown_layout.setHorizontalSpacing(30)
 
-        label_font = QFont("Consolas", 12)
-
-
         # addWidget(widget, row, column, rowSpan, columnSpan, alignment)
         label = QLabel("FOLDER")
         label.setFont(QFont("Consolas", 12))
@@ -247,7 +244,7 @@ class MainWindow(QMainWindow):
         self.text_output.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         self.text_output.document().setDocumentMargin(30)
 
-        # column output, set colours
+        # column output, set colors
         self.table_output = QTableView()
         self.table_output.setStyleSheet("""
             QTableView {
@@ -945,7 +942,7 @@ class MainWindow(QMainWindow):
         # popup for user input
         text, ok = QInputDialog.getText(self, "Search", "Enter at least 3 characters:")
         if not ok:
-            # user cancelled
+            # user canceled
             return
         else:
             self.clear()

@@ -1,11 +1,11 @@
 #=================================================
 # IMPORT
 #=================================================
-from book_collection import BookCollection, Book
 import book_utils
 import os
 import tkinter as tk
 
+from book_collection import BookCollection, Book
 from constants_loader import constants
 from tkinter import ttk, messagebox, font
 
@@ -531,7 +531,7 @@ if __name__ == "__main__":
         window.log(f"Error reading JSON file: {error}\n")
     else:
         window.log(
-            f"This collection has {The_Collection.all_quotes_count}"
-            f" quotes from {len(The_Collection.books)} books.\n\n"
+            f"This collection has {window.collection.all_quotes_count}"
+            f" quotes from {len(window.filtered_books)} books.\n\n"
         )
     window.mainloop()

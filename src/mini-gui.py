@@ -14,7 +14,39 @@ from tkinter import ttk, messagebox, font
 #=================================================
 class MainWindow(tk.Tk):
 
-    # attributes defined here would be class attributes, shared by all instances
+    #=================================================
+    # type hints
+    #=================================================
+    collection: BookCollection
+    filtered_books: list[str]
+    authors_with_quotes: list[str]
+
+    #===================
+    # output state
+    #===================
+    quote_printed: bool
+    pending_author_data: tuple[Book, int] | None
+    author_timer_id: str | None
+
+    #===================
+    # UI elements
+    #===================
+    header_frame: ttk.Frame
+    filters_frame: ttk.Frame
+    logo_frame: ttk.Frame
+    text_frame: ttk.Frame
+    buttons_frame: ttk.Frame
+    folders_dropdown: ttk.Combobox
+    authors_dropdown: ttk.Combobox
+    books_dropdown: ttk.Combobox
+    text_output: tk.Text
+
+    every_q_btn: ttk.Button
+    random_q_btn: ttk.Button
+    delay_author_btn: ttk.Checkbutton
+    delay_author_toggle: tk.BooleanVar
+    clear_btn: ttk.Button
+    reset_btn: ttk.Button
 
     #=================================================
     # initialization
@@ -25,31 +57,14 @@ class MainWindow(tk.Tk):
         #=================================================
         # instance attributes: type hints and init
         #=================================================
-        self.collection: BookCollection = collection
-        self.filtered_books: list[str] = []
-        self.authors_with_quotes: list[str] = []
+        self.collection = collection
+        self.filtered_books = []
+        self.authors_with_quotes = []
 
-        self.quote_printed: bool = False
-        self.pending_author_data: tuple[Book, int] | None = None
+        self.quote_printed = False
+        self.pending_author_data = None
         # Tkinter "timer" placeholder (stores after() ID)
-        self.author_timer_id: str | None = None
-
-        self.header_frame: ttk.Frame
-        self.filters_frame: ttk.Frame
-        self.logo_frame: ttk.Frame
-        self.text_frame: ttk.Frame
-        self.buttons_frame: ttk.Frame
-        self.folders_dropdown: ttk.Combobox
-        self.authors_dropdown: ttk.Combobox
-        self.books_dropdown: ttk.Combobox
-        self.text_output: tk.Text
-
-        self.every_q_btn: ttk.Button
-        self.random_q_btn: ttk.Button
-        self.delay_author_btn: ttk.Button
-        self.delay_author_toggle: tk.BooleanVar
-        self.clear_btn: ttk.Button
-        self.reset_btn: ttk.Button
+        self.author_timer_id = None
 
         #=================================================
         # set up Font objects for the GUI

@@ -55,7 +55,7 @@ class MainWindow(tk.Tk):
         super().__init__()
 
         #=================================================
-        # instance attributes: type hints and init
+        # instance attributes
         #=================================================
         self.collection = collection
         self.filtered_books = []

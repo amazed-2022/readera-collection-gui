@@ -7,7 +7,7 @@ import datetime
 import re
 import sys
 
-from book_collection import BookCollection
+from book_collection import BookCollection, Book
 from collections import Counter
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
@@ -23,17 +23,51 @@ from PySide6.QtWidgets import (
 class MainWindow(QMainWindow):
 
     #=================================================
+    # type hints
+    #=================================================
+    collection: BookCollection
+    filtered_books: list[str]
+    authors_with_quotes: list[str]
+
+    #===================
+    # output state
+    #===================
+    output_font_size: int
+    line_height_percent: int
+    quote_printed: bool
+    author_timer: QTimer
+    pending_author_data: tuple[Book, int] | None
+
+    #===================
+    # UI elements
+    #===================
+    panel: QWidget
+    folders_dropdown: QComboBox
+    authors_dropdown: QComboBox
+    books_dropdown: QComboBox
+    mode_dropdown: QComboBox
+    
+    delay_author_toggle: QPushButton
+    buttons: dict[str, QPushButton]
+    btn_increase: QPushButton
+    btn_decrease: QPushButton
+    
+    output_stack: QStackedWidget
+    text_output: QTextEdit
+    table_output: QTableView
+
+    #=================================================
     # initialization
     #=================================================
     def __init__(self, collection: BookCollection):
         super().__init__()
 
         #=================================================
-        # instance attributes: type hints and init
+        # instance attributes
         #=================================================
-        self.collection: BookCollection = collection
-        self.filtered_books: list[str] = []
-        self.authors_with_quotes: list[str] = []
+        self.collection = collection
+        self.filtered_books = []
+        self.authors_with_quotes = []
 
         #=================================================
         # call init and build functions
@@ -147,9 +181,12 @@ class MainWindow(QMainWindow):
         font = self.buttons["random"].font()
         font.setPointSize(font.pointSize() + 1)
 
-        for btn in list(self.buttons.values()) + [
-            self.btn_increase, self.btn_decrease, self.delay_author_toggle
-        ]:
+        for btn in (
+            *self.buttons.values(),
+            self.btn_increase,
+            self.btn_decrease,
+            self.delay_author_toggle
+        ):
             btn.setFont(font)
             btn.setMinimumHeight(33)
 

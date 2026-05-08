@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] – 2026-XX
+### Changed
+- Removed global state and moved collection responsibility into `BookCollection`
+
 ## [2.0.0] – 2026-05
 ### Added
 - **mini-gui**

@@ -6,7 +6,7 @@ from constants_loader import constants
 import datetime
 import re
 import sys
-
+ 
 from book_collection import BookCollection, Book
 from collections import Counter
 from PySide6.QtCore import Qt, QTimer

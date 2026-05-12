@@ -64,10 +64,11 @@ To use all features of `readera-collection-cli`, the following should be ensured
 - Includes only basic buttons:
   - Print every quote
   - Random quote
-  - Delay author
+  - Delay author (checkbutton)
+  - Clear
   - Reset
 
-<img width="640" alt="image" src="https://github.com/user-attachments/assets/1d77204d-00ad-473a-be70-ed72bcc85a86" />
+<img width="749" height="629" alt="image" src="https://github.com/user-attachments/assets/6fa62e4e-85c1-478c-8eec-2a10da4fa945" />
 
 
 ## License

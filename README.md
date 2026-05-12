@@ -26,7 +26,7 @@ If you enjoy using it, please consider supporting the developers by purchasing t
 4. **Transfer backup file to your PC** (Google Drive, Gmail, etc.)
 5. **Unpack** `bak` file into a freely chosen folder (only `library.json` file will be needed, the rest can be deleted)
 6. **Simply download** python files next to your extracted `library.json` file
-7. **Run** `readera-collection-gui.py`
+7. **Run** `readera-collection-gui.py` or `mini-gui.py`
 
   
 ## Usage

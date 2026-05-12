@@ -61,14 +61,20 @@ class Book:
         return self._rnd_q(self.short_quotes)
 
     def _rnd_q(self, quotes_list):
-        quotes_left = 0
-        random_quote = None
-        unselected_quotes = [q for q in quotes_list if q not in self.selected_set]
-        if unselected_quotes:
-            random_quote = random.choice(unselected_quotes)
-            self.selected_set.add(random_quote)
-            quotes_left = len(unselected_quotes) - 1
-        return random_quote, quotes_left
+        unselected_quotes = self._unselected_quotes(quotes_list)
+        if not unselected_quotes:
+            return None, 0
+        random_quote = random.choice(unselected_quotes)
+        self.selected_set.add(random_quote)
+        return random_quote, len(unselected_quotes) - 1
+
+    def _unselected_quotes(self, quotes_list=None):
+        if quotes_list is None:
+            quotes_list = self.quotes
+        return [q for q in quotes_list if q not in self.selected_set]
+
+    def get_quotes_left(self):
+        return len(self._unselected_quotes())
 
     def clear_selected_set(self):
         self.selected_set.clear()

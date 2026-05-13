@@ -56,11 +56,15 @@ To use all features of `readera-collection-cli`, the following should be ensured
 - Search within quote text.
 - Print a book list sorted by a selected property.
 
-<img width="900" alt="kép" src="https://github.com/user-attachments/assets/7eaa9cef-f822-4603-b012-b60aa07a4d90" />
+<p align="center">
+<img width="800" alt="kép" src="https://github.com/user-attachments/assets/7eaa9cef-f822-4603-b012-b60aa07a4d90" />
+</p>
+
 
 ## mini-gui
 - Uses built-in `tkinter` for GUI.
 - Reduced functionality compared to full version.
+- Includes a quotes remaining counter in the header.
 - Includes only basic buttons:
   - Print every quote
   - Random quote
@@ -68,8 +72,9 @@ To use all features of `readera-collection-cli`, the following should be ensured
   - Clear
   - Reset
 
-<img width="749" height="629" alt="image" src="https://github.com/user-attachments/assets/6fa62e4e-85c1-478c-8eec-2a10da4fa945" />
-
+<p align="center">
+<img width="640" alt="image" src="https://github.com/user-attachments/assets/dc975191-ee13-406d-8524-bb4e7acb7145" />
+</p>
 
 ## License
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  

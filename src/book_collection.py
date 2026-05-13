@@ -85,14 +85,14 @@ class Book:
 
     @property
     def has_remaining_quotes(self):
-        return self.quotes_left_num > 0
+        return self.quotes_left > 0
 
     @property
     def has_remaining_short_quotes(self):
         return any(q not in self.selected_set for q in self.short_quotes)
         
     @property
-    def quotes_left_num(self):
+    def quotes_left(self):
         return self.total_q - len(self.selected_set)
 
     @property

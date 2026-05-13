@@ -76,11 +76,11 @@ class Book:
     # that can be accessed like an attribute
     #=================================================
     @property
-    def total_q(self):
+    def total_quotes(self):
         return (len(self.quotes) + len(self.short_quotes))
 
     @property
-    def total_short_q(self):
+    def total_short_quotes(self):
         return len(self.short_quotes)
 
     @property
@@ -93,7 +93,7 @@ class Book:
         
     @property
     def quotes_left(self):
-        return self.total_q - len(self.selected_set)
+        return self.total_quotes - len(self.selected_set)
 
     @property
     def is_read(self):
@@ -203,7 +203,7 @@ class BookCollection:
 
                     # calculate the q/p ratio, avoid division by zero
                     if this_book.pages_count > 0:
-                        this_book.q_per_page = round(this_book.total_q / this_book.pages_count, 2)
+                        this_book.q_per_page = round(this_book.total_quotes / this_book.pages_count, 2)
 
                 # check if current doc was finished or not
                 read_at_timestamp = doc['data'].get('doc_have_read_time') / 1000
@@ -228,8 +228,8 @@ class BookCollection:
 
         # gather titles, authors and quote counts
         for book in self.books:
-            self.all_quotes_count += book.total_q
-            self.short_quotes_count += book.total_short_q
+            self.all_quotes_count += book.total_quotes
+            self.short_quotes_count += book.total_short_quotes
 
         # alphabetical order by title
         self.books.sort(key=lambda book: book.title)

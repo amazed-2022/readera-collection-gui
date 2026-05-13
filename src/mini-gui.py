@@ -25,9 +25,10 @@ class MainWindow(tk.Tk):
     # output state
     #===================
     quote_printed: bool
+    book_header_printed: bool
     pending_author_data: tuple[Book, int] | None
     author_timer_id: str | None
-    q_left_disp_var: tk.StringVar
+    quotes_remaining_var: tk.StringVar
 
     #===================
     # UI elements
@@ -62,9 +63,10 @@ class MainWindow(tk.Tk):
         self.collection = collection
         self.filtered_books = []
         self.authors_with_quotes = []
-        self.q_left_disp_var = tk.StringVar(value=f"{collection.all_quotes_count}")
+        self.quotes_remaining_var = tk.StringVar(value=f"{collection.all_quotes_count}")
 
         self.quote_printed = False
+        self.book_header_printed = False
         self.pending_author_data = None
         # Tkinter "timer" placeholder (stores after() ID)
         self.author_timer_id = None
@@ -159,7 +161,7 @@ class MainWindow(tk.Tk):
     def _init_data(self) -> None:
         authors_set = set()
         for book in self.collection.books:
-            if book.total_q > 0:
+            if book.total_quotes > 0:
                 self.filtered_books.append(book.title)
                 authors_set.add(book.author)
         self.authors_with_quotes = sorted(authors_set)
@@ -234,9 +236,9 @@ class MainWindow(tk.Tk):
     # signals (event bindings)
     #=================================================
     def _init_signals(self) -> None:
-        self.folders_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_dropdown_change("folder"))
-        self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_dropdown_change("author"))
-        self.books_dropdown.bind("<<ComboboxSelected>>", lambda e: self.on_dropdown_change("book"))
+        self.folders_dropdown.bind("<<ComboboxSelected>>", lambda e: self._on_dropdown_change("folder"))
+        self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: self._on_dropdown_change("author"))
+        self.books_dropdown.bind("<<ComboboxSelected>>", lambda e: self._on_dropdown_change("book"))
 
         self.every_q_btn.configure(command=self.print_every_quote)
         self.random_q_btn.configure(command=self.print_random_quote)
@@ -278,18 +280,23 @@ class MainWindow(tk.Tk):
         self.logo_frame.columnconfigure(1, weight=0)
         self.logo_frame.columnconfigure(2, weight=1)
 
-        # create the quotes left label
-        q_counter_text = ttk.Label(self.q_counter_frame, text="Quotes left", font=self.default_font)
-        q_counter_label = ttk.Label(
+        # create labels for quotes remaining counter
+        q_counter_title = ttk.Label(
             self.q_counter_frame,
-            textvariable=self.q_left_disp_var,
+            text="Quotes\nremaining",
+            font=self.default_font,
+            justify="center"
+        )
+        q_counter_value = ttk.Label(
+            self.q_counter_frame,
+            textvariable=self.quotes_remaining_var,
             font=self.default_font,
             width=8,
             anchor="center",
             relief="sunken"
         )
-        q_counter_text.grid(row=0, column=0, padx=(0,25), pady=(0,5))
-        q_counter_label.grid(row=1, column=0, padx=(0,25), pady=(0,5))
+        q_counter_title.grid(row=0, column=0, padx=(0,25), pady=(0,5))
+        q_counter_value.grid(row=1, column=0, padx=(0,25), pady=(0,5))
 
     #=================================================
     # text output
@@ -354,6 +361,7 @@ class MainWindow(tk.Tk):
         self._flush_pending_author()
 
         selected_title = self.books_dropdown.get()
+        is_book_selected = self.books_dropdown.get() != constants.ANY_BOOK
         delay_author = self.delay_author_toggle.get()
 
         book, message = book_utils.get_book_for_random_quote(
@@ -373,37 +381,44 @@ class MainWindow(tk.Tk):
             self.log(message)
             return
 
+        #
+        if is_book_selected and not self.book_header_printed:
+            self.log(f"{book.title}", scroll_to_end=True)
+            self.log(f"{'-'*len(book.title)}\n", scroll_to_end=True)
+            self.book_header_printed = True
+
         # get the random quote and print it
-        random_quote, q_left_in_book = book_utils.get_random_quote(book)
+        random_quote, quotes_left_in_book = book_utils.get_random_quote(book)
         self.log(random_quote.text)
 
-        if not delay_author:
-            self._print_author_now(book, q_left_in_book)
-        else:
-            self._schedule_author(book, q_left_in_book, len(random_quote.text))
+        if not is_book_selected:
+            if not delay_author:
+                self._print_author_now(book, quotes_left_in_book)
+            else:
+                self._schedule_author(book, quotes_left_in_book, len(random_quote.text))
 
         # call counter update
-        self._refresh_q_counter()
+        self._update_quotes_remaining()
 
     def _print_author_now(
         self,
         book: Book,
-        q_left_in_book: int,
+        quotes_left_in_book: int,
         scroll_to_end: bool = True
     ) -> None:
-        self.log(f"\n{book.title}   / {q_left_in_book} left /", scroll_to_end)
+        self.log(f"\n{book.title}   / {quotes_left_in_book} left /", scroll_to_end)
         self.log(f"{'-'*len(book.title)}", scroll_to_end)
 
     def _schedule_author(
         self,
         book: Book,
-        q_left_in_book: int,
+        quotes_left_in_book: int,
         quote_length: int,
         base_delay_ms: int = 1000,
         ms_per_char: int = 50
     ) -> None:
         delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
-        self.pending_author_data = (book, q_left_in_book)
+        self.pending_author_data = (book, quotes_left_in_book)
 
         # stop previous timer if running
         if self.author_timer_id is not None:
@@ -416,8 +431,8 @@ class MainWindow(tk.Tk):
     def _print_pending_author(self) -> None:
         if self.pending_author_data:
             # unpack the stored tuple
-            book, q_left_in_book = self.pending_author_data
-            self._print_author_now(book, q_left_in_book, scroll_to_end=False)
+            book, quotes_left_in_book = self.pending_author_data
+            self._print_author_now(book, quotes_left_in_book, scroll_to_end=False)
         self.pending_author_data = None
         self.author_timer_id = None
 
@@ -426,8 +441,8 @@ class MainWindow(tk.Tk):
             self.after_cancel(self.author_timer_id)
             self.author_timer_id = None
         if print_data and self.pending_author_data:
-            book, q_left_in_book = self.pending_author_data
-            self._print_author_now(book, q_left_in_book)
+            book, quotes_left_in_book = self.pending_author_data
+            self._print_author_now(book, quotes_left_in_book)
         self.pending_author_data = None
 
     def _on_delay_author_toggle(self) -> None:
@@ -486,23 +501,22 @@ class MainWindow(tk.Tk):
     #=================================================
     # refresh counter
     #=================================================
-    def _refresh_q_counter(self) -> None:
-        quotes_count = 0
+    def _update_quotes_remaining(self) -> None:
         selected_book = self.books_dropdown.get()
-        is_specific_book_selected = selected_book != constants.ANY_BOOK
 
-        if is_specific_book_selected:
-            book = book_utils.get_book_by_title(self.collection.books, selected_book)
-            quotes_count = book.quotes_left_num if book else 0
-        else:
+        if selected_book == constants.ANY_BOOK:
             chosen_folder = self.folders_dropdown.get()
             chosen_author = self.authors_dropdown.get()
             quotes_count = sum(
-                book.quotes_left_num
+                book.remaining_quote_count
                 for book in self.collection.books
                 if self._book_matches_filters(book, chosen_folder, chosen_author)
             )
-        self.q_left_disp_var.set(str(quotes_count))
+        else:
+            book = book_utils.get_book_by_title(self.collection.books, selected_book)
+            quotes_count = book.remaining_quote_count if book else 0
+
+        self.quotes_remaining_var.set(f"{quotes_count}")
 
     #=================================================
     # clear text output
@@ -510,6 +524,7 @@ class MainWindow(tk.Tk):
     def clear_text_output(self) -> None:
         self._flush_pending_author(print_data=False)
         self.quote_printed = False
+        self.book_header_printed = False
         self.text_output.config(state="normal")
         self.text_output.delete("1.0", "end")
         self.text_output.config(state="disabled")
@@ -533,7 +548,7 @@ class MainWindow(tk.Tk):
         self.authors_dropdown.current(0)
         self.books_dropdown.current(0)
         # build full dropdown lists again
-        self.on_dropdown_change("folder")
+        self._on_dropdown_change("folder")
 
         # in Tkinter:
         # command= runs only on user interaction (mouse/keyboard click)
@@ -546,13 +561,15 @@ class MainWindow(tk.Tk):
     #=================================================
     # combobox change
     #=================================================
-    def on_dropdown_change(self, source: str) -> None:
+    def _on_dropdown_change(self, source: str) -> None:
         chosen_folder = self.folders_dropdown.get()
         chosen_author = self.authors_dropdown.get()
         chosen_book = self.books_dropdown.get()
 
         if source == "book":
-            self._refresh_q_counter()
+            self._update_quotes_remaining()
+            # book name should be printed before the first quote
+            self.book_header_printed = False
             return
 
         # update authors dropdown, if folder changed
@@ -564,7 +581,7 @@ class MainWindow(tk.Tk):
                     book.author
                     for book in self.collection.books
                     if book.folder == chosen_folder
-                    and book.total_q > 0
+                    and book.total_quotes > 0
                 }
                 folder_authors = sorted(folder_authors)
                 authors = [constants.ANY_AUTHOR] + folder_authors
@@ -573,16 +590,16 @@ class MainWindow(tk.Tk):
             self.authors_dropdown.current(0)
             chosen_author = constants.ANY_AUTHOR
 
-        # update books dropdown
+        # gather books for dropdown into a filtered books list
         self.filtered_books = [constants.ANY_BOOK]
 
         for book in self.collection.books:
-            if self._book_matches_filters(book, chosen_folder, chosen_author) and book.total_q > 0:
+            if self._book_matches_filters(book, chosen_folder, chosen_author) and book.total_quotes > 0:
                 self.filtered_books.append(book.title)
 
         self.books_dropdown["values"] = self.filtered_books
         self.books_dropdown.current(0)
-        self._refresh_q_counter()
+        self._update_quotes_remaining()
 
 
 #=================================================

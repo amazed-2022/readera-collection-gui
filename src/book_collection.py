@@ -34,10 +34,10 @@ class Book:
         self.file_modified_date = 0
         self.have_read_date = 0
         self.activity_time = 0
-        self.q_per_page = 0.0
+        self.quotes_per_page = 0.0
         self.quotes = []
         self.short_quotes = []
-        self.selected_set = set()
+        self.selected_quotes_set = set()
         self.first_q_timestamp = 0
         self.last_q_timestamp = 0
         self.rating = 0.0
@@ -61,15 +61,15 @@ class Book:
         return self._rnd_q(self.short_quotes)
 
     def _rnd_q(self, quotes_list):
-        unselected_quotes = [q for q in quotes_list if q not in self.selected_set]
+        unselected_quotes = [q for q in quotes_list if q not in self.selected_quotes_set]
         if not unselected_quotes:
             return None, 0
         random_quote = random.choice(unselected_quotes)
-        self.selected_set.add(random_quote)
+        self.selected_quotes_set.add(random_quote)
         return random_quote, len(unselected_quotes) - 1
 
     def clear_selected_set(self):
-        self.selected_set.clear()
+        self.selected_quotes_set.clear()
 
     #=================================================
     # @property decorator is used to define a method
@@ -85,15 +85,15 @@ class Book:
 
     @property
     def has_remaining_quotes(self):
-        return self.quotes_left > 0
+        return self.remaining_quote_count > 0
 
     @property
     def has_remaining_short_quotes(self):
-        return any(q not in self.selected_set for q in self.short_quotes)
+        return any(q not in self.selected_quotes_set for q in self.short_quotes)
         
     @property
-    def remaining_quotes(self):
-        return self.total_quotes - len(self.selected_set)
+    def remaining_quote_count(self):
+        return self.total_quotes - len(self.selected_quotes_set)
 
     @property
     def is_read(self):
@@ -203,7 +203,7 @@ class BookCollection:
 
                     # calculate the q/p ratio, avoid division by zero
                     if this_book.pages_count > 0:
-                        this_book.q_per_page = round(this_book.total_quotes / this_book.pages_count, 2)
+                        this_book.quotes_per_page = round(this_book.total_quotes / this_book.pages_count, 2)
 
                 # check if current doc was finished or not
                 read_at_timestamp = doc['data'].get('doc_have_read_time') / 1000

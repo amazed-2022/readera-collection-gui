@@ -402,7 +402,7 @@ class MainWindow(tk.Tk):
                 self._schedule_author(book, quotes_left_in_book, len(random_quote.text))
 
         # call counter update
-        self._update_quotes_counter()
+        self._update_quotes_ui_counter()
 
     def _print_author_now(
         self,
@@ -461,10 +461,28 @@ class MainWindow(tk.Tk):
     #=================================================
     # print random quote
     #=================================================
+    def _print_quotes_async(self, quotes, i, n):
+        if i >= n:
+            # scroll back to the top and reset counter
+            self.text_output.see("1.0")
+            self._set_quotes_ui_counter(0)
+            return
+
+        quote = quotes[i]
+        header = f"{i+1} / {n}  (p.{quote.page})"
+        self.log(header)
+        self.log(quote.text)
+        if i < (n - 1):
+            self.log("\n")
+        self._set_quotes_ui_counter(n - i)
+
+        # call next print
+        self.after(1, lambda: self._print_quotes_async(quotes, i + 1, n))
+
     def print_every_quote(self) -> None:
         # set back clear state
         self.clear_text_output()
-        self._update_quotes_counter(use_book_total=True)
+        self._update_quotes_ui_counter(use_book_total=True)
 
         selected_title = self.books_dropdown.get()
         if selected_title == constants.ANY_BOOK:
@@ -483,17 +501,8 @@ class MainWindow(tk.Tk):
         self.log(book.title)
         self.log('-' * len(book.title))
 
-        num_of_quotes = len(quotes)
-        for i, quote in enumerate(quotes):
-            header = f"{i+1} / {num_of_quotes}  (p.{quote.page})"
-            self.log(header)
-            self.log(quote.text)
-            if i < (num_of_quotes-1):
-                self.log("\n")
-
-        # scroll back to the top
-        self.text_output.see("1.0")
-        self._update_quotes_counter(reset_to_zero=True)
+        # start async quote printing loop
+        self._print_quotes_async(quotes, 0, len(quotes))
 
     #=================================================
     # filter match for a book instance
@@ -507,11 +516,10 @@ class MainWindow(tk.Tk):
     #=================================================
     # refresh counter
     #=================================================
-    def _update_quotes_counter(self, use_book_total=False, reset_to_zero=False) -> None:
-        if reset_to_zero:
-            self.quotes_remaining_var.set("0")
-            return
+    def _set_quotes_ui_counter(self, value: int) -> None:
+        self.quotes_remaining_var.set(str(value))
 
+    def _update_quotes_ui_counter(self, use_book_total=False) -> None:
         selected_book = self.books_dropdown.get()
 
         if selected_book == constants.ANY_BOOK:
@@ -529,7 +537,7 @@ class MainWindow(tk.Tk):
             else:
                 quotes_count = book.remaining_quote_count if book else 0
 
-        self.quotes_remaining_var.set(str(quotes_count))
+        self._set_quotes_ui_counter(quotes_count)
 
     #=================================================
     # clear text output
@@ -541,6 +549,7 @@ class MainWindow(tk.Tk):
         self.text_output.config(state="normal")
         self.text_output.delete("1.0", "end")
         self.text_output.config(state="disabled")
+        self._update_quotes_ui_counter()
 
     #=================================================
     # reset
@@ -580,7 +589,7 @@ class MainWindow(tk.Tk):
         chosen_book = self.books_dropdown.get()
 
         if source == "book":
-            self._update_quotes_counter()
+            self._update_quotes_ui_counter()
             # book name should be printed before the first quote
             self.book_header_printed = False
             return
@@ -612,7 +621,7 @@ class MainWindow(tk.Tk):
 
         self.books_dropdown["values"] = self.filtered_books
         self.books_dropdown.current(0)
-        self._update_quotes_counter()
+        self._update_quotes_ui_counter()
 
 
 #=================================================

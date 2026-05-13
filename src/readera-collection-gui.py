@@ -6,7 +6,7 @@ from constants_loader import constants
 import datetime
 import re
 import sys
- 
+
 from book_collection import BookCollection, Book
 from collections import Counter
 from PySide6.QtCore import Qt, QTimer
@@ -46,12 +46,12 @@ class MainWindow(QMainWindow):
     authors_dropdown: QComboBox
     books_dropdown: QComboBox
     mode_dropdown: QComboBox
-    
+
     delay_author_toggle: QPushButton
     buttons: dict[str, QPushButton]
     btn_increase: QPushButton
     btn_decrease: QPushButton
-    
+
     output_stack: QStackedWidget
     text_output: QTextEdit
     table_output: QTableView
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
 
         # filtered books start with full list
         for book in self.collection.books:
-            if book.total_q > 0:
+            if book.total_quotes > 0:
                 self.filtered_books.append(book.title)
                 authors_set.add(book.author)
 
@@ -397,7 +397,7 @@ class MainWindow(QMainWindow):
                 folder_authors = {
                     book.author
                     for book in self.collection.books
-                    if book.folder == chosen_folder and book.total_q > 0
+                    if book.folder == chosen_folder and book.total_quotes > 0
                 }
                 folder_authors = sorted(folder_authors)
                 authors = [constants.ANY_AUTHOR] + folder_authors
@@ -414,7 +414,7 @@ class MainWindow(QMainWindow):
                 continue
             if chosen_author != constants.ANY_AUTHOR and book.author != chosen_author:
                 continue
-            if book.total_q > 0:
+            if book.total_quotes > 0:
                 self.filtered_books.append(book.title)
 
         self.books_dropdown.clear()
@@ -580,7 +580,7 @@ class MainWindow(QMainWindow):
             float(book.rating),
             book.ratings_count,
             book.folder,
-            int(book.total_q),
+            int(book.total_quotes),
             int(book.pages_count),
             book.q_per_page,
             book.have_read_date.strftime('%Y-%b-%d') if book.is_read else "-",
@@ -839,7 +839,7 @@ class MainWindow(QMainWindow):
         # gather book counts
         books_with_quotes, books_20th, books_21st, books_read_count = 0, 0, 0, 0
         for book in self.collection.books:
-            if book.total_q > 0:
+            if book.total_quotes > 0:
                 books_with_quotes += 1
             if 1900 <= book.published_date < 2000:
                 books_20th += 1
@@ -851,12 +851,12 @@ class MainWindow(QMainWindow):
             # gather folders statistics
             for folder in self.collection.folders:
                 if book.folder == folder:
-                    folder_q_count[folder] = folder_q_count.get(folder, 0) + book.total_q
+                    folder_q_count[folder] = folder_q_count.get(folder, 0) + book.total_quotes
                     folder_book_count[folder] = folder_book_count.get(folder, 0) + 1
                     break
 
-            if book.total_q > 0:
-                author_quotes[book.author] = author_quotes.get(book.author, 0) + book.total_q
+            if book.total_quotes > 0:
+                author_quotes[book.author] = author_quotes.get(book.author, 0) + book.total_quotes
 
         #=================================================
         # books

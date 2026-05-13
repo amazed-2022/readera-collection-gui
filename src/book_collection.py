@@ -92,7 +92,7 @@ class Book:
         return any(q not in self.selected_set for q in self.short_quotes)
         
     @property
-    def quotes_left(self):
+    def remaining_quotes(self):
         return self.total_quotes - len(self.selected_set)
 
     @property

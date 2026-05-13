@@ -375,14 +375,16 @@ class MainWindow(tk.Tk):
             self.log("\n")
         else:
             self.clear_text_output()
-        self.quote_printed = True
 
         if book is None:
             self.log(message)
             return
 
-        #
+        # print book header if a particular book is selected
         if is_book_selected and not self.book_header_printed:
+            if self.quote_printed:
+                # add an extra empty line for better separation
+                self.log("")
             self.log(f"{book.title}", scroll_to_end=True)
             self.log(f"{'-'*len(book.title)}\n", scroll_to_end=True)
             self.book_header_printed = True
@@ -390,6 +392,7 @@ class MainWindow(tk.Tk):
         # get the random quote and print it
         random_quote, quotes_left_in_book = book_utils.get_random_quote(book)
         self.log(random_quote.text)
+        self.quote_printed = True
 
         if not is_book_selected:
             if not delay_author:

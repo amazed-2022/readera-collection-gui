@@ -73,7 +73,7 @@ To use all features of `readera-collection-cli`, the following should be ensured
   - Reset
 
 <p align="center">
-<img width="640" alt="image" src="https://github.com/user-attachments/assets/dc975191-ee13-406d-8524-bb4e7acb7145" />
+<img width="640" alt="kép" src="https://github.com/user-attachments/assets/8b7f66c0-ce63-46ac-ab02-9de9d8a3e023" />
 </p>
 
 ## License

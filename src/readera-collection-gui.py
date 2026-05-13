@@ -582,7 +582,7 @@ class MainWindow(QMainWindow):
             book.folder,
             int(book.total_quotes),
             int(book.pages_count),
-            book.q_per_page,
+            book.quotes_per_page,
             book.have_read_date.strftime('%Y-%b-%d') if book.is_read else "-",
             book.file_modified_date.strftime('%Y-%b-%d'),
         ]

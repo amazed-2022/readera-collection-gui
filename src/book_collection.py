@@ -32,7 +32,7 @@ class Book:
         self.pages_count = 0
         self.published_date = 0
         self.file_modified_date = 0
-        self.have_read_date = 0
+        self.have_read_date: datetime.datetime = datetime.datetime.fromtimestamp(0)
         self.activity_time = 0
         self.quotes_per_page = 0.0
         self.quotes = []
@@ -77,7 +77,7 @@ class Book:
     #=================================================
     @property
     def total_quotes(self):
-        return (len(self.quotes) + len(self.short_quotes))
+        return len(self.quotes) + len(self.short_quotes)
 
     @property
     def total_short_quotes(self):
@@ -232,6 +232,6 @@ class BookCollection:
             self.short_quotes_count += book.total_short_quotes
 
         # alphabetical order by title
-        self.books.sort(key=lambda book: book.title)
+        self.books.sort(key=lambda bk: bk.title)
 
         return error

@@ -176,6 +176,7 @@ class MainWindow(QMainWindow):
 
         for w in (self.btn_increase, self.btn_decrease, self.mode_dropdown):
             w.setFixedWidth(160)
+            w.setMinimumHeight(40)
 
         # grab the font of first button (from dictionary list)
         font = self.buttons["random"].font()
@@ -188,7 +189,7 @@ class MainWindow(QMainWindow):
             self.delay_author_toggle
         ):
             btn.setFont(font)
-            btn.setMinimumHeight(33)
+            btn.setMinimumHeight(40)
 
     #=================================================
     # signals
@@ -519,7 +520,8 @@ class MainWindow(QMainWindow):
         )
         return prop if ok else None
 
-    def _build_headers(self, book_property):
+    @staticmethod
+    def _build_headers(book_property):
         headers = [
             "" if book_property != constants.PROP_READ_DURATION else "Read duration",
             "" if book_property != constants.PROP_READ_DURATION else "Pages / day",
@@ -608,7 +610,8 @@ class MainWindow(QMainWindow):
 
         return items
 
-    def _get_read_duration_data(self, book):
+    @staticmethod
+    def _get_read_duration_data(book):
         if (book.first_q_timestamp <= constants.START_DATE_FOR_READ_LIST or
             (book.last_q_timestamp - book.first_q_timestamp) <= constants.ONE_DAY_IN_SECONDS or
             book.title in constants.EXCLUDED_TITLES_FROM_READ_DURATION):
@@ -950,7 +953,8 @@ class MainWindow(QMainWindow):
         if blank_line:
             self.log("")
 
-    def get_percentage_string(self, count, total, digit=3):
+    @staticmethod
+    def get_percentage_string(count, total, digit=3):
         return f"{int((count/total)*100):{digit}d}%" if total else "0%"
 
     def print_folder_dict(self, folder_dict, total):

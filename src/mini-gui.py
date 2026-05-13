@@ -116,7 +116,7 @@ class MainWindow(tk.Tk):
 
     def set_default_window_size(self):
         width = 750
-        height = 600
+        height = 750
 
         # get screen size
         screen_width = self.winfo_screenwidth()
@@ -507,7 +507,8 @@ class MainWindow(tk.Tk):
     #=================================================
     # filter match for a book instance
     #=================================================
-    def _book_matches_filters(self, book, chosen_folder, chosen_author) -> bool:
+    @staticmethod
+    def _book_matches_filters(book, chosen_folder, chosen_author) -> bool:
         return (
             (chosen_folder == constants.ANY_FOLDER or book.folder == chosen_folder)
             and (chosen_author == constants.ANY_AUTHOR or book.author == chosen_author)
@@ -586,7 +587,6 @@ class MainWindow(tk.Tk):
     def _on_dropdown_change(self, source: str) -> None:
         chosen_folder = self.folders_dropdown.get()
         chosen_author = self.authors_dropdown.get()
-        chosen_book = self.books_dropdown.get()
 
         if source == "book":
             self._update_quotes_ui_counter()

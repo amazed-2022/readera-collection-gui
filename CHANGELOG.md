@@ -3,6 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [2.1.0] – 2026-XX
+### Added
+- Quotes remaining counter to the header in `mini-gui`
+
 ### Changed
 - Removed global state and moved collection responsibility into `BookCollection`
 

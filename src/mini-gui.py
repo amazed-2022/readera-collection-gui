@@ -204,7 +204,6 @@ class MainWindow(tk.Tk):
             style="Big.TButton"
         )
 
-        # just three buttons
         self.random_q_btn = ttk.Button(
             self.buttons_frame,
             text="Random quote",

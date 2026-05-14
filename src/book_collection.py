@@ -1,11 +1,12 @@
 #=================================================
 # IMPORT
 #=================================================
-from constants_loader import constants
-import datetime
 import json
 import random
 import re
+
+from constants_loader import constants
+from datetime import datetime
 
 #=================================================
 # CLASSES
@@ -32,7 +33,7 @@ class Book:
         self.pages_count = 0
         self.published_date = 0
         self.file_modified_date = 0
-        self.have_read_date: datetime.datetime = datetime.datetime.fromtimestamp(0)
+        self.have_read_date: datetime = datetime.fromtimestamp(0)
         self.activity_time = 0
         self.quotes_per_page = 0.0
         self.quotes = []
@@ -90,7 +91,7 @@ class Book:
     @property
     def has_remaining_short_quotes(self):
         return any(q not in self.selected_quotes_set for q in self.short_quotes)
-        
+
     @property
     def remaining_quote_count(self):
         return self.total_quotes - len(self.selected_quotes_set)
@@ -159,7 +160,7 @@ class BookCollection:
                 this_book.annotation = doc['data'].get('doc_annotation', "")
 
                 # store file date as a date object, activity time as a simple timestamp
-                aux_date = datetime.datetime.fromtimestamp(doc['data'].get('file_modified_time') / 1000)
+                aux_date = datetime.fromtimestamp(doc['data'].get('file_modified_time') / 1000)
                 this_book.file_modified_date = aux_date
                 this_book.activity_time = doc['data'].get('doc_activity_time')
 
@@ -209,19 +210,19 @@ class BookCollection:
                 read_at_timestamp = doc['data'].get('doc_have_read_time') / 1000
                 if doc['data'].get('doc_have_read_time') != 0:
                     if this_book.title in constants.EXCEPTION_TITLES_FOR_READ_DATE:
-                        aux_date = datetime.datetime.fromtimestamp(constants.EXCEPTION_DATE_FOR_READ_DATE)
+                        aux_date = datetime.fromtimestamp(constants.EXCEPTION_DATE_FOR_READ_DATE)
                     elif ((this_book.last_q_timestamp - this_book.first_q_timestamp) > constants.ONE_DAY_IN_SECONDS and
                         this_book.title not in constants.EXCLUDED_TITLES_FROM_READ_DATE ):
                         # sanity check for doc have read time
                         if (read_at_timestamp - this_book.last_q_timestamp) < constants.MAX_SEC_BETWEEN_LAST_QUOTE_AND_READ_DATE:
-                            aux_date = datetime.datetime.fromtimestamp(read_at_timestamp)
+                            aux_date = datetime.fromtimestamp(read_at_timestamp)
                         else:
-                            aux_date = datetime.datetime.fromtimestamp(this_book.last_q_timestamp)
+                            aux_date = datetime.fromtimestamp(this_book.last_q_timestamp)
                     else:
                         # use default date
-                        aux_date = datetime.datetime.fromtimestamp(constants.DEFAULT_DATE_FOR_READ_DATE)
+                        aux_date = datetime.fromtimestamp(constants.DEFAULT_DATE_FOR_READ_DATE)
                 else:
-                    aux_date = datetime.datetime.fromtimestamp(0)
+                    aux_date = datetime.fromtimestamp(0)
 
                 # add the constructed date
                 this_book.have_read_date = aux_date

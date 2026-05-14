@@ -2,13 +2,13 @@
 # IMPORT
 #=================================================
 import book_utils
-from constants_loader import constants
-import datetime
 import re
 import sys
 
 from book_collection import BookCollection, Book
+from constants_loader import constants
 from collections import Counter
+from datetime import datetime
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
@@ -618,7 +618,7 @@ class MainWindow(QMainWindow):
             return "", 0
 
         # compute elapsed days if needed
-        dt_first = datetime.datetime.fromtimestamp(book.first_q_timestamp)
+        dt_first = datetime.fromtimestamp(book.first_q_timestamp)
         elapsed_days = (book.have_read_date - dt_first).days + 1
 
         if dt_first.year == book.have_read_date.year:

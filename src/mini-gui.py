@@ -354,7 +354,7 @@ class MainWindow(tk.Tk):
         self.text_output.config(state="disabled")
 
     #=================================================
-    # print random quotes
+    # print random quote
     #=================================================
     def print_random_quote(self) -> None:
         # print any remaining author data
@@ -459,26 +459,8 @@ class MainWindow(tk.Tk):
                 self.text_output.see("end")
 
     #=================================================
-    # print random quote
+    # print every quote
     #=================================================
-    def _print_quotes_async(self, quotes, i, n):
-        if i >= n:
-            # scroll back to the top and reset counter
-            self.text_output.see("1.0")
-            self._set_quotes_ui_counter(0)
-            return
-
-        quote = quotes[i]
-        header = f"{i+1} / {n}  (p.{quote.page})"
-        self.log(header)
-        self.log(quote.text)
-        if i < (n - 1):
-            self.log("\n")
-        self._set_quotes_ui_counter(n - i)
-
-        # call next print
-        self.after(1, lambda: self._print_quotes_async(quotes, i + 1, n))
-
     def print_every_quote(self) -> None:
         # set back clear state
         self.clear_text_output()
@@ -496,30 +478,38 @@ class MainWindow(tk.Tk):
 
         # book exists, get quotes for printing
         quotes = book_utils.get_quotes_sorted_by_page(book)
-
-        # print to textbox
         self.log(book.title)
         self.log('-' * len(book.title))
 
-        # start async quote printing loop
-        self._print_quotes_async(quotes, 0, len(quotes))
+        # setup async iteration state and start the loop
+        self._book_quote_count = len(quotes)
+        # enumerate(quotes) produces (index, quote) pairs
+        # iter() creates the iterator over them
+        self._quote_iter = iter(enumerate(quotes))
+        self._print_next_quote()
 
-    #=================================================
-    # filter match for a book instance
-    #=================================================
-    @staticmethod
-    def _book_matches_filters(book, chosen_folder, chosen_author) -> bool:
-        return (
-            (chosen_folder == constants.ANY_FOLDER or book.folder == chosen_folder)
-            and (chosen_author == constants.ANY_AUTHOR or book.author == chosen_author)
-        )
+    def _print_next_quote(self):
+        try:
+            i, quote = next(self._quote_iter)
+        except StopIteration:
+            # finished
+            self.text_output.see("1.0")
+            self._set_quotes_ui_counter(0)
+            return
+
+        header = f"{i + 1} / {self._book_quote_count}  (p.{quote.page})"
+        self.log(header)
+        self.log(quote.text)
+        if i < (self._book_quote_count - 1):
+            self.log("\n")
+        self._set_quotes_ui_counter(self._book_quote_count  - i)
+
+        # schedule next iteration
+        self.after(1, self._print_next_quote)
 
     #=================================================
     # refresh counter
     #=================================================
-    def _set_quotes_ui_counter(self, value: int) -> None:
-        self.quotes_remaining_var.set(str(value))
-
     def _update_quotes_ui_counter(self, use_book_total=False) -> None:
         selected_book = self.books_dropdown.get()
 
@@ -539,6 +529,9 @@ class MainWindow(tk.Tk):
                 quotes_count = book.remaining_quote_count if book else 0
 
         self._set_quotes_ui_counter(quotes_count)
+
+    def _set_quotes_ui_counter(self, value: int) -> None:
+        self.quotes_remaining_var.set(str(value))
 
     #=================================================
     # clear text output
@@ -623,6 +616,15 @@ class MainWindow(tk.Tk):
         self.books_dropdown.current(0)
         self._update_quotes_ui_counter()
 
+    #=================================================
+    # filter match for a book instance
+    #=================================================
+    @staticmethod
+    def _book_matches_filters(book, chosen_folder, chosen_author) -> bool:
+        return (
+            (chosen_folder == constants.ANY_FOLDER or book.folder == chosen_folder)
+            and (chosen_author == constants.ANY_AUTHOR or book.author == chosen_author)
+        )
 
 #=================================================
 # MAIN

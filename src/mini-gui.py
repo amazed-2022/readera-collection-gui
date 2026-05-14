@@ -116,7 +116,7 @@ class MainWindow(tk.Tk):
 
     def set_default_window_size(self):
         width = 750
-        height = 750
+        height = 650
 
         # get screen size
         screen_width = self.winfo_screenwidth()
@@ -505,7 +505,7 @@ class MainWindow(tk.Tk):
         self._set_quotes_ui_counter(self._book_quote_count  - i)
 
         # schedule next iteration
-        self.after(1, self._print_next_quote)
+        self.after(5, self._print_next_quote)
 
     #=================================================
     # refresh counter

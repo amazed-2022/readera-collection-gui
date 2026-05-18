@@ -600,10 +600,14 @@ class MainWindow(tk.Tk):
             )
         else:
             book = book_utils.get_book_by_title(self.collection.books, selected_book)
-            if use_book_total:
-                quotes_count = book.total_quotes if book else 0
+            if book:
+                quotes_count = (
+                    book.total_quotes
+                    if use_book_total
+                    else book.remaining_quote_count
+                )
             else:
-                quotes_count = book.remaining_quote_count if book else 0
+                quotes_count = 0
 
         self._set_quotes_ui_counter(quotes_count)
 

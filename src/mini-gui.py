@@ -146,7 +146,7 @@ class MainWindow(tk.Tk):
     # helpers
     #===================
     _book_quote_count: int
-    _quote_iter: Iterator
+    _quote_iter: Iterator[tuple[int, str]]
 
     #=================================================
     # initialization
@@ -560,9 +560,9 @@ class MainWindow(tk.Tk):
 
         # setup async iteration state and start the loop
         self._book_quote_count = len(quotes)
-        # enumerate(quotes) produces (index, quote) pairs
-        # iter() creates the iterator over them
-        self._quote_iter = iter(enumerate(quotes))
+        
+        # enumerate(quotes) produces an iterator of (index, quote) pairs
+        self._quote_iter = enumerate(quotes)
         self._print_next_quote()
 
     def _print_next_quote(self) -> None:

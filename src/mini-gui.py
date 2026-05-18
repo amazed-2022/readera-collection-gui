@@ -585,7 +585,7 @@ class MainWindow(tk.Tk):
         self.after(5, self._print_next_quote)
 
     #=================================================
-    # refresh counter
+    # quotes remaining counter
     #=================================================
     def _update_quotes_ui_counter(self, use_book_total=False) -> None:
         selected_book = self.filters.selected_book

@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.1.0] – 2026-XX
+## [2.1.0] – 2026-05
 ### Added
 - Quotes remaining counter to the header in `mini-gui`
 

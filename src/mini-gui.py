@@ -579,7 +579,7 @@ class MainWindow(tk.Tk):
         self.log(quote.text)
         if i < (self._book_quote_count - 1):
             self.log("\n")
-        self._set_quotes_ui_counter(self._book_quote_count  - i)
+        self._set_quotes_ui_counter(self._book_quote_count - i)
 
         # schedule next iteration
         self.after(5, self._print_next_quote)

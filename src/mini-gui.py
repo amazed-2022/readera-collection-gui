@@ -6,8 +6,102 @@ import os
 import tkinter as tk
 
 from book_collection import BookCollection, Book
+from collections.abc import Iterator
 from constants_loader import constants
 from tkinter import ttk, messagebox, font
+
+#=================================================
+# FILTER PANEL
+#=================================================
+class FilterPanel(ttk.Frame):
+
+    #=================================================
+    # type hints
+    #=================================================
+    folder_label: ttk.Label
+    author_label: ttk.Label
+    book_label: ttk.Label
+    folders_dropdown: ttk.Combobox
+    authors_dropdown: ttk.Combobox
+    books_dropdown: ttk.Combobox
+
+    def __init__(self, parent, label_font: font.Font):
+        super().__init__(parent)
+
+        # folder/author/book filters (widgets belong to this Frame and are arranged in _build_layout)
+        self.folder_label = ttk.Label(self, text="FOLDER", font=label_font)
+        self.author_label = ttk.Label(self, text="AUTHOR", font=label_font)
+        self.book_label = ttk.Label(self, text="BOOK", font=label_font)
+
+        self.folders_dropdown = ttk.Combobox(self)
+        self.authors_dropdown = ttk.Combobox(self)
+        self.books_dropdown = ttk.Combobox(self)
+
+        self._build_layout()
+
+    def _build_layout(self) -> None:
+        grid_opts = {"column": 0, "padx": (0, 20), "pady": 6, "sticky": "w"}
+        self.folder_label.grid(row=0, **grid_opts)
+        self.author_label.grid(row=1, **grid_opts)
+        self.book_label.grid(row=2, **grid_opts)
+
+        self.folders_dropdown.grid(row=0, column=1, sticky="ew")
+        self.authors_dropdown.grid(row=1, column=1, sticky="ew")
+        self.books_dropdown.grid(row=2, column=1, sticky="ew")
+        # allow dropdown widgets (in column 1) to stretch when space is available
+        self.columnconfigure(1, weight=1)
+
+    def set_folders_list(self, folders: list[str]) -> None:
+        self.folders_dropdown["values"] = folders
+
+    def set_authors_list(self, authors: list[str]) -> None:
+        self.authors_dropdown["values"] = authors
+
+    def set_books_list(self, books: list[str]) -> None:
+        self.books_dropdown["values"] = books
+
+    def select_first_all(self) -> None:
+        self.select_first_folder()
+        self.select_first_author()
+        self.select_first_book()
+
+    def select_first_folder(self) -> None:
+        self._select_first_value(self.folders_dropdown)
+
+    def select_first_author(self) -> None:
+        self._select_first_value(self.authors_dropdown)
+
+    def select_first_book(self) -> None:
+        self._select_first_value(self.books_dropdown)
+
+    def _select_first_value(self, combobox: ttk.Combobox) -> None:
+        if combobox["values"]:
+            combobox.current(0)
+
+    def set_dropdowns_font(self, dropdown_font: font.Font) -> None:
+        for dropdown in (
+            self.folders_dropdown,
+            self.authors_dropdown,
+            self.books_dropdown,
+        ):
+            dropdown.configure(font=dropdown_font)
+
+    def set_on_change_callback(self, callback) -> None:
+        self.folders_dropdown.bind("<<ComboboxSelected>>", lambda e: callback("folder"))
+        self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: callback("author"))
+        self.books_dropdown.bind("<<ComboboxSelected>>", lambda e: callback("book"))
+
+    @property
+    def selected_folder(self) -> str:
+        return self.folders_dropdown.get()
+
+    @property
+    def selected_author(self) -> str:
+        return self.authors_dropdown.get()
+
+    @property
+    def selected_book(self) -> str:
+        return self.books_dropdown.get()
 
 #=================================================
 # MAIN WINDOW
@@ -34,15 +128,12 @@ class MainWindow(tk.Tk):
     # UI elements
     #===================
     header_frame: ttk.Frame
-    filters_frame: ttk.Frame
-    q_counter_frame: ttk.Frame
+    filters: FilterPanel
     logo_frame: ttk.Frame
+    q_counter_frame: ttk.Frame
     text_frame: ttk.Frame
-    buttons_frame: ttk.Frame
-    folders_dropdown: ttk.Combobox
-    authors_dropdown: ttk.Combobox
-    books_dropdown: ttk.Combobox
     text_output: tk.Text
+    buttons_frame: ttk.Frame
 
     every_q_btn: ttk.Button
     random_q_btn: ttk.Button
@@ -50,6 +141,12 @@ class MainWindow(tk.Tk):
     delay_author_toggle: tk.BooleanVar
     clear_btn: ttk.Button
     reset_btn: ttk.Button
+
+    #===================
+    # helpers
+    #===================
+    _book_quote_count: int
+    _quote_iter: Iterator
 
     #=================================================
     # initialization
@@ -142,13 +239,14 @@ class MainWindow(tk.Tk):
         self.panel.rowconfigure(1, weight=1)
         self.panel.columnconfigure(0, weight=1)
 
+        # create FilterPanel (manages filter dropdowns and selection logic)
+        self.filters = FilterPanel(self.header_frame, self.default_font)
         # create further sub-frames
-        self.filters_frame = ttk.Frame(self.header_frame)
         self.q_counter_frame = ttk.Frame(self.header_frame)
         self.logo_frame = ttk.Frame(self.header_frame)
 
         # grid and configure header frame
-        self.filters_frame.grid(row=0, column=0, sticky="ew", padx=(25, 0))
+        self.filters.grid(row=0, column=0, sticky="ew", padx=(25, 0))
         self.logo_frame.grid(row=0, column=1, sticky="ew", padx=0)
         self.q_counter_frame.grid(row=0, column=2)
         self.header_frame.columnconfigure(0, weight=15)
@@ -170,25 +268,21 @@ class MainWindow(tk.Tk):
     # ComboBox filters (dropdowns)
     #=================================================
     def _init_filters(self) -> None:
-        self.folders_dropdown = ttk.Combobox(
-            self.filters_frame,
-            values=[constants.ANY_FOLDER] + sorted(list(self.collection.folders.keys())),
-            font=self.default_font
-        )
-        self.authors_dropdown = ttk.Combobox(
-            self.filters_frame,
-            values=[constants.ANY_AUTHOR] + self.authors_with_quotes,
-            font=self.default_font
-        )
-        self.books_dropdown = ttk.Combobox(
-            self.filters_frame,
-            values=[constants.ANY_BOOK] + self.filtered_books,
-            font=self.default_font
+        self.filters.set_dropdowns_font(self.default_font)
+
+        self.filters.set_folders_list(
+            [constants.ANY_FOLDER] + sorted(list(self.collection.folders.keys()))
         )
 
-        self.folders_dropdown.current(0)
-        self.authors_dropdown.current(0)
-        self.books_dropdown.current(0)
+        self.filters.set_authors_list(
+            [constants.ANY_AUTHOR] + self.authors_with_quotes
+        )
+
+        self.filters.set_books_list(
+            [constants.ANY_BOOK] + self.filtered_books
+        )
+
+        self.filters.select_first_all()
 
     #=================================================
     # init buttons
@@ -235,9 +329,8 @@ class MainWindow(tk.Tk):
     # signals (event bindings)
     #=================================================
     def _init_signals(self) -> None:
-        self.folders_dropdown.bind("<<ComboboxSelected>>", lambda e: self._on_dropdown_change("folder"))
-        self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: self._on_dropdown_change("author"))
-        self.books_dropdown.bind("<<ComboboxSelected>>", lambda e: self._on_dropdown_change("book"))
+        # this method binds change callback for all comboboxes
+        self.filters.set_on_change_callback(self._on_dropdown_change)
 
         self.every_q_btn.configure(command=self.print_every_quote)
         self.random_q_btn.configure(command=self.print_random_quote)
@@ -249,23 +342,8 @@ class MainWindow(tk.Tk):
     # header frame
     #=================================================
     def _build_header_frame(self) -> None:
-        # populate filters_frame with labels and dropdowns
-        folder_label = ttk.Label(self.filters_frame, text="FOLDER", font=self.default_font)
-        author_label = ttk.Label(self.filters_frame, text="AUTHOR", font=self.default_font)
-        book_label = ttk.Label(self.filters_frame, text="BOOK", font=self.default_font)
-
-        grid_opts = {"column": 0, "padx": (0, 20), "pady": 6, "sticky": "w"}
-        folder_label.grid(row=0, **grid_opts)
-        author_label.grid(row=1, **grid_opts)
-        book_label.grid(row=2, **grid_opts)
-        self.folders_dropdown.grid(row=0, column=1, sticky="ew")
-        self.authors_dropdown.grid(row=1, column=1, sticky="ew")
-        self.books_dropdown.grid(row=2, column=1, sticky="ew")
-
-        # allow dropdown widgets (in column 1) to stretch when space is available
-        self.filters_frame.columnconfigure(1, weight=1)
-
-        # logo next to the dropdowns
+        # filters object (FilterPanel instance) was already created
+        # and positioned in header grid, add logo next to them
         string = f"== The Collection =="
         logo_text = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
         logo = ttk.Label(
@@ -360,8 +438,8 @@ class MainWindow(tk.Tk):
         self._flush_pending_author()
 
         # get dropdown selections
-        selected_title = self.books_dropdown.get()
-        is_book_selected = self.books_dropdown.get() != constants.ANY_BOOK
+        selected_title = self.filters.selected_book
+        is_book_selected = selected_title != constants.ANY_BOOK
         delay_author = self.delay_author_toggle.get()
 
         book, message = book_utils.get_book_for_random_quote(
@@ -465,7 +543,7 @@ class MainWindow(tk.Tk):
         self.clear_text_output()
         self._update_quotes_ui_counter(use_book_total=True)
 
-        selected_title = self.books_dropdown.get()
+        selected_title = self.filters.selected_book
         if selected_title == constants.ANY_BOOK:
             self.log("Select a book from the list.")
             return
@@ -487,7 +565,7 @@ class MainWindow(tk.Tk):
         self._quote_iter = iter(enumerate(quotes))
         self._print_next_quote()
 
-    def _print_next_quote(self):
+    def _print_next_quote(self) -> None:
         try:
             i, quote = next(self._quote_iter)
         except StopIteration:
@@ -510,11 +588,11 @@ class MainWindow(tk.Tk):
     # refresh counter
     #=================================================
     def _update_quotes_ui_counter(self, use_book_total=False) -> None:
-        selected_book = self.books_dropdown.get()
+        selected_book = self.filters.selected_book
 
         if selected_book == constants.ANY_BOOK:
-            chosen_folder = self.folders_dropdown.get()
-            chosen_author = self.authors_dropdown.get()
+            chosen_folder = self.filters.selected_folder
+            chosen_author = self.filters.selected_author
             quotes_count = sum(
                 book.remaining_quote_count
                 for book in self.collection.books
@@ -559,9 +637,8 @@ class MainWindow(tk.Tk):
 
         # rebuild collection and reset dropdowns
         self.collection.build_the_collection()
-        self.folders_dropdown.current(0)
-        self.authors_dropdown.current(0)
-        self.books_dropdown.current(0)
+        self.filters.select_first_all()
+
         # build full dropdown lists again
         self._on_dropdown_change("folder")
 
@@ -577,8 +654,7 @@ class MainWindow(tk.Tk):
     # combobox change
     #=================================================
     def _on_dropdown_change(self, source: str) -> None:
-        chosen_folder = self.folders_dropdown.get()
-        chosen_author = self.authors_dropdown.get()
+        chosen_folder = self.filters.selected_folder
 
         if source == "book":
             self._update_quotes_ui_counter()
@@ -600,19 +676,20 @@ class MainWindow(tk.Tk):
                 folder_authors = sorted(folder_authors)
                 authors = [constants.ANY_AUTHOR] + folder_authors
 
-            self.authors_dropdown["values"] = authors
-            self.authors_dropdown.current(0)
-            chosen_author = constants.ANY_AUTHOR
+            self.filters.set_authors_list(authors)
+            self.filters.select_first_author()
 
         # gather books for dropdown into a filtered books list
         self.filtered_books = [constants.ANY_BOOK]
 
         for book in self.collection.books:
-            if self._book_matches_filters(book, chosen_folder, chosen_author) and book.total_quotes > 0:
+            # check selected folder and/or author for matching books
+            if self._book_matches_filters(book, chosen_folder, self.filters.selected_author) and book.total_quotes > 0:
                 self.filtered_books.append(book.title)
 
-        self.books_dropdown["values"] = self.filtered_books
-        self.books_dropdown.current(0)
+        # set gathered list and reset dropdown
+        self.filters.set_books_list(self.filtered_books)
+        self.filters.select_first_book()
         self._update_quotes_ui_counter()
 
     #=================================================

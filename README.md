@@ -1,7 +1,7 @@
 # readera-collection-gui
 An **unofficial GUI tool** for loading and viewing books and quotes stored in ReadEra backup files.
 
-**Current version:** v2.0.0  
+**Current version:** v2.1.0  
 **License:** GNU GPL v3.0  
 **Author:** amazed  
 **Version history:** [CHANGELOG](CHANGELOG.md)

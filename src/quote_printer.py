@@ -3,7 +3,7 @@
 #=================================================
 import book_utils
 
-from book_collection import Book
+from book_collection import Book, Quote
 from collections.abc import Iterator
 from constants_loader import constants
 from typing import Protocol
@@ -17,7 +17,7 @@ class QuotePrinterServices(Protocol):
     def clear_text_output(self) -> None: ...
 
     # scheduling
-    def schedule(self, ms: int, callback) -> object: ...
+    def schedule(self, ms: int, callback) -> str | None: ...
     def cancel_timer(self, timer_id: str) -> None: ...
 
     # navigation
@@ -49,7 +49,7 @@ class QuotePrinter:
     author_timer_id: str | None
 
     book_quote_count: int
-    quote_iter: Iterator[tuple[int, str]]
+    quote_iter: Iterator[tuple[int, Quote]]
 
     #=================================================
     # initialization

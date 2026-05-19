@@ -8,6 +8,7 @@ import tkinter as tk
 from book_collection import BookCollection, Book
 from collections.abc import Iterator
 from constants_loader import constants
+from quote_printer import QuotePrinter
 from tkinter import ttk, messagebox, font
 
 #=================================================
@@ -104,199 +105,6 @@ class FilterPanel(ttk.Frame):
         return self.books_dropdown.get()
 
 #=================================================
-# QUOTE PRINTER
-#=================================================
-class QuotePrinter:
-
-    #=================================================
-    # type hints
-    #=================================================
-    quote_printed: bool
-    book_header_printed: bool
-
-    pending_author_data: tuple[Book, int] | None
-    author_timer_id: str | None
-
-    quotes_remaining_var: tk.StringVar
-    book_quote_count: int
-    quote_iter: Iterator[tuple[int, str]]
-
-    #=================================================
-    # initialization
-    #=================================================
-    def __init__(self, window: "MainWindow"):
-        self.window = window
-
-        # set default state
-        self.quote_printed = False
-        self.book_header_printed = False
-        self.pending_author_data = None
-        # Tkinter "timer" placeholder (stores after() ID)
-        self.author_timer_id = None
-
-    #=================================================
-    # print random quote
-    #=================================================
-    def print_random_quote(self) -> None:
-        # print any remaining author data
-        self._flush_pending_author()
-
-        # get dropdown selections
-        selected_title = self.window.filters.selected_book
-        is_book_selected = selected_title != constants.ANY_BOOK
-        delay_author = self.window.delay_author_enabled()
-
-        book, message = book_utils.get_book_for_random_quote(
-            self.window.collection.books,
-            selected_title,
-            self.window.filtered_books
-        )
-
-        if book is None:
-            self.window.log(message)
-            return
-
-        # add space before previous print (but not before the first)
-        if self.quote_printed:
-            self.window.log("\n")
-        else:
-            self.window.clear_text_output()
-
-        # print book header if a particular book is selected
-        if is_book_selected and not self.book_header_printed:
-            if self.quote_printed:
-                # add an extra empty line for better separation
-                self.window.log("")
-            self.window.log(f"{book.title}", scroll_to_end=True)
-            self.window.log(f"{'-'*len(book.title)}\n", scroll_to_end=True)
-            self.book_header_printed = True
-
-        # get the random quote and print it
-        random_quote, quotes_left_in_book = book_utils.get_random_quote(book)
-        self.window.log(random_quote.text)
-        self.quote_printed = True
-
-        if not is_book_selected:
-            if not delay_author:
-                self._print_author_now(book, quotes_left_in_book)
-            else:
-                self._schedule_author(book, quotes_left_in_book, len(random_quote.text))
-
-        # call counter update
-        self.window.update_quotes_ui_counter()
-
-    def _print_author_now(
-        self,
-        book: Book,
-        quotes_left_in_book: int,
-        scroll_to_end: bool = True
-    ) -> None:
-        self.window.log(f"\n{book.title}   / {quotes_left_in_book} left /", scroll_to_end)
-        self.window.log(f"{'-'*len(book.title)}", scroll_to_end)
-
-    def _schedule_author(
-        self,
-        book: Book,
-        quotes_left_in_book: int,
-        quote_length: int,
-        base_delay_ms: int = 1000,
-        ms_per_char: int = 50
-    ) -> None:
-        delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
-        self.pending_author_data = (book, quotes_left_in_book)
-
-        # stop previous timer if running
-        if self.author_timer_id is not None:
-            self.window.cancel_timer(self.author_timer_id)
-
-        # start the timer (id is like: "after#0", "after#1", etc.)
-        # Type checker warning is incorrect — no extra arguments are needed here
-        self.author_timer_id = self.window.schedule(delay_ms, self._print_pending_author)
-
-    def _print_pending_author(self) -> None:
-        if self.pending_author_data:
-            # unpack the stored tuple
-            book, quotes_left_in_book = self.pending_author_data
-            self._print_author_now(book, quotes_left_in_book, scroll_to_end=False)
-        self.pending_author_data = None
-        self.author_timer_id = None
-
-    def _flush_pending_author(self, print_data: bool = True) -> None:
-        if self.author_timer_id is not None:
-            self.window.cancel_timer(self.author_timer_id)
-            self.author_timer_id = None
-        if print_data and self.pending_author_data:
-            book, quotes_left_in_book = self.pending_author_data
-            self._print_author_now(book, quotes_left_in_book)
-        self.pending_author_data = None
-
-    def on_delay_author_toggle(self) -> None:
-        checked = self.window.delay_author_enabled()
-        if not checked:
-            if self.pending_author_data:
-                self._flush_pending_author()
-            else:
-                # make already printed author visible
-                self.window.scroll_to_end()
-
-    #=================================================
-    # print every quote
-    #=================================================
-    def print_every_quote(self) -> None:
-        # set back clear state
-        self.window.clear_text_output()
-        self.window.update_quotes_ui_counter(use_book_total=True)
-
-        selected_title = self.window.filters.selected_book
-        if selected_title == constants.ANY_BOOK:
-            self.window.log("Select a book from the list.")
-            return
-
-        book = book_utils.get_book_by_title(self.window.collection.books, selected_title)
-        if book is None:
-            self.window.log("Book not found.")
-            return
-
-        # book exists, get quotes for printing
-        quotes = book_utils.get_quotes_sorted_by_page(book)
-        self.window.log(book.title)
-        self.window.log('-' * len(book.title))
-
-        # setup async iteration state and start the loop
-        self.book_quote_count = len(quotes)
-
-        # enumerate(quotes) produces an iterator of (index, quote) pairs
-        self.quote_iter = enumerate(quotes)
-        self._print_next_quote()
-
-    def _print_next_quote(self) -> None:
-        try:
-            i, quote = next(self.quote_iter)
-        except StopIteration:
-            # finished
-            self.window.scroll_to_start()
-            self.window.set_quotes_ui_counter(0)
-            return
-
-        header = f"{i + 1} / {self.book_quote_count}  (p.{quote.page})"
-        self.window.log(header)
-        self.window.log(quote.text)
-        if i < (self.book_quote_count - 1):
-            self.window.log("\n")
-        self.window.set_quotes_ui_counter(self.book_quote_count - i)
-
-        # schedule next iteration
-        self.window.schedule(5, self._print_next_quote)
-
-    #=================================================
-    # reset state
-    #=================================================
-    def reset_state(self) -> None:
-        self._flush_pending_author(print_data=False)
-        self.quote_printed = False
-        self.book_header_printed = False
-
-#=================================================
 # MAIN WINDOW
 #=================================================
 class MainWindow(tk.Tk):
@@ -320,6 +128,7 @@ class MainWindow(tk.Tk):
     text_frame: ttk.Frame
     text_output: tk.Text
     buttons_frame: ttk.Frame
+    quotes_remaining_var: tk.StringVar
 
     every_q_btn: ttk.Button
     random_q_btn: ttk.Button
@@ -743,6 +552,16 @@ class MainWindow(tk.Tk):
     def cancel_timer(self, timer_id: str) -> None:
         if timer_id is not None:
             self.after_cancel(timer_id)
+            
+    def get_selected_book_title(self) -> str:
+        return self.filters.selected_book
+        
+    def get_collection_books(self) -> list[Book]:
+        # provide a copy of the original list
+        return list(self.collection.books)
+        
+    def get_filtered_books(self) -> list[str]:
+        return self.filtered_books
 
 #=================================================
 # MAIN

@@ -4,11 +4,8 @@
 import datetime
 import random
 
+from book_collection import Book, Quote
 from constants_loader import constants
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from book_collection import Book, Quote
 
 #=================================================
 # functions for print_random_quote

@@ -689,6 +689,44 @@ class MainWindow(QMainWindow):
         self.update_mode_dropdown_text()
 
     #=================================================
+    # shared helpers (QuotePrinter + UI)
+    #=================================================
+    def clear_text_output(self) -> None:
+        self.setCurrentWidget(self.text_output)
+        self.clear()
+
+    def update_quotes_ui_counter(self, use_book_total: bool = False) -> None:
+        pass
+
+    def set_quotes_ui_counter(self, value: int) -> None:
+        pass
+
+    def delay_author_enabled(self) -> bool:
+        return self.delay_author_toggle.isChecked()
+
+    def schedule(self, ms: int, callback) -> str:
+        pass
+
+    def cancel_timer(self, timer_id: str) -> None:
+        pass
+
+    def scroll_to_start(self) -> None:
+        pass
+
+    def scroll_to_end(self) -> None:
+        pass
+
+    def get_collection_books(self) -> list[Book]:
+        # provide a copy of the original list
+        return list(self.collection.books)
+
+    def get_filtered_books(self) -> list[str]:
+        return self.filtered_books
+
+    def get_selected_book_title(self) -> str:
+        return self.books_dropdown.currentText()
+
+    #=================================================
     # BUTTON FUNCTIONS
     #=================================================
     #=================================================
@@ -698,8 +736,9 @@ class MainWindow(QMainWindow):
         # print any remaining author data
         self._flush_pending_author()
 
-        selected_title = self.books_dropdown.currentText()
-        delay_author = self.delay_author_toggle.isChecked()
+        selected_title = self.get_selected_book_title()
+        is_book_selected = selected_title != constants.ANY_BOOK
+        delay_author = self.delay_author_enabled()
 
         book, message = book_utils.get_book_for_random_quote(
             self.collection.books,
@@ -772,7 +811,7 @@ class MainWindow(QMainWindow):
     def print_every_quote(self):
         self.clear()
 
-        selected_title = self.books_dropdown.currentText()
+        selected_title = self.get_selected_book_title()
         if selected_title == constants.ANY_BOOK:
             self.log("Select a book from the list.")
             return
@@ -802,7 +841,7 @@ class MainWindow(QMainWindow):
         self.clear()
 
         # get the book
-        selected_title = self.books_dropdown.currentText()
+        selected_title = self.get_selected_book_title()
         if selected_title == constants.ANY_BOOK:
             self.log("Select a book from the list.")
             return
@@ -994,7 +1033,7 @@ class MainWindow(QMainWindow):
             self.log("Incorrect input. Please enter at least 3 characters.\n")
             return
 
-        selected_title = self.books_dropdown.currentText()
+        selected_title = self.get_selected_book_title()
         if selected_title == constants.ANY_BOOK:
             books = [book for book in self.collection.books if book.title in self.filtered_books]
         else:

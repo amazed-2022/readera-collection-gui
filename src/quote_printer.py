@@ -77,7 +77,7 @@ class QuotePrinter:
     #=================================================
     # print random quote
     #=================================================
-    def print_random_quote(self) -> None:
+    def print_random_quote(self, length: str = "any") -> None:
         # print any remaining author data
         self._flush_pending_author()
 
@@ -89,7 +89,8 @@ class QuotePrinter:
         book, message = book_utils.get_book_for_random_quote(
             self.ui.get_collection_books(),
             selected_title,
-            self.ui.get_filtered_books()
+            self.ui.get_filtered_books(),
+            length
         )
 
         if book is None:

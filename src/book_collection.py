@@ -45,7 +45,7 @@ class Book:
         self.ratings_count: float = 0.0
 
     def add_quote(self, text: str, page_number: int, is_long: bool=False) -> None:
-        quote: = Quote(text, page_number)
+        quote: Quote = Quote(text, page_number)
         if is_long:
             self.quotes.append(quote)
         else:

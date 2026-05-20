@@ -535,7 +535,7 @@ class MainWindow(tk.Tk):
         )
 
     #=================================================
-    # helpers
+    # helpers for QuotePrinter
     #=================================================
     def delay_author_enabled(self) -> bool:
         return self.delay_author_toggle.get()
@@ -552,14 +552,14 @@ class MainWindow(tk.Tk):
     def cancel_timer(self, timer_id: str) -> None:
         if timer_id is not None:
             self.after_cancel(timer_id)
-            
+
     def get_selected_book_title(self) -> str:
         return self.filters.selected_book
-        
+
     def get_collection_books(self) -> list[Book]:
         # provide a copy of the original list
         return list(self.collection.books)
-        
+
     def get_filtered_books(self) -> list[str]:
         return self.filtered_books
 

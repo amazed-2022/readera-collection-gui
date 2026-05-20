@@ -540,12 +540,6 @@ class MainWindow(tk.Tk):
     def delay_author_enabled(self) -> bool:
         return self.delay_author_toggle.get()
 
-    def scroll_to_end(self) -> None:
-        self.text_output.see("end")
-
-    def scroll_to_start(self) -> None:
-        self.text_output.see("1.0")
-
     def schedule(self, ms: int, callback) -> str:
         return self.after(ms, callback)
 
@@ -553,8 +547,11 @@ class MainWindow(tk.Tk):
         if timer_id is not None:
             self.after_cancel(timer_id)
 
-    def get_selected_book_title(self) -> str:
-        return self.filters.selected_book
+    def scroll_to_start(self) -> None:
+        self.text_output.see("1.0")
+
+    def scroll_to_end(self) -> None:
+        self.text_output.see("end")
 
     def get_collection_books(self) -> list[Book]:
         # provide a copy of the original list
@@ -562,6 +559,9 @@ class MainWindow(tk.Tk):
 
     def get_filtered_books(self) -> list[str]:
         return self.filtered_books
+
+    def get_selected_book_title(self) -> str:
+        return self.filters.selected_book
 
 #=================================================
 # MAIN

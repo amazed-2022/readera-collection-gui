@@ -535,7 +535,7 @@ class MainWindow(tk.Tk):
         )
 
     #=================================================
-    # helpers for QuotePrinter
+    # shared helpers (QuotePrinter + UI)
     #=================================================
     def delay_author_enabled(self) -> bool:
         return self.delay_author_toggle.get()

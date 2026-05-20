@@ -94,7 +94,8 @@ class QuotePrinter:
         )
 
         if book is None:
-            self.ui.log(message)
+            if message is not None:
+                self.ui.log(message)
             return
 
         # add space before previous print (but not before the first)
@@ -114,6 +115,11 @@ class QuotePrinter:
 
         # get the random quote and print it
         random_quote, quotes_left_in_book = book_utils.get_random_quote(book)
+
+        # get_random_quote() can return None when the book has no quotes
+        if random_quote is None:
+            return
+
         self.ui.log(random_quote.text)
         self.quote_printed = True
 

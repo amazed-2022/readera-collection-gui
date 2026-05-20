@@ -1,7 +1,6 @@
 #=================================================
 # IMPORT
 #=================================================
-import datetime
 import random
 
 from book_collection import Book, Quote
@@ -37,6 +36,9 @@ def get_book_for_random_quote(
     else:
         # get the selected book instance
         book: Book | None = get_book_by_title(collection, selected_title)
+
+        if book is None:
+            return None, "Book not found."
 
         # check for available quote(s)
         if length != "short":

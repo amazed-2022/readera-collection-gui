@@ -692,7 +692,7 @@ class MainWindow(QMainWindow):
     # shared helpers (QuotePrinter + UI)
     #=================================================
     def clear_text_output(self) -> None:
-        self.setCurrentWidget(self.text_output)
+        self.show_text_output()
         self.clear()
 
     def update_quotes_ui_counter(self, use_book_total: bool = False) -> None:
@@ -758,6 +758,11 @@ class MainWindow(QMainWindow):
 
         # get the random quote and print it
         random_quote, quotes_left = book_utils.get_random_quote(book, length)
+
+        if random_quote is None:
+            self.log("Cannot find a random quote")
+            return
+
         self.log(random_quote.text)
         # ensure the last line is visible
         self.scroll_to_bottom()
@@ -847,6 +852,11 @@ class MainWindow(QMainWindow):
             return
 
         book = book_utils.get_book_by_title(self.collection.books, selected_title)
+
+        if book is None:
+            self.log("Book not found.")
+            return
+
         title = book.title
         self.log(title)
         self.log("-" * len(title))

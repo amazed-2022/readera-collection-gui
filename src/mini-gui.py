@@ -415,46 +415,6 @@ class MainWindow(tk.Tk):
         self.text_output.config(state="disabled")
 
     #=================================================
-    # quotes remaining counter
-    #=================================================
-    def update_quotes_ui_counter(self, use_book_total=False) -> None:
-        selected_book = self.filters.selected_book
-
-        if selected_book == constants.ANY_BOOK:
-            chosen_folder = self.filters.selected_folder
-            chosen_author = self.filters.selected_author
-            quotes_count = sum(
-                book.remaining_quote_count
-                for book in self.collection.books
-                if self._book_matches_filters(book, chosen_folder, chosen_author)
-            )
-        else:
-            book = book_utils.get_book_by_title(self.collection.books, selected_book)
-            if book:
-                quotes_count = (
-                    book.total_quotes
-                    if use_book_total
-                    else book.remaining_quote_count
-                )
-            else:
-                quotes_count = 0
-
-        self.set_quotes_ui_counter(quotes_count)
-
-    def set_quotes_ui_counter(self, value: int) -> None:
-        self.quotes_remaining_var.set(str(value))
-
-    #=================================================
-    # clear text output
-    #=================================================
-    def clear_text_output(self) -> None:
-        self.quote_printer.reset_state()
-        self.text_output.config(state="normal")
-        self.text_output.delete("1.0", "end")
-        self.text_output.config(state="disabled")
-        self.update_quotes_ui_counter()
-
-    #=================================================
     # reset
     #=================================================
     def reset(self) -> None:
@@ -537,6 +497,40 @@ class MainWindow(tk.Tk):
     #=================================================
     # shared helpers (QuotePrinter + UI)
     #=================================================
+    def clear_text_output(self) -> None:
+        self.quote_printer.reset_state()
+        self.text_output.config(state="normal")
+        self.text_output.delete("1.0", "end")
+        self.text_output.config(state="disabled")
+        self.update_quotes_ui_counter()
+
+    def update_quotes_ui_counter(self, use_book_total=False) -> None:
+        selected_book = self.filters.selected_book
+
+        if selected_book == constants.ANY_BOOK:
+            chosen_folder = self.filters.selected_folder
+            chosen_author = self.filters.selected_author
+            quotes_count = sum(
+                book.remaining_quote_count
+                for book in self.collection.books
+                if self._book_matches_filters(book, chosen_folder, chosen_author)
+            )
+        else:
+            book = book_utils.get_book_by_title(self.collection.books, selected_book)
+            if book:
+                quotes_count = (
+                    book.total_quotes
+                    if use_book_total
+                    else book.remaining_quote_count
+                )
+            else:
+                quotes_count = 0
+
+        self.set_quotes_ui_counter(quotes_count)
+
+    def set_quotes_ui_counter(self, value: int) -> None:
+        self.quotes_remaining_var.set(str(value))
+
     def delay_author_enabled(self) -> bool:
         return self.delay_author_toggle.get()
 

@@ -115,7 +115,7 @@ class QuotePrinter:
             self.book_header_printed = True
 
         # get the random quote and print it
-        random_quote, quotes_left_in_book = book_utils.get_random_quote(book)
+        random_quote, quotes_left_in_book = book_utils.get_random_quote(book, length)
 
         # something went wrong, inform user
         if random_quote is None:

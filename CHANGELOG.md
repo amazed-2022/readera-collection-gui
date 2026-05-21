@@ -4,12 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [2.2.0] – 2026-XX
 #### Added
-- Introduced `QuotePrinter` to separate quote printing logic from UI
-- Added `schedule()` and `cancel_timer()` abstraction in `MainWindow`
+- Introduced `QuoteManager` to separate quote printing logic from UI
+- Added `schedule()` and `cancel_timer()` abstractions
 - Introduced `FilterPanel` for `mini-gui` to encapsulate dropdown UI logic
   
 #### Changed
-- Refactored quote printing logic into `QuotePrinter` and removed direct UI/timer coupling
+- Refactored quote printing logic into `QuoteManager` and removed direct UI/timer coupling
 - Replaced direct `after/after_cancel` usage with abstracted scheduling API
 
 ---

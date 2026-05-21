@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QTableView, QTextEdit, QWidget
 )
-from quote_printer import QuotePrinter
+from quote_manager import QuoteManager
 
 #=================================================
 # MAIN WINDOW
@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
     # type hints
     #=================================================
     collection: BookCollection
-    quote_printer: QuotePrinter
+    quote_manager: QuoteManager
 
     filtered_books: list[str]
     authors_with_quotes: list[str]
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         # instance attributes
         #=================================================
         self.collection = collection
-        self.quote_printer = QuotePrinter(self)
+        self.quote_manager = QuoteManager(self)
         self.filtered_books = []
         self.authors_with_quotes = []
 
@@ -193,12 +193,12 @@ class MainWindow(QMainWindow):
         # the folder/author choice event triggers the authors and book lists update
         self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
         self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
-        self.delay_author_toggle.toggled.connect(self.quote_printer.on_delay_author_toggle)
+        self.delay_author_toggle.toggled.connect(self.quote_manager.on_delay_author_toggle)
 
         # use lambda to defer immediate execution when an argument is passed
-        self.buttons["random"].clicked.connect(self.quote_printer.print_random_quote)
-        self.buttons["short"].clicked.connect(lambda: self.quote_printer.print_random_quote("short"))
-        self.buttons["every"].clicked.connect(self.quote_printer.print_every_quote)
+        self.buttons["random"].clicked.connect(self.quote_manager.print_random_quote)
+        self.buttons["short"].clicked.connect(lambda: self.quote_manager.print_random_quote("short"))
+        self.buttons["every"].clicked.connect(self.quote_manager.print_every_quote)
         self.buttons["stats"].clicked.connect(self.print_statistics)
         self.buttons["dist"].clicked.connect(self.print_quote_distribution)
         self.buttons["search"].clicked.connect(self.search)
@@ -651,8 +651,8 @@ class MainWindow(QMainWindow):
         if reply != QMessageBox.StandardButton.Yes:
             return
 
-        # reset QuotePrinter state
-        self.quote_printer.reset_state()
+        # reset QuoteManager state
+        self.quote_manager.reset_state()
 
         # rebuild collection and reset dropdowns
         self.collection.build_the_collection()
@@ -676,7 +676,7 @@ class MainWindow(QMainWindow):
         self.update_mode_dropdown_text()
 
     #=================================================
-    # shared helpers (QuotePrinter + UI)
+    # shared helpers (QuoteManager + UI)
     #=================================================
     def clear_text_output(self) -> None:
         self.show_text_output()
@@ -724,7 +724,7 @@ class MainWindow(QMainWindow):
         return self.books_dropdown.currentText()
 
     #=================================================
-    # QUOTE FUNCTIONS (not supported by QuotePrinter
+    # QUOTE FUNCTIONS (not supported by QuoteManager
     #=================================================
     #=================================================
     # FUNCTION: print quote distribution

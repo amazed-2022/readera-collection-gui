@@ -13,7 +13,7 @@ from typing import Protocol
 #=================================================
 class QuotePrinterAPI(Protocol):
     # output
-    def log(self, message: str, scroll_to_end: bool = True) -> None: ...
+    def log(self, message: str, scroll_to_bottom: bool = True) -> None: ...
     def clear_text_output(self) -> None: ...
 
     # scheduling
@@ -21,8 +21,8 @@ class QuotePrinterAPI(Protocol):
     def cancel_timer(self, timer_id: str) -> None: ...
 
     # navigation
-    def scroll_to_end(self) -> None: ...
-    def scroll_to_start(self) -> None: ...
+    def scroll_to_top(self) -> None: ...
+    def scroll_to_bottom(self) -> None: ...
 
     # state
     def delay_author_enabled(self) -> bool: ...
@@ -60,8 +60,8 @@ class QuotePrinter:
         # - log(...)
         # - schedule(...)
         # - cancel_timer(...)
-        # - scroll_to_end()
-        # - scroll_to_start()
+        # - scroll_to_top()
+        # - scroll_to_bottom()
         # - delay_author_enabled()
         # - update_quotes_ui_counter()
         """
@@ -110,8 +110,8 @@ class QuotePrinter:
             if self.quote_printed:
                 # add an extra empty line for better separation
                 self.ui.log("")
-            self.ui.log(f"{book.title}", scroll_to_end=True)
-            self.ui.log(f"{'-'*len(book.title)}\n", scroll_to_end=True)
+            self.ui.log(f"{book.title}", scroll_to_bottom=True)
+            self.ui.log(f"{'-'*len(book.title)}\n", scroll_to_bottom=True)
             self.book_header_printed = True
 
         # get the random quote and print it
@@ -129,7 +129,7 @@ class QuotePrinter:
             if not delay_author:
                 self._print_author_now(book, quotes_left_in_book)
             else:
-                self._schedule_author(book, quotes_left_in_book, len(random_quote.text))
+                self._schedule_author_print(book, quotes_left_in_book, len(random_quote.text))
 
         # call counter update
         self.ui.update_quotes_ui_counter()
@@ -138,12 +138,12 @@ class QuotePrinter:
         self,
         book: Book,
         quotes_left_in_book: int,
-        scroll_to_end: bool = True
+        scroll_to_bottom: bool = True
     ) -> None:
-        self.ui.log(f"\n{book.title}   / {quotes_left_in_book} left /", scroll_to_end)
-        self.ui.log(f"{'-'*len(book.title)}", scroll_to_end)
+        self.ui.log(f"\n{book.title}   / {quotes_left_in_book} left /", scroll_to_bottom)
+        self.ui.log(f"{'-'*len(book.title)}", scroll_to_bottom)
 
-    def _schedule_author(
+    def _schedule_author_print(
         self,
         book: Book,
         quotes_left_in_book: int,
@@ -166,7 +166,7 @@ class QuotePrinter:
         if self.pending_author_data:
             # unpack the stored tuple
             book, quotes_left_in_book = self.pending_author_data
-            self._print_author_now(book, quotes_left_in_book, scroll_to_end=False)
+            self._print_author_now(book, quotes_left_in_book, scroll_to_bottom=False)
         self.pending_author_data = None
         self.author_timer_id = None
 
@@ -186,7 +186,7 @@ class QuotePrinter:
                 self._flush_pending_author()
             else:
                 # make already printed author visible
-                self.ui.scroll_to_end()
+                self.ui.scroll_to_bottom()
 
     #=================================================
     # print every quote
@@ -223,7 +223,7 @@ class QuotePrinter:
             i, quote = next(self.quote_iter)
         except StopIteration:
             # finished
-            self.ui.scroll_to_start()
+            self.ui.scroll_to_top()
             self.ui.set_quotes_ui_counter(0)
             return
 

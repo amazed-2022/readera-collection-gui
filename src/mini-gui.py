@@ -407,11 +407,11 @@ class MainWindow(tk.Tk):
     #=================================================
     # log messages to the text widget
     #=================================================
-    def log(self, message: str, scroll_to_end: bool = True) -> None:
+    def log(self, message: str, scroll_to_bottom: bool = True) -> None:
         self.text_output.config(state="normal")
         self.text_output.insert("end", f"{message}\n")
-        if scroll_to_end:
-            self.scroll_to_end()
+        if scroll_to_bottom:
+            self.scroll_to_bottom()
         self.text_output.config(state="disabled")
 
     #=================================================
@@ -541,10 +541,10 @@ class MainWindow(tk.Tk):
         if timer_id is not None:
             self.after_cancel(timer_id)
 
-    def scroll_to_start(self) -> None:
+    def scroll_to_top(self) -> None:
         self.text_output.see("1.0")
 
-    def scroll_to_end(self) -> None:
+    def scroll_to_bottom(self) -> None:
         self.text_output.see("end")
 
     def get_collection_books(self) -> list[Book]:

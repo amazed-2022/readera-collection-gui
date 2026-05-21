@@ -3,17 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ## [2.2.0] – 2026-XX
-### mini-gui
 #### Added
-- Introduced `QuotePrinter` to separate quote printing logic from `MainWindow`
+- Introduced `QuotePrinter` to separate quote printing logic from UI
 - Added `schedule()` and `cancel_timer()` abstraction in `MainWindow`
-- Introduced `FilterPanel` to encapsulate dropdown UI logic in
+- Introduced `FilterPanel` for `mini-gui` to encapsulate dropdown UI logic
   
 #### Changed
 - Refactored quote printing logic into `QuotePrinter` and removed direct UI/timer coupling
 - Replaced direct `after/after_cancel` usage with abstracted scheduling API
-- Refactored dropdown creation and selection handling into `FilterPanel`
-- Moved combobox setup and value management from `MainWindow` to `FilterPanel`
 
 ---
 

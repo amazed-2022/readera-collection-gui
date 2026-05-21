@@ -16,12 +16,12 @@ from PySide6.QtWidgets import (
     QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QTableView, QTextEdit, QWidget
 )
-from quote_manager import QuoteManager
+from quote_manager import QuoteManager, QuoteManagerUI
 
 #=================================================
 # MAIN WINDOW
 #=================================================
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, QuoteManagerUI):
 
     #=================================================
     # type hints
@@ -446,7 +446,8 @@ class MainWindow(QMainWindow):
     def log(self, message, scroll_to_bottom: bool = True):
         # make sure text output is visible
         self.show_text_output()
-        self.text_output.append(message)
+        # use insertPlainText to prevent automatic scrolling
+        self.text_output.insertPlainText(message + "\n")
         self.set_output_line_height(self.line_height_percent)
         if scroll_to_bottom:
             self.scroll_to_bottom()
@@ -698,8 +699,8 @@ class MainWindow(QMainWindow):
         timer.start(ms)
         return timer
 
-    def cancel_timer(self, timer: QTimer) -> None:
-        if timer.isActive():
+    def cancel_timer(self, timer: object) -> None:
+        if isinstance(timer, QTimer) and timer.isActive():
             timer.stop()
 
     def scroll_to_top(self) -> None:

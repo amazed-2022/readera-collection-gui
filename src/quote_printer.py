@@ -11,7 +11,7 @@ from typing import Protocol
 #=================================================
 # PROTOCOL
 #=================================================
-class QuotePrinterAPI(Protocol):
+class QuoteManagerUI(Protocol):
     # output
     def log(self, message: str, scroll_to_bottom: bool = True) -> None: ...
     def clear_text_output(self) -> None: ...
@@ -37,7 +37,7 @@ class QuotePrinterAPI(Protocol):
 #=================================================
 # QUOTE PRINTER
 #=================================================
-class QuotePrinter:
+class QuoteManager:
 
     #=================================================
     # type hints
@@ -54,7 +54,7 @@ class QuotePrinter:
     #=================================================
     # initialization
     #=================================================
-    def __init__(self, ui: QuotePrinterAPI):
+    def __init__(self, ui: QuoteManagerUI):
         """
         # ui needs to provide:
         # - log(...)

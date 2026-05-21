@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QTableView, QTextEdit, QWidget
 )
+from quote_printer import QuotePrinter
 
 #=================================================
 # MAIN WINDOW
@@ -26,6 +27,8 @@ class MainWindow(QMainWindow):
     # type hints
     #=================================================
     collection: BookCollection
+    quote_printer: QuotePrinter
+
     filtered_books: list[str]
     authors_with_quotes: list[str]
 
@@ -34,9 +37,6 @@ class MainWindow(QMainWindow):
     #===================
     output_font_size: int
     line_height_percent: int
-    quote_printed: bool
-    author_timer: QTimer
-    pending_author_data: tuple[Book, int] | None
 
     #===================
     # UI elements
@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         # instance attributes
         #=================================================
         self.collection = collection
+        self.quote_printer = QuotePrinter(self)
         self.filtered_books = []
         self.authors_with_quotes = []
 
@@ -113,13 +114,6 @@ class MainWindow(QMainWindow):
     def _init_state(self):
         self.output_font_size = constants.DEFAULT_OUTPUT_FONT_SIZE
         self.line_height_percent = constants.DEFAULT_LINE_SPACING_HEIGHT
-        self.quote_printed = False
-
-        # for delayed author print
-        self.author_timer = QTimer(self)
-        self.author_timer.setSingleShot(True)
-        self.author_timer.timeout.connect(self._print_pending_author)
-        self.pending_author_data = None
 
     #=================================================
     # ComboBox filters (dropdowns)
@@ -199,12 +193,12 @@ class MainWindow(QMainWindow):
         # the folder/author choice event triggers the authors and book lists update
         self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
         self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
-        self.delay_author_toggle.toggled.connect(self.on_toggle_delay_author)
+        self.delay_author_toggle.toggled.connect(self.quote_printer.on_delay_author_toggle)
 
         # use lambda to defer immediate execution when an argument is passed
-        self.buttons["random"].clicked.connect(self.print_random_quote)
-        self.buttons["short"].clicked.connect(lambda: self.print_random_quote("short"))
-        self.buttons["every"].clicked.connect(self.print_every_quote)
+        self.buttons["random"].clicked.connect(self.quote_printer.print_random_quote)
+        self.buttons["short"].clicked.connect(lambda: self.quote_printer.print_random_quote("short"))
+        self.buttons["every"].clicked.connect(self.quote_printer.print_every_quote)
         self.buttons["stats"].clicked.connect(self.print_statistics)
         self.buttons["dist"].clicked.connect(self.print_quote_distribution)
         self.buttons["search"].clicked.connect(self.search)
@@ -375,13 +369,6 @@ class MainWindow(QMainWindow):
         self.panel.setLayout(main_layout)
 
     #=================================================
-    # FUNCTION: toggle button changer
-    #=================================================
-    def on_toggle_delay_author(self, checked):
-        if not checked and self.pending_author_data:
-            self._flush_pending_author()
-
-    #=================================================
     # FUNCTION: folder/author dropdown change
     #=================================================
     def on_folder_or_author_change(self):
@@ -456,11 +443,13 @@ class MainWindow(QMainWindow):
     #=================================================
     # FUNCTION: log messages to the text box
     #=================================================
-    def log(self, message):
+    def log(self, message, scroll_to_bottom: bool = True):
         # make sure text output is visible
         self.show_text_output()
         self.text_output.append(message)
         self.set_output_line_height(self.line_height_percent)
+        if scroll_to_bottom:
+            self.scroll_to_bottom()
 
     def set_output_line_height(self, line_height_percent):
         cursor = self.text_output.textCursor()
@@ -639,7 +628,6 @@ class MainWindow(QMainWindow):
 
         if current is self.text_output:
             self.text_output.clear()
-            self.quote_printed = False
         elif current is self.table_output:
             model = self.table_output.model()
             if model:
@@ -663,8 +651,8 @@ class MainWindow(QMainWindow):
         if reply != QMessageBox.StandardButton.Yes:
             return
 
-        # flush any pending author data without print
-        self._flush_pending_author(print_data=False)
+        # reset QuotePrinter state
+        self.quote_printer.reset_state()
 
         # rebuild collection and reset dropdowns
         self.collection.build_the_collection()
@@ -676,7 +664,6 @@ class MainWindow(QMainWindow):
 
         # reset UI state
         self.delay_author_toggle.setChecked(False)
-        self.quote_printed = False
         self.clear()
 
         # reset font and layout settings
@@ -704,17 +691,27 @@ class MainWindow(QMainWindow):
     def delay_author_enabled(self) -> bool:
         return self.delay_author_toggle.isChecked()
 
-    def schedule(self, ms: int, callback) -> str:
-        pass
+    def schedule(self, ms: int, callback) -> QTimer:
+        timer = QTimer(self)
+        timer.setSingleShot(True)
+        timer.timeout.connect(callback)
+        timer.start(ms)
+        return timer
 
-    def cancel_timer(self, timer_id: str) -> None:
-        pass
+    def cancel_timer(self, timer: QTimer) -> None:
+        if timer.isActive():
+            timer.stop()
 
-    def scroll_to_start(self) -> None:
-        pass
+    def scroll_to_top(self) -> None:
+        cursor = self.text_output.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.Start)
+        self.text_output.setTextCursor(cursor)
 
-    def scroll_to_end(self) -> None:
-        pass
+    def scroll_to_bottom(self) -> None:
+        cursor = self.text_output.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.text_output.setTextCursor(cursor)
+        self.text_output.ensureCursorVisible()
 
     def get_collection_books(self) -> list[Book]:
         # provide a copy of the original list
@@ -727,118 +724,8 @@ class MainWindow(QMainWindow):
         return self.books_dropdown.currentText()
 
     #=================================================
-    # BUTTON FUNCTIONS
+    # QUOTE FUNCTIONS (not supported by QuotePrinter
     #=================================================
-    #=================================================
-    # FUNCTION: print random quote
-    #=================================================
-    def print_random_quote(self, length="any"):
-        # print any remaining author data
-        self._flush_pending_author()
-
-        selected_title = self.get_selected_book_title()
-        is_book_selected = selected_title != constants.ANY_BOOK
-        delay_author = self.delay_author_enabled()
-
-        book, message = book_utils.get_book_for_random_quote(
-            self.collection.books,
-            selected_title,
-            self.filtered_books,
-            length
-        )
-
-        # add space before previous print (but not before the first)
-        if self.quote_printed:
-            self.log("\n")
-        self.quote_printed = True
-
-        if book is None:
-            self.log(message)
-            return
-
-        # get the random quote and print it
-        random_quote, quotes_left = book_utils.get_random_quote(book, length)
-
-        if random_quote is None:
-            self.log("Cannot find a random quote")
-            return
-
-        self.log(random_quote.text)
-        # ensure the last line is visible
-        self.scroll_to_bottom()
-
-        if not delay_author:
-            self._print_author_now(book, quotes_left)
-        else:
-            self._schedule_author(book, quotes_left, len(random_quote.text))
-
-    def scroll_to_bottom(self):
-        cursor = self.text_output.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.End)
-        self.text_output.setTextCursor(cursor)
-        self.text_output.ensureCursorVisible()
-
-    def _print_author_now(self, book, quotes_left):
-        self.log(f"\n{book.title}   / {quotes_left} left /")
-        self.log(f"{'-'*len(book.title)}")
-        # ensure the last line is visible
-        self.scroll_to_bottom()
-
-    def _schedule_author(self, book, quotes_left, quote_length, base_delay_ms=1000, ms_per_char=50):
-        delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
-        self.pending_author_data = (book, quotes_left)
-
-        # stop previous timer if running
-        if self.author_timer.isActive():
-            self.author_timer.stop()
-
-        # start the timer
-        self.author_timer.start(delay_ms)
-
-    def _print_pending_author(self):
-        if self.pending_author_data:
-            # unpack the stored tuple
-            book, quotes_left = self.pending_author_data
-            self._print_author_now(book, quotes_left)
-        self.pending_author_data = None
-
-    def _flush_pending_author(self, print_data=True):
-        if self.author_timer.isActive():
-            self.author_timer.stop()
-        if print_data and self.pending_author_data:
-            book, quotes_left = self.pending_author_data
-            self._print_author_now(book, quotes_left)
-        self.pending_author_data = None
-
-    #=================================================
-    # FUNCTION: print every quote
-    #=================================================
-    def print_every_quote(self):
-        self.clear()
-
-        selected_title = self.get_selected_book_title()
-        if selected_title == constants.ANY_BOOK:
-            self.log("Select a book from the list.")
-            return
-
-        book = book_utils.get_book_by_title(self.collection.books, selected_title)
-        if book is None:
-            self.log("Book not found.")
-            return
-
-        # get and export all quotes to file
-        quotes = book_utils.get_and_export_quotes(book, f"{book.title}.txt")
-
-        # print to textbox
-        self.log(book.title)
-        self.log('-' * len(book.title))
-
-        for i, quote in enumerate(quotes):
-            header = f"{i+1} / {len(quotes)}  (p.{quote.page})"
-            self.log(header)
-            self.log(quote.text)
-            self.log("")
-
     #=================================================
     # FUNCTION: print quote distribution
     #=================================================

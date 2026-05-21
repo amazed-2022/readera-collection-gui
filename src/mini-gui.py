@@ -449,7 +449,7 @@ class MainWindow(tk.Tk):
         chosen_folder = self.filters.selected_folder
 
         if source == "book":
-            self.update_quotes_ui_counter()
+            self.update_quotes_counter()
             # book name should be printed before the first quote
             self.quote_manager.book_header_printed = False
             return
@@ -482,7 +482,7 @@ class MainWindow(tk.Tk):
         # set gathered list and reset dropdown
         self.filters.set_books_list(self.filtered_books)
         self.filters.select_first_book()
-        self.update_quotes_ui_counter()
+        self.update_quotes_counter()
 
     #=================================================
     # filter match for a book instance
@@ -502,9 +502,9 @@ class MainWindow(tk.Tk):
         self.text_output.config(state="normal")
         self.text_output.delete("1.0", "end")
         self.text_output.config(state="disabled")
-        self.update_quotes_ui_counter()
+        self.update_quotes_counter()
 
-    def update_quotes_ui_counter(self, use_book_total=False) -> None:
+    def update_quotes_counter(self, use_book_total=False) -> None:
         selected_book = self.filters.selected_book
 
         if selected_book == constants.ANY_BOOK:
@@ -526,9 +526,9 @@ class MainWindow(tk.Tk):
             else:
                 quotes_count = 0
 
-        self.set_quotes_ui_counter(quotes_count)
+        self.set_quotes_counter(quotes_count)
 
-    def set_quotes_ui_counter(self, value: int) -> None:
+    def set_quotes_counter(self, value: int) -> None:
         self.quotes_remaining_var.set(str(value))
 
     def delay_author_enabled(self) -> bool:

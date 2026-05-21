@@ -93,6 +93,7 @@ class QuotePrinter:
             length
         )
 
+        # something went wrong, return early
         if book is None:
             if message is not None:
                 self.ui.log(message)
@@ -116,8 +117,9 @@ class QuotePrinter:
         # get the random quote and print it
         random_quote, quotes_left_in_book = book_utils.get_random_quote(book)
 
-        # get_random_quote() can return None when the book has no quotes
+        # something went wrong, inform user
         if random_quote is None:
+            self.ui.log(f'Failed to get a quote from "{book.title}"')
             return
 
         self.ui.log(random_quote.text)

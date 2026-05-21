@@ -46,7 +46,7 @@ class QuotePrinter:
     book_header_printed: bool
 
     pending_author_data: tuple[Book, int] | None
-    author_timer_id: str | None
+    author_timer: str | int | object | None
 
     book_quote_count: int
     quote_iter: Iterator[tuple[int, Quote]]
@@ -71,8 +71,7 @@ class QuotePrinter:
         self.quote_printed = False
         self.book_header_printed = False
         self.pending_author_data = None
-        # Tkinter "timer" placeholder (stores after() ID)
-        self.author_timer_id = None
+        self.author_timer = None
 
     #=================================================
     # print random quote
@@ -84,7 +83,6 @@ class QuotePrinter:
         # get dropdown selections
         selected_title = self.ui.get_selected_book_title()
         is_book_selected = selected_title != constants.ANY_BOOK
-        delay_author = self.ui.delay_author_enabled()
 
         book, message = book_utils.get_book_for_random_quote(
             self.ui.get_collection_books(),
@@ -126,7 +124,7 @@ class QuotePrinter:
         self.quote_printed = True
 
         if not is_book_selected:
-            if not delay_author:
+            if not self.ui.delay_author_enabled():
                 self._print_author_now(book, quotes_left_in_book)
             else:
                 self._schedule_author_print(book, quotes_left_in_book, len(random_quote.text))
@@ -155,12 +153,12 @@ class QuotePrinter:
         self.pending_author_data = (book, quotes_left_in_book)
 
         # stop previous timer if running
-        if self.author_timer_id is not None:
-            self.ui.cancel_timer(self.author_timer_id)
+        if self.author_timer is not None:
+            self.ui.cancel_timer(self.author_timer)
 
         # start the timer (id is like: "after#0", "after#1", etc.)
         # Type checker warning is incorrect — no extra arguments are needed here
-        self.author_timer_id = self.ui.schedule(delay_ms, self._print_pending_author)
+        self.author_timer = self.ui.schedule(delay_ms, self._print_pending_author)
 
     def _print_pending_author(self) -> None:
         if self.pending_author_data:
@@ -168,12 +166,12 @@ class QuotePrinter:
             book, quotes_left_in_book = self.pending_author_data
             self._print_author_now(book, quotes_left_in_book, scroll_to_bottom=False)
         self.pending_author_data = None
-        self.author_timer_id = None
+        self.author_timer = None
 
     def _flush_pending_author(self, print_data: bool = True) -> None:
-        if self.author_timer_id is not None:
-            self.ui.cancel_timer(self.author_timer_id)
-            self.author_timer_id = None
+        if self.author_timer is not None:
+            self.ui.cancel_timer(self.author_timer)
+            self.author_timer = None
         if print_data and self.pending_author_data:
             book, quotes_left_in_book = self.pending_author_data
             self._print_author_now(book, quotes_left_in_book)

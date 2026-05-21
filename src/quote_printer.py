@@ -17,8 +17,8 @@ class QuotePrinterAPI(Protocol):
     def clear_text_output(self) -> None: ...
 
     # scheduling
-    def schedule(self, ms: int, callback) -> str | None: ...
-    def cancel_timer(self, timer_id: str) -> None: ...
+    def schedule(self, ms: int, callback) -> object: ...
+    def cancel_timer(self, timer: object) -> None: ...
 
     # navigation
     def scroll_to_top(self) -> None: ...
@@ -46,7 +46,7 @@ class QuotePrinter:
     book_header_printed: bool
 
     pending_author_data: tuple[Book, int] | None
-    author_timer: str | int | object | None
+    author_timer: object | None
 
     book_quote_count: int
     quote_iter: Iterator[tuple[int, Quote]]
@@ -156,8 +156,7 @@ class QuotePrinter:
         if self.author_timer is not None:
             self.ui.cancel_timer(self.author_timer)
 
-        # start the timer (id is like: "after#0", "after#1", etc.)
-        # Type checker warning is incorrect — no extra arguments are needed here
+        # start the timer
         self.author_timer = self.ui.schedule(delay_ms, self._print_pending_author)
 
     def _print_pending_author(self) -> None:

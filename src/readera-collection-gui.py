@@ -682,10 +682,10 @@ class MainWindow(QMainWindow):
         self.show_text_output()
         self.clear()
 
-    def update_quotes_ui_counter(self, use_book_total: bool = False) -> None:
+    def update_quotes_counter(self, use_book_total: bool = False) -> None:
         pass
 
-    def set_quotes_ui_counter(self, value: int) -> None:
+    def set_quotes_counter(self, value: int) -> None:
         pass
 
     def delay_author_enabled(self) -> bool:

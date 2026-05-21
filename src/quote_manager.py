@@ -26,8 +26,8 @@ class QuoteManagerUI(Protocol):
 
     # state
     def delay_author_enabled(self) -> bool: ...
-    def update_quotes_ui_counter(self, use_book_total: bool = False) -> None: ...
-    def set_quotes_ui_counter(self, value: int) -> None: ...
+    def update_quotes_counter(self, use_book_total: bool = False) -> None: ...
+    def set_quotes_counter(self, value: int) -> None: ...
 
     # data access
     def get_selected_book_title(self) -> str: ...
@@ -63,7 +63,7 @@ class QuoteManager:
         # - scroll_to_top()
         # - scroll_to_bottom()
         # - delay_author_enabled()
-        # - update_quotes_ui_counter()
+        # - update_quotes_counter()
         """
         self.ui = ui
 
@@ -130,7 +130,7 @@ class QuoteManager:
                 self._schedule_author_print(book, quotes_left_in_book, len(random_quote.text))
 
         # call counter update
-        self.ui.update_quotes_ui_counter()
+        self.ui.update_quotes_counter()
 
     def _print_author_now(
         self,
@@ -191,7 +191,7 @@ class QuoteManager:
     def print_every_quote(self) -> None:
         # set back clear state
         self.ui.clear_text_output()
-        self.ui.update_quotes_ui_counter(use_book_total=True)
+        self.ui.update_quotes_counter(use_book_total=True)
 
         selected_title = self.ui.get_selected_book_title()
         if selected_title == constants.ANY_BOOK:
@@ -221,7 +221,7 @@ class QuoteManager:
         except StopIteration:
             # finished
             self.ui.scroll_to_top()
-            self.ui.set_quotes_ui_counter(0)
+            self.ui.set_quotes_counter(0)
             return
 
         header = f"{i + 1} / {self.book_quote_count}  (p.{quote.page})"
@@ -229,7 +229,7 @@ class QuoteManager:
         self.ui.log(quote.text)
         if i < (self.book_quote_count - 1):
             self.ui.log("\n")
-        self.ui.set_quotes_ui_counter(self.book_quote_count - i)
+        self.ui.set_quotes_counter(self.book_quote_count - i)
 
         # schedule next iteration
         self.ui.schedule(5, self._print_next_quote)

@@ -8,7 +8,7 @@ import tkinter as tk
 from book_collection import BookCollection, Book
 from collections.abc import Iterator
 from constants_loader import constants
-from quote_printer import QuotePrinter
+from quote_manager import QuoteManager
 from tkinter import ttk, messagebox, font
 
 #=================================================
@@ -113,7 +113,7 @@ class MainWindow(tk.Tk):
     # type hints
     #=================================================
     collection: BookCollection
-    quote_printer: QuotePrinter
+    quote_manager: QuoteManager
 
     filtered_books: list[str]
     authors_with_quotes: list[str]
@@ -147,7 +147,7 @@ class MainWindow(tk.Tk):
         # instance attributes
         #=================================================
         self.collection = collection
-        self.quote_printer = QuotePrinter(self)
+        self.quote_manager = QuoteManager(self)
         self.filtered_books = []
         self.authors_with_quotes = []
         self.quotes_remaining_var = tk.StringVar(value=f"{collection.all_quotes_count}")
@@ -316,9 +316,9 @@ class MainWindow(tk.Tk):
         # this method binds change callback for all comboboxes
         self.filters.set_on_change_callback(self._on_dropdown_change)
 
-        self.every_q_btn.configure(command=self.quote_printer.print_every_quote)
-        self.random_q_btn.configure(command=self.quote_printer.print_random_quote)
-        self.delay_author_btn.configure(command=self.quote_printer.on_delay_author_toggle)
+        self.every_q_btn.configure(command=self.quote_manager.print_every_quote)
+        self.random_q_btn.configure(command=self.quote_manager.print_random_quote)
+        self.delay_author_btn.configure(command=self.quote_manager.on_delay_author_toggle)
         self.clear_btn.configure(command=self.clear_text_output)
         self.reset_btn.configure(command=self.reset)
 
@@ -451,7 +451,7 @@ class MainWindow(tk.Tk):
         if source == "book":
             self.update_quotes_ui_counter()
             # book name should be printed before the first quote
-            self.quote_printer.book_header_printed = False
+            self.quote_manager.book_header_printed = False
             return
 
         # update authors dropdown, if folder changed
@@ -495,10 +495,10 @@ class MainWindow(tk.Tk):
         )
 
     #=================================================
-    # shared helpers (QuotePrinter + UI)
+    # shared helpers (QuoteManager + UI)
     #=================================================
     def clear_text_output(self) -> None:
-        self.quote_printer.reset_state()
+        self.quote_manager.reset_state()
         self.text_output.config(state="normal")
         self.text_output.delete("1.0", "end")
         self.text_output.config(state="disabled")

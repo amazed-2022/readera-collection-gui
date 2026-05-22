@@ -6,6 +6,7 @@ import re
 import sys
 
 from book_collection import BookCollection, Book
+from book_statistics import Statistics, WordStatistics
 from constants_loader import constants
 from collections import Counter
 from datetime import datetime
@@ -772,60 +773,62 @@ class MainWindow(QMainWindow, QuoteManagerUI):
     #=================================================
     def print_statistics(self):
         self.clear()
-        author_quotes = {}
-        folder_q_count = {}
-        folder_book_count = {}
-
-        # gather book counts
-        books_with_quotes, books_20th, books_21st, books_read_count = 0, 0, 0, 0
-        for book in self.collection.books:
-            if book.total_quotes > 0:
-                books_with_quotes += 1
-            if 1900 <= book.published_date < 2000:
-                books_20th += 1
-            if book.published_date >= 2000:
-                books_21st += 1
-            if book.is_read:
-                books_read_count += 1
-
-            # gather folders statistics
-            for folder in self.collection.folders:
-                if book.folder == folder:
-                    folder_q_count[folder] = folder_q_count.get(folder, 0) + book.total_quotes
-                    folder_book_count[folder] = folder_book_count.get(folder, 0) + 1
-                    break
-
-            if book.total_quotes > 0:
-                author_quotes[book.author] = author_quotes.get(book.author, 0) + book.total_quotes
+        stats = Statistics.from_collection(self.collection)
 
         #=================================================
         # books
         #=================================================
         string = "Statistics"
         self.log(f"{string}\n{'-'*len(string)}\n")
-        books_count = len(self.collection.books)
-        self.print_stat_line("Books in The Collection", f"{books_count:4d} / 100%")
-        if books_21st:
-            self.print_stat_line("Books from the 21st century", f"{books_21st:4d} / {self.get_percentage_string(books_21st, books_count)}")
-        if books_20th:
-            self.print_stat_line("Books from the 20th century", f"{books_20th:4d} / {self.get_percentage_string(books_20th, books_count)}")
-        self.print_stat_line("Books with quotes", f"{books_with_quotes:4d} / {self.get_percentage_string(books_with_quotes, books_count)}")
-        self.print_stat_line("Books finished", f"{books_read_count:4d} / {self.get_percentage_string(books_read_count, books_count)}", blank_line=True)
+        self.print_stat_line("Books in The Collection", f"{stats.books_count:4d} / 100%")
 
-        # Sort folders by book count (descending)
-        folder_book_count = dict(sorted(folder_book_count.items(), key=lambda item: item[1], reverse=True))
-        self.print_folder_dict(folder_book_count, books_count)
+        if stats.books_21st:
+            self.print_stat_line(
+                "Books from the 21st century",
+                f"{stats.books_21st:4d} / {self.get_percentage_string(stats.books_21st, stats.books_count)}"
+            )
+
+        if stats.books_20th:
+            self.print_stat_line(
+                "Books from the 20th century",
+                f"{stats.books_20th:4d} / {self.get_percentage_string(stats.books_20th, stats.books_count)}"
+            )
+
+        self.print_stat_line(
+            "Books with quotes",
+            f"{stats.books_with_quotes:4d} / {self.get_percentage_string(stats.books_with_quotes, stats.books_count)}"
+        )
+
+        self.print_stat_line(
+            "Books finished",
+            f"{stats.books_read:4d} / {self.get_percentage_string(stats.books_read, stats.books_count)}",
+            blank_line=True
+        )
+
+        # folders (book counts)
+        self.print_folder_dict(stats.folder_book_counts, stats.books_count)
 
         #=================================================
         # quotes
         #=================================================
-        self.print_stat_line("Quotes in total", f"{self.collection.all_quotes_count:4d} / 100%")
-        string = f"{self.collection.short_quotes_count:4d} / {self.get_percentage_string(self.collection.short_quotes_count, self.collection.all_quotes_count)}"
-        self.print_stat_line(f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters", string)
-        self.print_stat_line("Quotes per book on average", f"{round(self.collection.all_quotes_count / books_with_quotes):4d}", blank_line=True)
+        self.print_stat_line(
+            "Quotes in total",
+            f"{stats.total_quotes_count:4d} / 100%"
+        )
 
-        folder_q_count = dict(sorted(folder_q_count.items(), key=lambda item: item[1], reverse=True))
-        self.print_folder_dict(folder_q_count, self.collection.all_quotes_count)
+        self.print_stat_line(
+            f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters",
+            f"{stats.total_short_quotes_count:4d} / "
+            f"{self.get_percentage_string(stats.total_short_quotes_count, stats.total_quotes_count)}"
+        )
+
+        avg = (
+            round(stats.total_short_quotes_count / stats.books_with_quotes)
+            if stats.books_with_quotes else 0
+        )
+
+        self.print_stat_line("Quotes per book on average", f"{avg:4d}", blank_line=True)
+        self.print_folder_dict(stats.folder_quote_counts, stats.total_quotes_count)
 
         #=================================================
         # authors
@@ -833,15 +836,13 @@ class MainWindow(QMainWindow, QuoteManagerUI):
         string = "Top 15 Authors"
         self.log(f"{string}\n{'-'*len(string)}")
 
-        # sort authors by total quotes (descending)
-        author_quotes = dict(sorted(author_quotes.items(), key=lambda item: item[1], reverse=True))
         cumulative = 0
-        for i, (author, count) in enumerate(author_quotes.items(), start=1):
+        for i, (author, count) in enumerate(stats.author_quotes.items(), start=1):
             cumulative += count
             self.print_stat_line(
                 f" --> {author}",
-                f"{count:4d} / {self.get_percentage_string(count, self.collection.all_quotes_count, digit=2)}"
-                f" / {self.get_percentage_string(cumulative, self.collection.all_quotes_count, digit=2)}"
+                f"{count:4d} / {self.get_percentage_string(count, stats.total_quotes_count, digit=2)}"
+                f" / {self.get_percentage_string(cumulative, stats.total_quotes_count, digit=2)}"
             )
             if i >= 15:
                 break
@@ -852,38 +853,21 @@ class MainWindow(QMainWindow, QuoteManagerUI):
         string = "Top 30 most used words"
         self.log(f"\n\n{string}\n{'-'*len(string)}")
 
-        all_quotes_list = []
-        for book in self.collection.books:
-            all_quotes_list += book.get_all_quotes_list()
-        all_text = ' '.join(quote.text for quote in all_quotes_list)
+        # get word stats for most common 30 words
+        word_stats = WordStatistics.from_collection(
+            self.collection,
+            constants.WORDS_TO_OMIT_FROM_SEARCH,
+            top_n=30
+        )
 
-        pattern = r"\b(?:" + '|'.join(constants.WORDS_TO_OMIT_FROM_SEARCH) + r")\b"
-        updated_text = re.sub(pattern, "", all_text, flags=re.IGNORECASE)
-
-        # convert to lowercase and split by non-word characters (e.g., punctuation)
-        words = re.findall(r"\b\w{4,}\b", updated_text.lower())
-        top_30 = Counter(words).most_common(30)
-
-        # get word counts for each book, omitted words from top_30 will be
-        # also counted, but there will be no match during later check
-        book_word_counts = {}
-        for book in self.collection.books:
-            quotes_text = ' '.join(quote.text for quote in book.get_all_quotes_list()).lower()
-            word_counts = Counter(re.findall(r'\b\w{4,}\b', quotes_text))
-            book_word_counts[book.title] = word_counts
-
-        # process the top 30 words
-        for word, count in top_30:
-            # find the book with the most occurrence of the word
-            max_count = 0
-            book_string = ""
-            for book in self.collection.books:
-                word_count = book_word_counts[book.title].get(word, 0)
-                if word_count > max_count:
-                    max_count = word_count
-                    book_string = book.title
-            # print related data in one line
-            self.log(f" --> {count:3d} x {word}{' '*(12-len(word))}{max_count:3d} / {book_string}")
+        for word, count in word_stats.top_words:
+            # get the book with the most occurrence of the word
+            book_string, max_count = word_stats.top_book_for_word[word]
+            self.log(
+                f" --> {count:3d} x {word}"
+                f"{' ' * (12 - len(word))}"
+                f"{max_count:3d} / {book_string}"
+            )
 
     def print_stat_line(self, string, value, blank_line=False):
         self.log(f"{string}  {'-'*(48-len(string))}>  {value}")
@@ -895,12 +879,10 @@ class MainWindow(QMainWindow, QuoteManagerUI):
         return f"{int((count/total)*100):{digit}d}%" if total else "0%"
 
     def print_folder_dict(self, folder_dict, total):
-        cumulative = 0
-        for folder in folder_dict:
-            cumulative += folder_dict[folder]
+        for folder, count in folder_dict.items():
             self.print_stat_line(
                 f" --> {folder}",
-                f"{folder_dict[folder]:4d} / {self.get_percentage_string(folder_dict[folder], total)}"
+                f"{count:4d} / {self.get_percentage_string(count, total)}"
             )
         self.log("\n")
 

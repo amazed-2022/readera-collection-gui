@@ -160,6 +160,7 @@ class BookCollection:
                 this_book.activity_time = doc['data'].get('doc_activity_time')
 
                 # get the folder, if available
+                this_book.folder = "unassigned"
                 if self.folders:
                     for folder, ids in self.folders.items():
                         if this_book.file_id in ids:

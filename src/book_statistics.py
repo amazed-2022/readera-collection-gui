@@ -5,7 +5,6 @@ import re
 
 from book_collection import BookCollection
 from collections import Counter
-from constants_loader import constants
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -175,8 +174,10 @@ class WordStatistics:
 
 class StatisticsReporter:
 
-    def __init__(self, line_width=48):
+    def __init__(self, write, line_width=48):
         self.line_width = line_width
+        # output callback provided at construction time (UI/CLI abstraction)
+        self.emit: Callable[[str], Any] = write
 
     #=================================================
     # MAIN
@@ -187,13 +188,9 @@ class StatisticsReporter:
         collection: BookCollection,
         max_short_quote_chars: int,
         omitted_words: list[str],
-        write: Callable[[str], Any],
         top_n_words: int = 30
 
     ):
-        # output function passed by caller (UI/CLI/etc.)
-        self.emit = write
-
         #=================================================
         # books
         #=================================================
@@ -249,7 +246,7 @@ class StatisticsReporter:
         )
 
         avg = (
-            round(stats.total_short_quotes_count / stats.books_with_quotes)
+            round(stats.total_quotes_count / stats.books_with_quotes)
             if stats.books_with_quotes else 0
         )
 
@@ -275,7 +272,8 @@ class StatisticsReporter:
         #=================================================
         # words
         #=================================================
-        self.emit(self.section(f"\n\nTop {top_n_words} most used words"))
+        self.emit("\n")
+        self.emit(self.section(f"Top {top_n_words} most used words"))
 
         word_stats = WordStatistics.from_collection(
             collection,
@@ -295,9 +293,6 @@ class StatisticsReporter:
     #=================================================
     # HELPERS
     #=================================================
-    def section(self, title):
-        return f"{title}\n{'-' * len(title)}"
-
     def report_stat_line(self, string, value, blank_line=False):
         self.emit(f"{string}  {'-'*(self.line_width-len(string))}>  {value}")
         if blank_line:
@@ -310,6 +305,10 @@ class StatisticsReporter:
                 f"{count:4d} / {self.get_percentage_string(count, total)}"
             )
         self.emit("\n")
+
+    @staticmethod
+    def section(title):
+        return f"{title}\n{'-' * len(title)}"
 
     @staticmethod
     def get_percentage_string(count, total, digit=3):

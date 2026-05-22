@@ -491,13 +491,16 @@ class MainWindow(tk.Tk):
 
     def on_logo_click(self, event) -> None:
         self.clear_text_output()
-        reporter = StatisticsReporter()
+        write_wo_scroll = lambda message: self.log(
+            message,
+            scroll_to_bottom=False
+        )
+        reporter = StatisticsReporter(write_wo_scroll)
         reporter.report(
             stats=self.stats,
             collection=self.collection,
             max_short_quote_chars=constants.MAX_CHAR_IN_SHORT_QUOTE,
             omitted_words=constants.WORDS_TO_OMIT_FROM_SEARCH,
-            write=self.log,
             top_n_words=30
         )
 

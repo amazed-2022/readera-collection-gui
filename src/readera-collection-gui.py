@@ -8,7 +8,6 @@ import sys
 from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
 from constants_loader import constants
-from collections import Counter
 from datetime import datetime
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
@@ -17,12 +16,12 @@ from PySide6.QtWidgets import (
     QInputDialog, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QTableView, QTextEdit, QWidget
 )
-from quote_manager import QuoteManager, QuoteManagerUI
+from quote_manager import QuoteManager
 
 #=================================================
 # MAIN WINDOW
 #=================================================
-class MainWindow(QMainWindow, QuoteManagerUI):
+class MainWindow(QMainWindow):
 
     #=================================================
     # type hints
@@ -700,7 +699,8 @@ class MainWindow(QMainWindow, QuoteManagerUI):
         timer.start(ms)
         return timer
 
-    def cancel_timer(self, timer: object) -> None:
+    @staticmethod
+    def cancel_timer(timer: object) -> None:
         if isinstance(timer, QTimer) and timer.isActive():
             timer.stop()
 
@@ -726,7 +726,25 @@ class MainWindow(QMainWindow, QuoteManagerUI):
         return self.books_dropdown.currentText()
 
     #=================================================
-    # QUOTE FUNCTIONS (not supported by QuoteManager
+    # FUNCTION: print statistics
+    #=================================================
+    def print_statistics(self):
+        self.clear()
+        write_wo_scroll = lambda message: self.log(
+            message,
+            scroll_to_bottom=False
+        )
+        reporter = StatisticsReporter(write_wo_scroll)
+        reporter.report(
+            stats=Statistics.from_collection(self.collection),
+            collection=self.collection,
+            max_short_quote_chars=constants.MAX_CHAR_IN_SHORT_QUOTE,
+            omitted_words=constants.WORDS_TO_OMIT_FROM_SEARCH,
+            top_n_words=30
+        )
+
+    #=================================================
+    # QUOTE FUNCTIONS (not supported by QuoteManager)
     #=================================================
     #=================================================
     # FUNCTION: print quote distribution
@@ -767,21 +785,6 @@ class MainWindow(QMainWindow, QuoteManagerUI):
             self.log(f"{space}|{row}")
         self.log(f"{space}{'-'*columns}→")
         self.log(f"{space}1{' '*(columns-len(str(book.pages_count))+1)}{book.pages_count}")
-
-    #=================================================
-    # FUNCTION: print statistics
-    #=================================================
-    def print_statistics(self):
-        self.clear()
-        reporter = StatisticsReporter()
-        reporter.report(
-            stats=Statistics.from_collection(collection),
-            collection=self.collection,
-            max_short_quote_chars=constants.MAX_CHAR_IN_SHORT_QUOTE,
-            omitted_words=constants.WORDS_TO_OMIT_FROM_SEARCH,
-            write=self.log,
-            top_n_words=30
-        )
 
     #=================================================
     # FUNCTION: search in quotes

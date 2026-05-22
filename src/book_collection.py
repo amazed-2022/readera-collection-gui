@@ -6,6 +6,7 @@ import random
 import re
 
 from constants_loader import constants
+from dataclasses import dataclass
 from datetime import datetime
 
 #=================================================
@@ -112,9 +113,6 @@ class BookCollection:
         # The Collection is stored as an instance attribute
         self.books: list[Book] = []
         self.folders: dict[str, set] = {}
-        self.all_quotes_count: int = 0
-        self.short_quotes_count: int = 0
-
 
     #=================================================
     # FUNCTION: build The Collection
@@ -126,8 +124,6 @@ class BookCollection:
         # reset state
         self.books = []
         self.folders = {}
-        self.all_quotes_count = 0
-        self.short_quotes_count = 0
 
         # open and read the JSON file
         try:
@@ -227,12 +223,109 @@ class BookCollection:
                 # add the constructed date
                 this_book.have_read_date = aux_date
 
-        # gather titles, authors and quote counts
-        for book in self.books:
-            self.all_quotes_count += book.total_quotes
-            self.short_quotes_count += book.total_short_quotes
-
         # alphabetical order by title
         self.books.sort(key=lambda bk: bk.title)
-
         return error
+
+
+@dataclass
+class Statistics:
+
+    books_count: int
+    books_20th: int
+    books_21st: int
+    books_with_quotes: int
+    books_read: int
+
+    total_quotes_count: int
+    total_short_quotes_count: int
+
+    author_quotes: dict[str, int]
+    folder_quote_counts: dict[str, int]
+    folder_book_counts: dict[str, int]
+
+    @classmethod
+    def from_collection(cls, collection):
+
+        author_quotes = {}
+        folder_quote_counts = {}
+        folder_book_counts = {}
+
+        books_with_quotes = 0
+        books_read = 0
+
+        total_quotes_count = 0
+        total_short_quotes_count = 0
+
+        books_20th = 0
+        books_21st = 0
+
+        for book in collection.books:
+            if book.total_quotes > 0:
+                books_with_quotes += 1
+                # gather author based stats
+                author_quotes[book.author] = (
+                    author_quotes.get(book.author, 0)
+                    + book.total_quotes
+                )
+            if book.is_read:
+                books_read += 1
+            if 1900 <= book.published_date < 2000:
+                books_20th += 1
+            if book.published_date >= 2000:
+                books_21st += 1
+
+            # gather folders stats
+            folder_quote_counts[book.folder] = (
+                folder_quote_counts.get(book.folder, 0)
+                + book.total_quotes
+            )
+
+            folder_book_counts[book.folder] = (
+                folder_book_counts.get(book.folder, 0)
+                + 1
+            )
+
+            total_quotes_count += book.total_quotes
+            total_short_quotes_count += book.total_short_quotes
+
+        # sort dicts descending based on count
+        author_quotes = dict(
+            sorted(
+                author_quotes.items(),
+                key=lambda item: item[1],
+                reverse=True
+            )
+        )
+
+        folder_quote_counts = dict(
+            sorted(
+                folder_quote_counts.items(),
+                key=lambda item: item[1],
+                reverse=True
+            )
+        )
+
+        folder_book_counts = dict(
+            sorted(
+                folder_book_counts.items(),
+                key=lambda item: item[1],
+                reverse=True
+            )
+        )
+
+        return cls(
+            books_count=len(collection.books),
+            books_with_quotes=books_with_quotes,
+            books_read=books_read,
+
+            books_20th=books_20th,
+            books_21st=books_21st,
+
+            total_quotes_count=total_quotes_count,
+            total_short_quotes_count=total_short_quotes_count,
+
+            author_quotes=author_quotes,
+            folder_quote_counts=folder_quote_counts,
+            folder_book_counts=folder_book_counts,
+        )

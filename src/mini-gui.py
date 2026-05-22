@@ -148,7 +148,7 @@ class MainWindow(tk.Tk):
         # instance attributes
         #=================================================
         self.collection = collection
-        self.stats = Statistics.from_collection(collection)
+        self.stats = Statistics.from_collection(self.collection)
 
         self.quote_manager = QuoteManager(self)
         self.filtered_books = []

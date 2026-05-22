@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 - Introduced `QuoteManager` to separate quote printing logic from UI
 - Added `schedule()` and `cancel_timer()` abstractions
 - Introduced `FilterPanel` for `mini-gui` to encapsulate dropdown UI logic
-- Introduced `Statistics` and `WordStatistics` dataclass to centralize computation (book_statistics.py)
+- Introduced `Statistics`, `WordStatistics` and `StatisticsReporter` to centralize computation and functions
   
 #### Changed
 - Refactored quote printing logic into `QuoteManager` and removed direct UI/timer coupling

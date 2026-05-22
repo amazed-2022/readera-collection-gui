@@ -1,11 +1,13 @@
 #=================================================
-# IMPORT 
+# IMPORT
 #=================================================
 import re
 
+from book_collection import BookCollection
 from collections import Counter
 from constants_loader import constants
 from dataclasses import dataclass
+from typing import Any, Callable
 
 #=================================================
 # CLASSES
@@ -145,22 +147,22 @@ class WordStatistics:
 
             # accumulate into global word frequency counter
             global_counter.update(counter)
-            
+
         # top words globally
         top_words = global_counter.most_common(top_n)
-        
+
         # compute top book for word (only for top words, avoids full vocabulary scan)
         for word, _count in top_words:
             max_count = 0
             best_book = ""
-            
+
             # scan all books' word counts
             for book_name, counter in book_word_counts.items():
                 count = counter.get(word, 0)
                 if count > max_count:
                     max_count = count
                     best_book = book_name
-            
+
             # store (best book, count) for this word
             top_book_for_word[word] = (best_book, max_count)
 
@@ -169,3 +171,146 @@ class WordStatistics:
             book_word_counts=book_word_counts,
             top_book_for_word=top_book_for_word
         )
+
+
+class StatisticsReporter:
+
+    def __init__(self, line_width=48):
+        self.line_width = line_width
+
+    #=================================================
+    # MAIN
+    #=================================================
+    def report(
+        self,
+        stats: Statistics,
+        collection: BookCollection,
+        max_short_quote_chars: int,
+        omitted_words: list[str],
+        write: Callable[[str], Any],
+        top_n_words: int = 30
+
+    ):
+        # output function passed by caller (UI/CLI/etc.)
+        self.emit = write
+
+        #=================================================
+        # books
+        #=================================================
+        self.emit(self.section("Statistics"))
+        self.emit("")
+        self.report_stat_line(
+                "Books in The Collection",
+                f"{stats.books_count:4d} / 100%"
+            )
+
+        if stats.books_21st:
+            self.report_stat_line(
+                "Books from the 21st century",
+                f"{stats.books_21st:4d} / "
+                f"{self.get_percentage_string(stats.books_21st, stats.books_count)}"
+            )
+
+        if stats.books_20th:
+            self.report_stat_line(
+                "Books from the 20th century",
+                f"{stats.books_20th:4d} / "
+                f"{self.get_percentage_string(stats.books_20th, stats.books_count)}"
+            )
+
+        self.report_stat_line(
+            "Books with quotes",
+            f"{stats.books_with_quotes:4d} / "
+            f"{self.get_percentage_string(stats.books_with_quotes, stats.books_count)}"
+        )
+
+        self.report_stat_line(
+            "Books finished",
+            f"{stats.books_read:4d} / "
+            f"{self.get_percentage_string(stats.books_read, stats.books_count)}",
+            blank_line=True
+        )
+
+        # folders (book counts)
+        self.report_folder_dict(stats.folder_book_counts, stats.books_count)
+
+        #=================================================
+        # quotes
+        #=================================================
+        self.report_stat_line(
+            "Quotes in total",
+            f"{stats.total_quotes_count:4d} / 100%"
+        )
+
+        self.report_stat_line(
+            f"Quotes that are less than {max_short_quote_chars} characters",
+            f"{stats.total_short_quotes_count:4d} / "
+            f"{self.get_percentage_string(stats.total_short_quotes_count, stats.total_quotes_count)}"
+        )
+
+        avg = (
+            round(stats.total_short_quotes_count / stats.books_with_quotes)
+            if stats.books_with_quotes else 0
+        )
+
+        self.report_stat_line("Quotes per book on average", f"{avg:4d}", blank_line=True)
+        self.report_folder_dict(stats.folder_quote_counts, stats.total_quotes_count)
+
+        #=================================================
+        # authors
+        #=================================================
+        self.emit(self.section("Top 15 Authors"))
+
+        cumulative = 0
+        for i, (author, count) in enumerate(stats.author_quotes.items(), start=1):
+            cumulative += count
+            self.report_stat_line(
+                f" --> {author}",
+                f"{count:4d} / {self.get_percentage_string(count, stats.total_quotes_count, digit=2)}"
+                f" / {self.get_percentage_string(cumulative, stats.total_quotes_count, digit=2)}"
+            )
+            if i >= 15:
+                break
+
+        #=================================================
+        # words
+        #=================================================
+        self.emit(self.section(f"\n\nTop {top_n_words} most used words"))
+
+        word_stats = WordStatistics.from_collection(
+            collection,
+            omitted_words,
+            top_n=top_n_words
+        )
+
+        for word, count in word_stats.top_words:
+            # get the book with the most occurrence of the word
+            book_string, max_count = word_stats.top_book_for_word[word]
+            self.emit(
+                f" --> {count:3d} x {word}"
+                f"{' ' * (12 - len(word))}"
+                f"{max_count:3d} / {book_string}"
+            )
+
+    #=================================================
+    # HELPERS
+    #=================================================
+    def section(self, title):
+        return f"{title}\n{'-' * len(title)}"
+
+    def report_stat_line(self, string, value, blank_line=False):
+        self.emit(f"{string}  {'-'*(self.line_width-len(string))}>  {value}")
+        if blank_line:
+            self.emit("")
+
+    def report_folder_dict(self, folder_dict, total):
+        for folder, count in folder_dict.items():
+            self.report_stat_line(
+                f" --> {folder}",
+                f"{count:4d} / {self.get_percentage_string(count, total)}"
+            )
+        self.emit("\n")
+
+    @staticmethod
+    def get_percentage_string(count, total, digit=3):
+        return f"{int((count/total)*100):{digit}d}%" if total else "0%"

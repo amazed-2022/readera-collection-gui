@@ -6,7 +6,7 @@ import os
 import tkinter as tk
 
 from book_collection import BookCollection, Book
-from book_statistics import Statistics
+from book_statistics import Statistics, StatisticsReporter
 from collections.abc import Iterator
 from constants_loader import constants
 from quote_manager import QuoteManager
@@ -125,6 +125,7 @@ class MainWindow(tk.Tk):
     header_frame: ttk.Frame
     filters: FilterPanel
     logo_frame: ttk.Frame
+    logo: ttk.Label
     q_counter_frame: ttk.Frame
     text_frame: ttk.Frame
     text_output: tk.Text
@@ -171,10 +172,10 @@ class MainWindow(tk.Tk):
         self._init_data()
         self._init_filters()
         self._init_buttons()
-        self._init_signals()
         self._build_header_frame()
         self._build_text_frame()
         self._build_buttons_frame()
+        self._init_signals()
 
     #=================================================
     # main window
@@ -313,19 +314,6 @@ class MainWindow(tk.Tk):
         )
 
     #=================================================
-    # signals (event bindings)
-    #=================================================
-    def _init_signals(self) -> None:
-        # this method binds change callback for all comboboxes
-        self.filters.set_on_change_callback(self._on_dropdown_change)
-
-        self.every_q_btn.configure(command=self.quote_manager.print_every_quote)
-        self.random_q_btn.configure(command=self.quote_manager.print_random_quote)
-        self.delay_author_btn.configure(command=self.quote_manager.on_delay_author_toggle)
-        self.clear_btn.configure(command=self.clear_text_output)
-        self.reset_btn.configure(command=self.reset)
-
-    #=================================================
     # header frame
     #=================================================
     def _build_header_frame(self) -> None:
@@ -333,13 +321,13 @@ class MainWindow(tk.Tk):
         # and positioned in header grid, add logo next to them
         string = f"== The Collection =="
         logo_text = f"{'=' * len(string)}\n{string}\n{'=' * len(string)}"
-        logo = ttk.Label(
+        self.logo = ttk.Label(
             self.logo_frame,
             text=logo_text,
             font=("Consolas", 14),
             anchor="center"
         )
-        logo.grid(row=0, column=1, sticky="ew")
+        self.logo.grid(row=0, column=1, sticky="ew")
         self.logo_frame.columnconfigure(0, weight=1)
         self.logo_frame.columnconfigure(1, weight=0)
         self.logo_frame.columnconfigure(2, weight=1)
@@ -406,6 +394,20 @@ class MainWindow(tk.Tk):
         self.buttons_frame.columnconfigure(3, weight=10) # spacer
         self.buttons_frame.columnconfigure(4, weight=1)  # clear
         self.buttons_frame.columnconfigure(5, weight=1)  # reset
+
+    #=================================================
+    # signals (event bindings)
+    #=================================================
+    def _init_signals(self) -> None:
+        # this method binds change callback for all comboboxes
+        self.filters.set_on_change_callback(self._on_dropdown_change)
+        self.logo.bind("<Button-1>", self.on_logo_click)
+
+        self.every_q_btn.configure(command=self.quote_manager.print_every_quote)
+        self.random_q_btn.configure(command=self.quote_manager.print_random_quote)
+        self.delay_author_btn.configure(command=self.quote_manager.on_delay_author_toggle)
+        self.clear_btn.configure(command=self.clear_text_output)
+        self.reset_btn.configure(command=self.reset)
 
     #=================================================
     # log messages to the text widget
@@ -486,6 +488,18 @@ class MainWindow(tk.Tk):
         self.filters.set_books_list(self.filtered_books)
         self.filters.select_first_book()
         self.update_quotes_counter()
+
+    def on_logo_click(self, event) -> None:
+        self.clear_text_output()
+        reporter = StatisticsReporter()
+        reporter.report(
+            stats=self.stats,
+            collection=self.collection,
+            max_short_quote_chars=constants.MAX_CHAR_IN_SHORT_QUOTE,
+            omitted_words=constants.WORDS_TO_OMIT_FROM_SEARCH,
+            write=self.log,
+            top_n_words=30
+        )
 
     #=================================================
     # filter match for a book instance

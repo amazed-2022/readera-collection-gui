@@ -6,6 +6,7 @@ import os
 import tkinter as tk
 
 from book_collection import BookCollection, Book
+from book_statistics import Statistics
 from collections.abc import Iterator
 from constants_loader import constants
 from quote_manager import QuoteManager
@@ -147,10 +148,12 @@ class MainWindow(tk.Tk):
         # instance attributes
         #=================================================
         self.collection = collection
+        self.stats = Statistics.from_collection(collection)
+
         self.quote_manager = QuoteManager(self)
         self.filtered_books = []
         self.authors_with_quotes = []
-        self.quotes_remaining_var = tk.StringVar(value=f"{collection.all_quotes_count}")
+        self.quotes_remaining_var = tk.StringVar(value=f"{self.stats.total_quotes_count}")
 
         #=================================================
         # set up Font objects for the GUI
@@ -569,7 +572,7 @@ if __name__ == "__main__":
         window.log(f"Error reading JSON file: {error}\n")
     else:
         window.log(
-            f"This collection has {window.collection.all_quotes_count}"
+            f"This collection has {window.stats.total_quotes_count}"
             f" quotes from {len(window.filtered_books)} books.\n\n"
         )
     window.mainloop()

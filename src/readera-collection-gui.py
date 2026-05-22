@@ -6,7 +6,7 @@ import re
 import sys
 
 from book_collection import BookCollection, Book
-from book_statistics import Statistics, WordStatistics
+from book_statistics import Statistics, StatisticsReporter
 from constants_loader import constants
 from collections import Counter
 from datetime import datetime
@@ -773,118 +773,15 @@ class MainWindow(QMainWindow, QuoteManagerUI):
     #=================================================
     def print_statistics(self):
         self.clear()
-        stats = Statistics.from_collection(self.collection)
-
-        #=================================================
-        # books
-        #=================================================
-        string = "Statistics"
-        self.log(f"{string}\n{'-'*len(string)}\n")
-        self.print_stat_line("Books in The Collection", f"{stats.books_count:4d} / 100%")
-
-        if stats.books_21st:
-            self.print_stat_line(
-                "Books from the 21st century",
-                f"{stats.books_21st:4d} / {self.get_percentage_string(stats.books_21st, stats.books_count)}"
-            )
-
-        if stats.books_20th:
-            self.print_stat_line(
-                "Books from the 20th century",
-                f"{stats.books_20th:4d} / {self.get_percentage_string(stats.books_20th, stats.books_count)}"
-            )
-
-        self.print_stat_line(
-            "Books with quotes",
-            f"{stats.books_with_quotes:4d} / {self.get_percentage_string(stats.books_with_quotes, stats.books_count)}"
+        reporter = StatisticsReporter()
+        reporter.report(
+            stats=Statistics.from_collection(collection),
+            collection=self.collection,
+            max_short_quote_chars=constants.MAX_CHAR_IN_SHORT_QUOTE,
+            omitted_words=constants.WORDS_TO_OMIT_FROM_SEARCH,
+            write=self.log,
+            top_n_words=30
         )
-
-        self.print_stat_line(
-            "Books finished",
-            f"{stats.books_read:4d} / {self.get_percentage_string(stats.books_read, stats.books_count)}",
-            blank_line=True
-        )
-
-        # folders (book counts)
-        self.print_folder_dict(stats.folder_book_counts, stats.books_count)
-
-        #=================================================
-        # quotes
-        #=================================================
-        self.print_stat_line(
-            "Quotes in total",
-            f"{stats.total_quotes_count:4d} / 100%"
-        )
-
-        self.print_stat_line(
-            f"Quotes that are less than {constants.MAX_CHAR_IN_SHORT_QUOTE} characters",
-            f"{stats.total_short_quotes_count:4d} / "
-            f"{self.get_percentage_string(stats.total_short_quotes_count, stats.total_quotes_count)}"
-        )
-
-        avg = (
-            round(stats.total_short_quotes_count / stats.books_with_quotes)
-            if stats.books_with_quotes else 0
-        )
-
-        self.print_stat_line("Quotes per book on average", f"{avg:4d}", blank_line=True)
-        self.print_folder_dict(stats.folder_quote_counts, stats.total_quotes_count)
-
-        #=================================================
-        # authors
-        #=================================================
-        string = "Top 15 Authors"
-        self.log(f"{string}\n{'-'*len(string)}")
-
-        cumulative = 0
-        for i, (author, count) in enumerate(stats.author_quotes.items(), start=1):
-            cumulative += count
-            self.print_stat_line(
-                f" --> {author}",
-                f"{count:4d} / {self.get_percentage_string(count, stats.total_quotes_count, digit=2)}"
-                f" / {self.get_percentage_string(cumulative, stats.total_quotes_count, digit=2)}"
-            )
-            if i >= 15:
-                break
-
-        #=================================================
-        # words
-        #=================================================
-        string = "Top 30 most used words"
-        self.log(f"\n\n{string}\n{'-'*len(string)}")
-
-        # get word stats for most common 30 words
-        word_stats = WordStatistics.from_collection(
-            self.collection,
-            constants.WORDS_TO_OMIT_FROM_SEARCH,
-            top_n=30
-        )
-
-        for word, count in word_stats.top_words:
-            # get the book with the most occurrence of the word
-            book_string, max_count = word_stats.top_book_for_word[word]
-            self.log(
-                f" --> {count:3d} x {word}"
-                f"{' ' * (12 - len(word))}"
-                f"{max_count:3d} / {book_string}"
-            )
-
-    def print_stat_line(self, string, value, blank_line=False):
-        self.log(f"{string}  {'-'*(48-len(string))}>  {value}")
-        if blank_line:
-            self.log("")
-
-    @staticmethod
-    def get_percentage_string(count, total, digit=3):
-        return f"{int((count/total)*100):{digit}d}%" if total else "0%"
-
-    def print_folder_dict(self, folder_dict, total):
-        for folder, count in folder_dict.items():
-            self.print_stat_line(
-                f" --> {folder}",
-                f"{count:4d} / {self.get_percentage_string(count, total)}"
-            )
-        self.log("\n")
 
     #=================================================
     # FUNCTION: search in quotes

@@ -5,6 +5,7 @@ import json
 import random
 import re
 
+from collections import Counter
 from constants_loader import constants
 from dataclasses import dataclass
 from datetime import datetime
@@ -328,4 +329,62 @@ class Statistics:
             author_quotes=author_quotes,
             folder_quote_counts=folder_quote_counts,
             folder_book_counts=folder_book_counts,
+        )
+
+
+@dataclass
+class WordStatistics:
+    top_words: list[tuple[str, int]]
+    book_word_counts: dict[str, Counter]
+    top_book_for_word: dict[str, tuple[str, int]]
+
+    @classmethod
+    def from_collection(cls, collection, omit_words: list[str], top_n: int = 30):
+
+        omit_set = set(omit_words)
+
+        book_word_counts: dict[str, Counter] = {}
+        top_book_for_word = {}
+        global_counter = Counter()
+
+        # per-book + global word frequency build
+        for book in collection.books:
+            # combine all quotes (long + short) into lowercase
+            text = ' '.join(q.text for q in book.get_all_quotes_list()).lower()
+
+            # generator of filtered words for Counter
+            words = (
+                w for w in re.findall(r"\b\w{4,}\b", text)
+                if w not in omit_set
+            )
+
+            # build per-book frequency counter (word -> count) and store it
+            counter = Counter(words)
+            book_word_counts[book.title] = counter
+
+            # accumulate into global word frequency counter
+            global_counter.update(counter)
+            
+        # top words globally
+        top_words = global_counter.most_common(top_n)
+        
+        # compute top book for word (only for top words, avoids full vocabulary scan)
+        for word, _count in top_words:
+            max_count = 0
+            best_book = ""
+            
+            # scan all books' word counts
+            for book_name, counter in book_word_counts.items():
+                count = counter.get(word, 0)
+                if count > max_count:
+                    max_count = count
+                    best_book = book_name
+            
+            # store (best book, count) for this word
+            top_book_for_word[word] = (best_book, max_count)
+
+        return cls(
+            top_words=top_words,
+            book_word_counts=book_word_counts,
+            top_book_for_word=top_book_for_word
         )

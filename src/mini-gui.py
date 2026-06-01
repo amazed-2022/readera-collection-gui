@@ -9,6 +9,7 @@ from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
 from collections.abc import Iterator
 from constants_loader import constants
+from functools import partial
 from quote_manager import QuoteManager
 from tkinter import ttk, messagebox, font
 
@@ -491,11 +492,9 @@ class MainWindow(tk.Tk):
 
     def on_logo_click(self, event) -> None:
         self.clear_text_output()
-        write_wo_scroll = lambda message: self.log(
-            message,
-            scroll_to_bottom=False
+        reporter = StatisticsReporter(
+            partial(self.log, scroll_to_bottom=False)
         )
-        reporter = StatisticsReporter(write_wo_scroll)
         reporter.report(
             stats=self.stats,
             collection=self.collection,

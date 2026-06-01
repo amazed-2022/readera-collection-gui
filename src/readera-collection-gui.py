@@ -9,6 +9,7 @@ from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
 from constants_loader import constants
 from datetime import datetime
+from functools import partial
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
@@ -734,7 +735,9 @@ class MainWindow(QMainWindow):
             message,
             scroll_to_bottom=False
         )
-        reporter = StatisticsReporter(write_wo_scroll)
+        reporter = StatisticsReporter(
+            partial(self.log, scroll_to_bottom=False)
+        )
         reporter.report(
             stats=Statistics.from_collection(self.collection),
             collection=self.collection,

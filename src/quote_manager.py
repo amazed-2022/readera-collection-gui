@@ -45,8 +45,8 @@ class QuoteManager:
     quote_printed: bool
     book_header_printed: bool
 
-    pending_book_data: tuple[Book, int] | None
     book_data_timer: object | None
+    pending_book_data: tuple[Book, int] | None
 
     book_quote_count: int
     quote_iter: Iterator[tuple[int, Quote]]
@@ -98,8 +98,8 @@ class QuoteManager:
             if self.quote_printed:
                 # add an extra empty line for better separation
                 self.ui.log("")
-            self.ui.log(f"{book.title}", scroll_to_bottom=True)
-            self.ui.log(f"{'-'*len(book.title)}\n", scroll_to_bottom=True)
+            self.ui.log(f"{book.title}")
+            self.ui.log(f"{'-'*len(book.title)}\n")
             self.book_header_printed = True
 
         # get the random quote and print it
@@ -195,8 +195,8 @@ class QuoteManager:
 
         # book exists, get quotes for printing
         quotes = book_utils.get_quotes_sorted_by_page(book)
-        self.ui.log(book.title)
-        self.ui.log('-' * len(book.title))
+        self.ui.log(book.title, scroll_to_bottom=False)
+        self.ui.log('-' * len(book.title), scroll_to_bottom=False)
 
         # setup async iteration state and start the loop
         self.book_quote_count = len(quotes)
@@ -214,11 +214,11 @@ class QuoteManager:
             self.ui.set_quotes_counter(0)
             return
 
-        header = f"{i + 1} / {self.book_quote_count}  (p.{quote.page})"
-        self.ui.log(header)
-        self.ui.log(quote.text)
+        quote_info_line = f"{i + 1} / {self.book_quote_count}  (p.{quote.page})"
+        self.ui.log(quote_info_line, scroll_to_bottom=False)
+        self.ui.log(quote.text, scroll_to_bottom=False)
         if i < (self.book_quote_count - 1):
-            self.ui.log("\n")
+            self.ui.log("\n", scroll_to_bottom=False)
         self.ui.set_quotes_counter(self.book_quote_count - i)
 
         # schedule next iteration

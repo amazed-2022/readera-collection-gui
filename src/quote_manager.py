@@ -25,7 +25,7 @@ class QuoteManagerUI(Protocol):
     def scroll_to_bottom(self) -> None: ...
 
     # state
-    def delay_author_enabled(self) -> bool: ...
+    def delay_source_enabled(self) -> bool: ...
     def update_quotes_counter(self, use_book_total: bool = False) -> None: ...
     def set_quotes_counter(self, value: int) -> None: ...
 
@@ -45,8 +45,8 @@ class QuoteManager:
     quote_printed: bool
     book_header_printed: bool
 
-    pending_author_data: tuple[Book, int] | None
-    author_timer: object | None
+    pending_book_data: tuple[Book, int] | None
+    book_data_timer: object | None
 
     book_quote_count: int
     quote_iter: Iterator[tuple[int, Quote]]
@@ -55,23 +55,13 @@ class QuoteManager:
     # initialization
     #=================================================
     def __init__(self, ui: QuoteManagerUI):
-        """
-        # ui needs to provide:
-        # - log(...)
-        # - schedule(...)
-        # - cancel_timer(...)
-        # - scroll_to_top()
-        # - scroll_to_bottom()
-        # - delay_author_enabled()
-        # - update_quotes_counter()
-        """
         self.ui = ui
 
         # set default state
         self.quote_printed = False
         self.book_header_printed = False
-        self.pending_author_data = None
-        self.author_timer = None
+        self.pending_book_data = None
+        self.book_data_timer = None
 
     #=================================================
     # print random quote
@@ -124,7 +114,7 @@ class QuoteManager:
         self.quote_printed = True
 
         if not is_book_selected:
-            if not self.ui.delay_author_enabled():
+            if not self.ui.delay_source_enabled():
                 self._print_author_now(book, quotes_left_in_book)
             else:
                 self._schedule_author_print(book, quotes_left_in_book, len(random_quote.text))
@@ -150,36 +140,36 @@ class QuoteManager:
         ms_per_char: int = 50
     ) -> None:
         delay_ms = min(base_delay_ms + quote_length * ms_per_char, 60000)
-        self.pending_author_data = (book, quotes_left_in_book)
+        self.pending_book_data = (book, quotes_left_in_book)
 
         # stop previous timer if running
-        if self.author_timer is not None:
-            self.ui.cancel_timer(self.author_timer)
+        if self.book_data_timer is not None:
+            self.ui.cancel_timer(self.book_data_timer)
 
         # start the timer
-        self.author_timer = self.ui.schedule(delay_ms, self._print_pending_author)
+        self.book_data_timer = self.ui.schedule(delay_ms, self._print_pending_author)
 
     def _print_pending_author(self) -> None:
-        if self.pending_author_data:
+        if self.pending_book_data:
             # unpack the stored tuple
-            book, quotes_left_in_book = self.pending_author_data
+            book, quotes_left_in_book = self.pending_book_data
             self._print_author_now(book, quotes_left_in_book, scroll_to_bottom=False)
-        self.pending_author_data = None
-        self.author_timer = None
+        self.pending_book_data = None
+        self.book_data_timer = None
 
     def _flush_pending_author(self, print_data: bool = True) -> None:
-        if self.author_timer is not None:
-            self.ui.cancel_timer(self.author_timer)
-            self.author_timer = None
-        if print_data and self.pending_author_data:
-            book, quotes_left_in_book = self.pending_author_data
+        if self.book_data_timer is not None:
+            self.ui.cancel_timer(self.book_data_timer)
+            self.book_data_timer = None
+        if print_data and self.pending_book_data:
+            book, quotes_left_in_book = self.pending_book_data
             self._print_author_now(book, quotes_left_in_book)
-        self.pending_author_data = None
+        self.pending_book_data = None
 
-    def on_delay_author_toggle(self) -> None:
-        checked = self.ui.delay_author_enabled()
+    def on_delay_source_toggle(self) -> None:
+        checked = self.ui.delay_source_enabled()
         if not checked:
-            if self.pending_author_data:
+            if self.pending_book_data:
                 self._flush_pending_author()
             else:
                 # make already printed author visible

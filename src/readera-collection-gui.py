@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
     books_dropdown: QComboBox
     mode_dropdown: QComboBox
 
-    delay_author_toggle: QPushButton
+    delay_source_toggle: QPushButton
     buttons: dict[str, QPushButton]
     btn_increase: QPushButton
     btn_decrease: QPushButton
@@ -142,11 +142,11 @@ class MainWindow(QMainWindow):
     # actions, adjustment
     #=================================================
     def _init_actions(self):
-        self.delay_author_toggle = QPushButton("Random quotes: delay author")
-        self.delay_author_toggle.setCheckable(True)
-        self.delay_author_toggle.setChecked(False)
-        self.delay_author_toggle.setToolTip("ON: Author appears after a delay\nOFF: Author appears immediately")
-        self.delay_author_toggle.setStyleSheet("""
+        self.delay_source_toggle = QPushButton("Random quotes: delay source")
+        self.delay_source_toggle.setCheckable(True)
+        self.delay_source_toggle.setChecked(False)
+        self.delay_source_toggle.setToolTip("ON: Source appears after a delay\nOFF: Source appears immediately")
+        self.delay_source_toggle.setStyleSheet("""
             QPushButton { background-color: none; }
             QPushButton:checked { background-color: rgb(180,230,180); }
         """)
@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
             *self.buttons.values(),
             self.btn_increase,
             self.btn_decrease,
-            self.delay_author_toggle
+            self.delay_source_toggle
         ):
             btn.setFont(font)
             btn.setMinimumHeight(40)
@@ -194,7 +194,7 @@ class MainWindow(QMainWindow):
         # the folder/author choice event triggers the authors and book lists update
         self.folders_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
         self.authors_dropdown.currentIndexChanged.connect(self.on_folder_or_author_change)
-        self.delay_author_toggle.toggled.connect(self.quote_manager.on_delay_author_toggle)
+        self.delay_source_toggle.toggled.connect(self.quote_manager.on_delay_source_toggle)
 
         # use lambda to defer immediate execution when an argument is passed
         self.buttons["random"].clicked.connect(self.quote_manager.print_random_quote)
@@ -332,7 +332,7 @@ class MainWindow(QMainWindow):
         widgets = [
             self.buttons["random"], self.buttons["every"], self.buttons["stats"], self.btn_increase,
             self.buttons["short"],  self.buttons["dist"],  self.buttons["search"], self.mode_dropdown,
-            self.delay_author_toggle, self.buttons["clear"], self.buttons["list"], self.btn_decrease,
+            self.delay_source_toggle, self.buttons["clear"], self.buttons["list"], self.btn_decrease,
         ]
 
         positions = [(i, j) for i in range(3) for j in range(4)]
@@ -665,7 +665,7 @@ class MainWindow(QMainWindow):
         self.on_folder_or_author_change()
 
         # reset UI state
-        self.delay_author_toggle.setChecked(False)
+        self.delay_source_toggle.setChecked(False)
         self.clear()
 
         # reset font and layout settings
@@ -690,8 +690,8 @@ class MainWindow(QMainWindow):
     def set_quotes_counter(self, value: int) -> None:
         pass
 
-    def delay_author_enabled(self) -> bool:
-        return self.delay_author_toggle.isChecked()
+    def delay_source_enabled(self) -> bool:
+        return self.delay_source_toggle.isChecked()
 
     def schedule(self, ms: int, callback) -> QTimer:
         timer = QTimer(self)

@@ -135,8 +135,8 @@ class MainWindow(tk.Tk):
 
     every_q_btn: ttk.Button
     random_q_btn: ttk.Button
-    delay_author_btn: ttk.Checkbutton
-    delay_author_toggle: tk.BooleanVar
+    delay_source_btn: ttk.Checkbutton
+    delay_source_toggle: tk.BooleanVar
     clear_btn: ttk.Button
     reset_btn: ttk.Button
 
@@ -294,11 +294,11 @@ class MainWindow(tk.Tk):
         )
 
         # this will be a special Tkinter variable
-        self.delay_author_toggle = tk.BooleanVar(value=False)
-        self.delay_author_btn = tk.Checkbutton(
+        self.delay_source_toggle = tk.BooleanVar(value=False)
+        self.delay_source_btn = tk.Checkbutton(
             self.buttons_frame,
-            text="Delay author",
-            variable=self.delay_author_toggle,
+            text="Delay source",
+            variable=self.delay_source_toggle,
             font=self.default_font,
         )
 
@@ -384,7 +384,7 @@ class MainWindow(tk.Tk):
         # left buttons
         self.every_q_btn.grid(row=0, column=0, padx=(25, 0), sticky="ew")
         self.random_q_btn.grid(row=0, column=1, padx=(15, 0), sticky="ew")
-        self.delay_author_btn.grid(row=0, column=2, padx=(15, 0))
+        self.delay_source_btn.grid(row=0, column=2, padx=(15, 0))
         # right buttons
         self.clear_btn.grid(row=0, column=4, padx=(15, 0), sticky="ew")
         self.reset_btn.grid(row=0, column=5, padx=(15, 25), sticky="ew")
@@ -406,7 +406,7 @@ class MainWindow(tk.Tk):
 
         self.every_q_btn.configure(command=self.quote_manager.print_every_quote)
         self.random_q_btn.configure(command=self.quote_manager.print_random_quote)
-        self.delay_author_btn.configure(command=self.quote_manager.on_delay_author_toggle)
+        self.delay_source_btn.configure(command=self.quote_manager.on_delay_source_toggle)
         self.clear_btn.configure(command=self.clear_text_output)
         self.reset_btn.configure(command=self.reset)
 
@@ -444,7 +444,7 @@ class MainWindow(tk.Tk):
         # command= runs only on user interaction (mouse/keyboard click)
         # .set() changes the associated BooleanVar value only
         # .set() does NOT trigger the command callback
-        self.delay_author_toggle.set(False)
+        self.delay_source_toggle.set(False)
         self.clear_text_output()
         self.set_default_window_size()
 
@@ -550,8 +550,8 @@ class MainWindow(tk.Tk):
     def set_quotes_counter(self, value: int) -> None:
         self.quotes_remaining_var.set(str(value))
 
-    def delay_author_enabled(self) -> bool:
-        return self.delay_author_toggle.get()
+    def delay_source_enabled(self) -> bool:
+        return self.delay_source_toggle.get()
 
     def schedule(self, ms: int, callback) -> str:
         return self.after(ms, callback)

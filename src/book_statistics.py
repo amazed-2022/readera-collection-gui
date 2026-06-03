@@ -23,14 +23,14 @@ class Statistics:
     total_quotes_count: int
     total_short_quotes_count: int
 
-    author_quotes: dict[str, int]
+    author_quote_counts: dict[str, int]
     folder_quote_counts: dict[str, int]
     folder_book_counts: dict[str, int]
 
     @classmethod
-    def from_collection(cls, collection):
+    def from_collection(cls, collection: BookCollection):
 
-        author_quotes = {}
+        author_quote_counts = {}
         folder_quote_counts = {}
         folder_book_counts = {}
 
@@ -47,8 +47,8 @@ class Statistics:
             if book.total_quotes > 0:
                 books_with_quotes += 1
                 # gather author based stats
-                author_quotes[book.author] = (
-                    author_quotes.get(book.author, 0)
+                author_quote_counts[book.author] = (
+                    author_quote_counts.get(book.author, 0)
                     + book.total_quotes
                 )
             if book.is_read:
@@ -73,9 +73,9 @@ class Statistics:
             total_short_quotes_count += book.total_short_quotes
 
         # sort dicts descending based on count
-        author_quotes = dict(
+        author_quote_counts = dict(
             sorted(
-                author_quotes.items(),
+                author_quote_counts.items(),
                 key=lambda item: item[1],
                 reverse=True
             )
@@ -108,7 +108,7 @@ class Statistics:
             total_quotes_count=total_quotes_count,
             total_short_quotes_count=total_short_quotes_count,
 
-            author_quotes=author_quotes,
+            author_quote_counts=author_quote_counts,
             folder_quote_counts=folder_quote_counts,
             folder_book_counts=folder_book_counts,
         )
@@ -259,7 +259,7 @@ class StatisticsReporter:
         self.emit(self.section("Top 15 Authors"))
 
         cumulative = 0
-        for i, (author, count) in enumerate(stats.author_quotes.items(), start=1):
+        for i, (author, count) in enumerate(stats.author_quote_counts.items(), start=1):
             cumulative += count
             self.report_stat_line(
                 f" --> {author}",

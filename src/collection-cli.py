@@ -2,19 +2,16 @@
 # IMPORT
 #=================================================
 import datetime
-import json
 import os
 import random
 import re
 import sys
 import textwrap
-import time
 import unicodedata
 
-from book_collection import BookCollection, Book
+from book_collection import BookCollection
 from book_statistics import Statistics, StatisticsReporter
 from constants_loader import constants
-from collections import Counter
 
 #=================================================
 # GLOBALS, CONSTANTS
@@ -45,15 +42,15 @@ LENGTH_TO_METHOD = {
 # FUNCTIONS
 #=================================================
 def create_options_menu(opt_lst):
-    result = {}
-    counter = 1
+    options = {}
+    cntr = 1
     for element in opt_lst:
         if element != "Exit":
-            result[str(counter)] = element
-            counter += 1
+            options[str(cntr)] = element
+            cntr += 1
         else:
-            result['x'] = element
-    return result
+            options['x'] = element
+    return options
 
 #=================================================
 # get terminal width
@@ -97,15 +94,15 @@ def get_option():
         " ..or doing the right thing, and so on and so forth... "
         ]
 
-    string = "Choose an option:"
-    print(f"{string}\n{'-' * len(string)}")
+    header = "Choose an option:"
+    print(f"{header}\n{'-' * len(header)}")
     print_options()
     print_separator_line()
 
     iteration = 0
     while True:
-        string = prompts[iteration] if iteration < len(prompts) else " It's time to choose an option.. "
-        opt = input(string)
+        selection = prompts[iteration] if iteration < len(prompts) else " It's time to choose an option.. "
+        opt = input(selection)
         iteration += 1
 
         if opt.isdigit() and opt in Options_Menu:
@@ -116,10 +113,10 @@ def get_option():
 #=================================================
 # FUNCTION: print random quotes
 #=================================================
-def print_random_quotes(books, method, print_title=True):
+def print_random_quotes(books_for_print, method, print_title=True):
     while True:
         # random book for every iteration (or same book for a single-element list)
-        book = random.choice(books)
+        book = random.choice(books_for_print)
         random_quote, quotes_left = getattr(book, method)()
 
         # get random returns None if there is no more quote left in that book
@@ -141,9 +138,9 @@ def print_random_quotes(books, method, print_title=True):
             print('\n')
         else:
             # refresh the list if no more quote is in the book
-            books.remove(book)
+            books_for_print.remove(book)
 
-        if not books:
+        if not books_for_print:
             input("All quotes were printed.")
             return
 
@@ -163,9 +160,9 @@ def print_wrapped_text(text):
 #=================================================
 # print items with selection numbers
 #=================================================
-def print_selection_list(items, option=""):
-    for i, item in enumerate(items):
-        print(f"{i + 1:2d}.  -->  {item}{get_century_suffix(item) if option else ''}")
+def print_selection_list(items, extra_option: str = ""):
+    for idx, item in enumerate(items):
+        print(f"{idx + 1:2d}.  -->  {item}{get_century_suffix(item) if extra_option else ''}")
 
 #=================================================
 # return century suffix
@@ -183,7 +180,7 @@ def get_century_suffix(cent):
 # print items with selection numbers
 #=================================================
 def get_user_choice(input_type, max_value, zero_is_valid=False, extra_prompt=""):
-    number = None
+    number = 999
     min_value = 0 if zero_is_valid else 1
     while True:
         article = ' a' if input_type != 'quote length' else ''
@@ -209,15 +206,15 @@ def get_user_choice(input_type, max_value, zero_is_valid=False, extra_prompt="")
 def choose_a_book(attr):
     print(" 0.  -->  random book")
 
-    if attr == "with_quotes":
-        books = [book for book in collection.books if book.total_quotes > 0]
-    elif attr == "with_annotation":
-        books = [book for book in collection.books if book.annotation]
+    if attr == "with_annotation":
+        books_for_selection = [book for book in collection.books if book.annotation]
+    else:
+        books_for_selection = [book for book in collection.books if book.total_quotes > 0]
 
-    titles = [book.title for book in books]
+    titles = [book.title for book in books_for_selection]
     print_selection_list(titles)
-    choice = get_user_choice("book", len(books), zero_is_valid=True)
-    return books[choice - 1] if choice else random.choice(books)
+    choice = get_user_choice("book", len(books_for_selection), zero_is_valid=True)
+    return books_for_selection[choice - 1] if choice else random.choice(books_for_selection)
 
 #=================================================
 # user can choose an author
@@ -231,7 +228,6 @@ def choose_an_author(authors):
 # user can choose a property
 #=================================================
 def choose_a_property():
-    global Ratings_Available
 
     properties = [
         "added on",
@@ -240,6 +236,7 @@ def choose_a_property():
         "read duration",
         "number of quotes",
         "quote/page ratio",
+        "publish date",
         "rating",
         "folder",
         ]
@@ -278,7 +275,7 @@ def choose_a_folder(folders: dict[str, set], allow_select_all: bool = True):
 def choose_quote_length():
     print_selection_list(LENGTHS)
     choice = get_user_choice("quote length", len(LENGTHS))
-    return LENGTHS[choice - 1] if choice else None
+    return LENGTHS[choice - 1] if choice else length[0]
 
 
 #=================================================
@@ -305,7 +302,7 @@ while True:
     print(f"{separator}\n{string}\n{separator}\n")
 
     # get option also prints the options menu
-    option = get_option();
+    option = get_option()
     print_separator_line()
 
     #=================================================
@@ -354,7 +351,7 @@ while True:
             # open output file with context manager
             with open(f"{selected_book.title}.txt", "w", encoding="utf8") as f_output:
                 # create a list sorted by page number of all quotes in the book
-                sorted_by_page = sorted(selected_book.get_all_quotes_list(), key=lambda quote: quote.page)
+                sorted_by_page = sorted(selected_book.get_all_quotes_list(), key=lambda q: q.page)
 
                 print(selected_book.title)
                 print('-' * len(selected_book.title))
@@ -435,7 +432,7 @@ while True:
             sorted_books = sorted(collection.books, key=lambda book: book.quotes_per_page, reverse=True)
         elif book_property == "rating":
             sorted_books = sorted(collection.books, key=lambda book: book.rating, reverse=True)
-        elif book_property == "folder":
+        else:
             sorted_books = sorted(collection.books, key=lambda book: book.title, reverse=False)
 
         # choose function returns none if all is requested
@@ -482,12 +479,9 @@ while True:
                                   f"/ {book.pages_count:4d} pages  /  {int((book.pages_count / elapsed_days)+0.5):2d} / day")
 
                     elif book_property == "publish date":
-                        if century:
-                            date_match = ((century - 1) * 100) <= book.published_date < (century * 100)
-                        if not century or date_match:
-                            date_data = f"{book.published_date:4d}" if book.published_date else " N/A"
-                            pages_count = f"{book.pages_count:4d}" if book.pages_count else " N/A"
-                            print(f"  -->  {date_data}  /  {pages_count} pages  /  {book.title}")
+                        date_data = f"{book.published_date:4d}" if book.published_date else " N/A"
+                        pages_count = f"{book.pages_count:4d}" if book.pages_count else " N/A"
+                        print(f"  -->  {date_data}  /  {pages_count} pages  /  {book.title}")
 
                     elif book_property == "number of quotes":
                         if book.total_quotes > 0:
@@ -495,7 +489,7 @@ while True:
 
                     elif book_property == "quote/page ratio":
                         if book.quotes_per_page > 0.0:
-                            string = (f"  -->  {book.quotes_per_page:.3f}  /  {book.title}")
+                            string = f"  -->  {book.quotes_per_page:.3f}  /  {book.title}"
                             print(f"{string}{' ' * (85-len(string))} ( {book.total_quotes:3d} / {book.pages_count:4d} )")
 
                     elif book_property in {"rating", "continued_as_ratings_count"}:
@@ -592,7 +586,7 @@ while True:
         print("Error.")
 
     #=================================================
-    # hold on and clear sceen before next iteration
+    # hold on and clear screen before next iteration
     #=================================================
     if (option != "Random / All Quotes"        and
         option != "Random / Short Quotes"      and

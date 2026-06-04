@@ -320,7 +320,7 @@ while True:
 
         # narrow down list if necessary
         if option == "Random / Selected Author":
-            selected_author = choose_an_author(collection.authors)
+            selected_author = choose_an_author(collection.authors_with_quotes)
             books = [b for b in books if b.author == selected_author]
 
         elif option == "Random / Selected Folder":

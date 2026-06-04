@@ -1,5 +1,5 @@
 #=================================================
-# IMPORT 
+# IMPORT
 #=================================================
 import json
 import random
@@ -111,6 +111,7 @@ class BookCollection:
     def __init__(self) -> None:
         # The Collection is stored as an instance attribute
         self.books: list[Book] = []
+        self.authors_with_quotes: list[str] = []
         self.folders: dict[str, set] = {}
 
     #=================================================
@@ -222,6 +223,15 @@ class BookCollection:
 
                 # add the constructed date
                 this_book.have_read_date = aux_date
+
+        # gather authors into a set
+        authors_set = {
+            book.author
+            for book in self.books
+            if book.total_quotes > 0
+        }
+        # sort them alphabetically
+        self.authors_with_quotes = sorted(authors_set)
 
         # alphabetical order by title
         self.books.sort(key=lambda bk: bk.title)

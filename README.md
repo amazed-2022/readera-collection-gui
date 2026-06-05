@@ -21,12 +21,15 @@ If you enjoy using it, please consider supporting the developers by purchasing t
 
 ---
 ## Installation
-2. **Install PySide6** separately `pip install PySide6`
-3. **Create a backup file** in the ReadEra app (Settings / Backup & Restore)
-4. **Transfer backup file to your PC** (Google Drive, Gmail, etc.)
-5. **Unpack** `bak` file into a freely chosen folder (only `library.json` file will be needed, the rest can be deleted)
-6. **Simply download** python files next to your extracted `library.json` file
-7. **Run** `readera-collection-gui.py` or `mini-gui.py`
+1. **Install PySide6** (only required for the PySide GUI): `pip install PySide6`
+2. **Create a backup file** in the ReadEra app (Settings → Backup & Restore)
+3. **Transfer backup file to your PC** (Google Drive, Gmail, etc.)
+4. **Extract the `.bak` file into a folder**  
+   (only `library.json` is needed; other files can be deleted)
+5. **Place the project Python files** in the same folder as `library.json`
+6. **Run one of the following:**
+    - `mini-gui.py` (lightweight Tkinter version)
+    - `readera-collection-gui.py` (full version)
 
   
 ## Usage
@@ -46,35 +49,38 @@ To use all features of `readera-collection-cli`, the following should be ensured
   
   ([goodreads](https://www.goodreads.com/) can be used for info)
 
-
 ## Features / Highlights
-- Print quotes of any length or only short quotes using corresponding buttons.  
+### mini-gui
+- Built with `Tkinter` (standard library, no external dependencies)
+- Lightweight version of the full application
+- Shows remaining quotes counter in the header
+- Provides basic functionality only:
+  - Random quote
+  - Delay author (checkbutton)
+  - Print every quote from a selected book
+  - Clear output
+  - Reset state
+
+<p align="center">
+<img width="640" alt="kép" src="https://github.com/user-attachments/assets/8b7f66c0-ce63-46ac-ab02-9de9d8a3e023" />
+</p>
+
+### full-gui
+- Full-featured GUI built with `PySide6`
+- Print quotes of any length or only short quotes using corresponding buttons  
   (Use "delay author" toggle button to delay author print for each quote.)
-- Print every quote from a selected book.
-- Print quote distribution from a selected book (lengths/pages map).
-- Print statistics.
-- Search within quote text.
-- Print a book list sorted by a selected property.
+- Print every quote from a selected book
+- View quote distribution for a book (length/page mapping)
+- View statistics
+- Search within quote text
+- Display books sorted by selected properties
 
 <p align="center">
 <img width="800" alt="kép" src="https://github.com/user-attachments/assets/7eaa9cef-f822-4603-b012-b60aa07a4d90" />
 </p>
 
 
-## mini-gui
-- Uses built-in `tkinter` for GUI.
-- Reduced functionality compared to full version.
-- Includes a quotes remaining counter in the header.
-- Includes only basic buttons:
-  - Print every quote
-  - Random quote
-  - Delay author (checkbutton)
-  - Clear
-  - Reset
 
-<p align="center">
-<img width="640" alt="kép" src="https://github.com/user-attachments/assets/8b7f66c0-ce63-46ac-ab02-9de9d8a3e023" />
-</p>
 
 ## License
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  

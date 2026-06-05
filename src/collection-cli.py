@@ -9,9 +9,10 @@ import sys
 import textwrap
 import unicodedata
 
-from book_collection import BookCollection
+from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
 from constants_loader import constants
+from typing import Optional
 
 #=================================================
 # GLOBALS, CONSTANTS
@@ -41,13 +42,11 @@ LENGTH_TO_METHOD = {
 #=================================================
 # FUNCTIONS
 #=================================================
-def create_options_menu(opt_lst):
+def create_options_menu(opt_lst: list[str]) -> dict[str, str]:
     options = {}
-    cntr = 1
-    for element in opt_lst:
+    for i, element in enumerate(opt_lst, start=1):
         if element != "Exit":
-            options[str(cntr)] = element
-            cntr += 1
+            options[str(i)] = element
         else:
             options['x'] = element
     return options
@@ -55,7 +54,7 @@ def create_options_menu(opt_lst):
 #=================================================
 # get terminal width
 #=================================================
-def get_terminal_columns():
+def get_terminal_columns() -> int:
     """
     Return the current column size of the terminal window.
     """
@@ -68,13 +67,13 @@ def get_terminal_columns():
 #=================================================
 # print separator using hyphens
 #=================================================
-def print_separator_line():
+def print_separator_line() -> None:
     print('-' * get_terminal_columns(), end='')
 
 #=================================================
 # print options menu
 #=================================================
-def print_options():
+def print_options() -> None:
     for key, value in Options_Menu.items():
         if key.isdigit():
             print(f" {int(key)}  -->  {value}")
@@ -84,14 +83,23 @@ def print_options():
 #=================================================
 # get option
 #=================================================
-def get_option():
+def get_option() -> str:
     prompts = [
         " Choice is the act of hesitation.. ",
         " ..that we make before making a decision. ",
         " It is a mental wobble. ",
         " And so we are always in a dither of doubt.. ",
         " ..as to whether we are behaving the right way.. ",
-        " ..or doing the right thing, and so on and so forth... "
+        " ..or doing the right thing, and so on and so forth... ",
+        " It's time to choose an option.. ",
+        " I'll wait a little longer...",
+        " Running out of patience...",
+        " Choose soon, or I'll exit.",
+        " Tick tock... exit is approaching.",
+        " Make a choice, or I'll choose goodbye.",
+        " Warning: automatic exit imminent.",
+        " Final countdown has started.",
+        " Choose now, or I'll exit."
         ]
 
     header = "Choose an option:"
@@ -99,21 +107,27 @@ def get_option():
     print_options()
     print_separator_line()
 
-    iteration = 0
-    while True:
-        selection = prompts[iteration] if iteration < len(prompts) else " It's time to choose an option.. "
-        opt = input(selection)
-        iteration += 1
+    attempt  = 0
+    while attempt  < len(prompts):
+        opt = input(prompts[attempt ])
 
         if opt.isdigit() and opt in Options_Menu:
             return Options_Menu.get(opt, "Something went wrong")
-        elif opt == 'x' or iteration >= 20:
+        elif opt == 'x':
             sys.exit()
+        attempt  += 1
+
+    print("\n" + r" I told you so. ¯\_(°_o)/¯")
+    sys.exit()
 
 #=================================================
 # FUNCTION: print random quotes
 #=================================================
-def print_random_quotes(books_for_print, method, print_title=True):
+def print_random_quotes(
+    books_for_print: list[Book],
+    method: str,
+    print_title: bool = True,
+) -> None:
     while True:
         # random book for every iteration (or same book for a single-element list)
         book = random.choice(books_for_print)
@@ -147,63 +161,58 @@ def print_random_quotes(books_for_print, method, print_title=True):
 #=================================================
 # check exit request ('x')
 #=================================================
-def is_exit_requested():
+def is_exit_requested() -> bool:
     response = input()
-    return response and response[0] == 'x'
+    return bool(response and response[0] == 'x')
 
 #=================================================
 # print wrapped text
 #=================================================
-def print_wrapped_text(text):
+def print_wrapped_text(text: str) -> None:
     print(*textwrap.wrap(f"{text}\n", get_terminal_columns() - 1), sep='\n')
 
 #=================================================
 # print items with selection numbers
 #=================================================
-def print_selection_list(items, extra_option: str = ""):
+def print_selection_list(items: list[str]) -> None:
     for idx, item in enumerate(items):
-        print(f"{idx + 1:2d}.  -->  {item}{get_century_suffix(item) if extra_option else ''}")
-
-#=================================================
-# return century suffix
-#=================================================
-def get_century_suffix(cent):
-    # special case for 11th, 12th, 13th, etc.
-    if 10 <= cent % 100 <= 20:
-        return "th"
-    else:
-        # regular case for 1st, 2nd, 3rd, etc.
-        suffixes = {1: "st", 2: "nd", 3: "rd"}
-        return suffixes.get(cent % 10, "th")
+        print(f"{idx + 1:2d}.  -->  {item}")
 
 #=================================================
 # print items with selection numbers
 #=================================================
-def get_user_choice(input_type, max_value, zero_is_valid=False, extra_prompt=""):
-    number = 999
+def get_user_choice(
+    input_type: str,
+    max_value: int,
+    zero_is_valid: bool = False,
+    extra_prompt: str = "",
+) -> int:
     min_value = 0 if zero_is_valid else 1
+    article = ' a' if input_type != 'quote length' else ''
+    n_suffix = 'n' if input_type == 'author' else ''
+    prompt = f"\nChoose{article}{n_suffix} {input_type}{extra_prompt}: "
+
     while True:
-        article = ' a' if input_type != 'quote length' else ''
-        n_suffix = 'n' if input_type == 'author' else ''
-        user_input = input(f"\nChoose{article}{n_suffix} {input_type}{extra_prompt}: ")
+        user_input = input(prompt)
+
         if user_input.isdigit():
             number = int(user_input)
             if min_value <= number <= max_value:
-                # input is in the range
-                break
-            else:
-                print("You should choose more wisely.")
-        elif input_type not in ["folder", "century"] or (input_type == "folder" and extra_prompt == ""):
-            print("This is not a valid number..")
-        else:
-            break
-    print_separator_line()
-    return number
+                return number
+
+            print("You should choose more wisely.")
+            continue
+
+        # only allow "special escape" cases here-
+        if input_type in {"folder", "quote length"} and not user_input:
+            return 0
+
+        print("This is not a valid number..")
 
 #=================================================
 # user can choose a book from the printed list
 #=================================================
-def choose_a_book(attr):
+def choose_a_book(attr: str) -> Book:
     print(" 0.  -->  random book")
 
     if attr == "with_annotation":
@@ -214,20 +223,22 @@ def choose_a_book(attr):
     titles = [book.title for book in books_for_selection]
     print_selection_list(titles)
     choice = get_user_choice("book", len(books_for_selection), zero_is_valid=True)
+    print_separator_line()
     return books_for_selection[choice - 1] if choice else random.choice(books_for_selection)
 
 #=================================================
 # user can choose an author
 #=================================================
-def choose_an_author(authors):
+def choose_an_author(authors: list[str]) -> str:
     print_selection_list(authors)
     choice = get_user_choice("author", len(authors))
+    print_separator_line()
     return authors[choice - 1]
 
 #=================================================
 # user can choose a property
 #=================================================
-def choose_a_property():
+def choose_a_property() -> str:
 
     properties = [
         "added on",
@@ -243,12 +254,16 @@ def choose_a_property():
 
     print_selection_list(properties)
     choice = get_user_choice("property", len(properties))
+    print_separator_line()
     return properties[choice - 1]
 
 #=================================================
 # user can choose a folder
 #=================================================
-def choose_a_folder(folders: dict[str, set], allow_select_all: bool = True):
+def choose_a_folder(
+    folders: dict[str, set],
+    allow_select_all: bool = True,
+) -> Optional[str]:
     def strip_accents(s: str) -> str:
         return ''.join(
             c for c in unicodedata.normalize('NFD', s)
@@ -267,15 +282,17 @@ def choose_a_folder(folders: dict[str, set], allow_select_all: bool = True):
         len(folders_list),
         extra_prompt=" (or press Enter to list all)" if allow_select_all else ""
     )
+    print_separator_line()
     return folders_list[choice - 1] if choice else None
 
 #=================================================
 # user can choose between quote lengths
 #=================================================
-def choose_quote_length():
+def choose_quote_length() -> str:
     print_selection_list(LENGTHS)
     choice = get_user_choice("quote length", len(LENGTHS))
-    return LENGTHS[choice - 1] if choice else length[0]
+    print_separator_line()
+    return LENGTHS[choice - 1] if choice else LENGTHS[0]
 
 
 #=================================================

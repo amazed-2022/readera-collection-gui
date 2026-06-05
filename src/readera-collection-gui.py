@@ -731,10 +731,7 @@ class MainWindow(QMainWindow):
     #=================================================
     def print_statistics(self):
         self.clear()
-        write_wo_scroll = lambda message: self.log(
-            message,
-            scroll_to_bottom=False
-        )
+
         reporter = StatisticsReporter(
             partial(self.log, scroll_to_bottom=False)
         )

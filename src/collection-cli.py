@@ -44,9 +44,9 @@ LENGTH_TO_METHOD = {
 #=================================================
 def create_options_menu(opt_lst: list[str]) -> dict[str, str]:
     options = {}
-    for i, element in enumerate(opt_lst, start=1):
+    for idx, element in enumerate(opt_lst, start=1):
         if element != "Exit":
-            options[str(i)] = element
+            options[str(idx)] = element
         else:
             options['x'] = element
     return options
@@ -208,6 +208,9 @@ def get_user_choice(
             return 0
 
         print("This is not a valid number..")
+
+    # prevent an implicit `None` return in the eyes of static type checkers
+    raise RuntimeError("unreachable")
 
 #=================================================
 # user can choose a book from the printed list

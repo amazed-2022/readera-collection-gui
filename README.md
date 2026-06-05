@@ -49,8 +49,9 @@ To use all features of `readera-collection-cli`, the following should be ensured
   
   ([goodreads](https://www.goodreads.com/) can be used for info)
 
-## Features / Highlights
+## User Interfaces
 ### mini-gui
+Designed for quick, distraction-free usage.
 - Built with `Tkinter` (standard library, no external dependencies)
 - Lightweight version of the full application
 - Shows remaining quotes counter in the header
@@ -66,10 +67,11 @@ To use all features of `readera-collection-cli`, the following should be ensured
 </p>
 
 ### full-gui
+Designed for full exploration and analysis.
 - Full-featured GUI built with `PySide6`
 - Print quotes of any length or only short quotes using corresponding buttons  
-  (Use "delay author" toggle button to delay author print for each quote.)
-- Print every quote from a selected book
+  (Use "delay author" toggle button to delay author display for each quote)
+- Print all quotes from a selected book
 - View quote distribution for a book (length/page mapping)
 - View statistics
 - Search within quote text
@@ -78,8 +80,6 @@ To use all features of `readera-collection-cli`, the following should be ensured
 <p align="center">
 <img width="800" alt="kép" src="https://github.com/user-attachments/assets/7eaa9cef-f822-4603-b012-b60aa07a4d90" />
 </p>
-
-
 
 
 ## License

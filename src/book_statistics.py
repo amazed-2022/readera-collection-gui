@@ -13,35 +13,38 @@ from typing import Any, Callable
 #=================================================
 @dataclass
 class Statistics:
-
+    
+    # book level counts
     books_count: int
     books_20th: int
     books_21st: int
     books_with_quotes: int
     books_read: int
-
+    
+    # totals
     total_quotes_count: int
     total_short_quotes_count: int
-
+    
+    # grouped counts
     author_quote_counts: dict[str, int]
     folder_quote_counts: dict[str, int]
     folder_book_counts: dict[str, int]
 
     @classmethod
     def from_collection(cls, collection: BookCollection):
-
+    
+        books_count = 0
+        books_20th = 0
+        books_21st = 0
+        books_with_quotes = 0
+        books_read = 0
+        
+        total_quotes_count = 0
+        total_short_quotes_count = 0
+        
         author_quote_counts = {}
         folder_quote_counts = {}
         folder_book_counts = {}
-
-        books_with_quotes = 0
-        books_read = 0
-
-        total_quotes_count = 0
-        total_short_quotes_count = 0
-
-        books_20th = 0
-        books_21st = 0
 
         for book in collection.books:
             if book.total_quotes > 0:

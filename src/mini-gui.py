@@ -9,7 +9,6 @@ from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
 from collections.abc import Iterator
 from constants_loader import constants
-from functools import partial
 from quote_manager import QuoteManager
 from tkinter import ttk, messagebox, font
 
@@ -24,21 +23,33 @@ class FilterPanel(ttk.Frame):
     folder_label: ttk.Label
     author_label: ttk.Label
     book_label: ttk.Label
+    search_label: ttk.Label
     folders_dropdown: ttk.Combobox
     authors_dropdown: ttk.Combobox
     books_dropdown: ttk.Combobox
 
+    search_hint: str
+    search_var: tk.StringVar
+    search_entry: ttk.Entry
+
     def __init__(self, parent, label_font: font.Font):
         super().__init__(parent)
+
+        # search helper variable
+        self.search_hint = "Type at least 3 letters to search..."
+        self.search_var = tk.StringVar(value=self.search_hint)
 
         # folder/author/book filters (widgets belong to this Frame and are arranged in _build_layout)
         self.folder_label = ttk.Label(self, text="FOLDER", font=label_font)
         self.author_label = ttk.Label(self, text="AUTHOR", font=label_font)
         self.book_label = ttk.Label(self, text="BOOK", font=label_font)
+        self.search_label = ttk.Label(self, text="SEARCH", font=label_font)
 
         self.folders_dropdown = ttk.Combobox(self)
         self.authors_dropdown = ttk.Combobox(self)
         self.books_dropdown = ttk.Combobox(self)
+        self.search_entry = ttk.Entry(self, textvariable=self.search_var)
+        self.search_entry.bind("<FocusIn>", self.clear_search_hint)
 
         self._build_layout()
 
@@ -47,10 +58,13 @@ class FilterPanel(ttk.Frame):
         self.folder_label.grid(row=0, **grid_opts)
         self.author_label.grid(row=1, **grid_opts)
         self.book_label.grid(row=2, **grid_opts)
+        self.search_label.grid(row=3, **grid_opts)
 
         self.folders_dropdown.grid(row=0, column=1, sticky="ew")
         self.authors_dropdown.grid(row=1, column=1, sticky="ew")
         self.books_dropdown.grid(row=2, column=1, sticky="ew")
+        self.search_entry.grid(row=3, column=1, sticky="ew")
+
         # allow dropdown widgets (in column 1) to stretch when space is available
         self.columnconfigure(1, weight=1)
 
@@ -93,6 +107,17 @@ class FilterPanel(ttk.Frame):
         self.folders_dropdown.bind("<<ComboboxSelected>>", lambda e: callback("folder"))
         self.authors_dropdown.bind("<<ComboboxSelected>>", lambda e: callback("author"))
         self.books_dropdown.bind("<<ComboboxSelected>>", lambda e: callback("book"))
+
+    def set_search_callback(self, callback) -> None:
+        # use lambda to adapt Tkinter's event callback to a query-string callback
+        self.search_entry.bind("<Return>", lambda event: callback(self.search_var.get()))
+
+    def clear_search_hint(self, event):
+        if self.search_var.get() == self.search_hint:
+            self.search_var.set("")
+
+    def set_search_hint(self):
+        self.search_var.set(self.search_hint)
 
     @property
     def selected_folder(self) -> str:
@@ -204,11 +229,11 @@ class MainWindow(tk.Tk):
         width = 750
         height = 650
 
-        # get screen size
+		# get screen size
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
 
-        # calculate top-left corner coordinates and set geometry
+		# calculate top-left corner coordinates and set geometry
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
         self.geometry(f"{width}x{height}+{x}+{y}")
@@ -221,20 +246,20 @@ class MainWindow(tk.Tk):
         self.text_frame = ttk.Frame(self.panel)
         self.buttons_frame = ttk.Frame(self.panel)
 
-        # grid and configure main panel
+		# grid and configure main panel
         self.header_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         self.text_frame.grid(row=1, column=0, sticky="nsew", padx=15)
         self.buttons_frame.grid(row=2, column=0, sticky="ew", pady=18)
         self.panel.rowconfigure(1, weight=1)
         self.panel.columnconfigure(0, weight=1)
 
-        # create FilterPanel (manages filter dropdowns and selection logic)
+		# create FilterPanel (manages filter dropdowns and selection logic)
         self.filters = FilterPanel(self.header_frame, self.default_font)
-        # create further sub-frames
+		# create further sub-frames
         self.q_counter_frame = ttk.Frame(self.header_frame)
         self.logo_frame = ttk.Frame(self.header_frame)
 
-        # grid and configure header frame
+		# grid and configure header frame
         self.filters.grid(row=0, column=0, sticky="ew", padx=(25, 0))
         self.logo_frame.grid(row=0, column=1, sticky="ew", padx=0)
         self.q_counter_frame.grid(row=0, column=2)
@@ -277,7 +302,7 @@ class MainWindow(tk.Tk):
     # init buttons
     #=================================================
     def _init_buttons(self) -> None:
-        # custom style
+		# custom style
         style = ttk.Style()
         style.configure("Big.TButton", font=self.button_font, padding=(15,15))
 
@@ -293,7 +318,7 @@ class MainWindow(tk.Tk):
             style="Big.TButton"
         )
 
-        # this will be a special Tkinter variable
+		# this will be a special Tkinter variable
         self.delay_source_toggle = tk.BooleanVar(value=False)
         self.delay_source_btn = tk.Checkbutton(
             self.buttons_frame,
@@ -381,11 +406,11 @@ class MainWindow(tk.Tk):
     # button frame
     #=================================================
     def _build_buttons_frame(self) -> None:
-        # left buttons
+		# left buttons
         self.every_q_btn.grid(row=0, column=0, padx=(25, 0), sticky="ew")
         self.random_q_btn.grid(row=0, column=1, padx=(15, 0), sticky="ew")
         self.delay_source_btn.grid(row=0, column=2, padx=(15, 0))
-        # right buttons
+		# right buttons
         self.clear_btn.grid(row=0, column=4, padx=(15, 0), sticky="ew")
         self.reset_btn.grid(row=0, column=5, padx=(15, 25), sticky="ew")
 
@@ -400,8 +425,10 @@ class MainWindow(tk.Tk):
     # signals (event bindings)
     #=================================================
     def _init_signals(self) -> None:
-        # this method binds change callback for all comboboxes
+		# this method binds change callback for all comboboxes
         self.filters.set_on_change_callback(self._on_dropdown_change)
+        self.filters.set_search_callback(self._on_search)
+
         self.logo.bind("<Button-1>", self.on_logo_click)
 
         self.every_q_btn.configure(command=self.quote_manager.print_every_quote)
@@ -411,9 +438,73 @@ class MainWindow(tk.Tk):
         self.reset_btn.configure(command=self.reset)
 
     #=================================================
+    # global search
+    #=================================================
+    def global_search(self, query: str) -> None:
+        query = query.strip().lower()
+
+        if not query:
+            return
+
+        self.clear_text_output()
+
+        matches = {
+            "title": set(),
+            "quote": {}
+        }
+
+        for book in self.collection.books:
+            # check book title with lower case
+            if query in book.title.lower():
+                matches["title"].add(book.title)
+
+            for quote in book.quotes:
+                if query in quote.text.lower():
+                    matches["quote"].setdefault(book.title, []).append(quote.text)
+
+        # return if no match was found
+        if not matches["title"] and not matches["quote"]:
+            self.log("No match found.")
+            return
+
+        if matches["title"]:
+            header = "Title matches"
+            self.log(header)
+            self.log(f"{'-' * len(header)}\n")
+
+            for book_title in matches["title"]:
+                self.log(book_title)
+            self.log("\n")
+
+        if matches["quote"]:
+            header = "Quote matches"
+            self.log(header)
+            self.log(f"{'-' * len(header)}\n")
+
+            for i, (book_title, quotes) in enumerate(matches["quote"].items()):
+                self.log(book_title)
+                self.log("-" * len(book_title))
+
+                for j, q in enumerate(quotes):
+                    self.log(q)
+                    if j != len(quotes) - 1:
+                        self.log("\n")
+
+                if i != len(matches["quote"]) - 1:
+                    self.log("\n")
+
+    #=================================================
+    # search events
+    #=================================================
+    def _on_search(self, query: str) -> None:
+        if len(query) < 3:
+            return
+        self.global_search(query)
+
+    #=================================================
     # log messages to the text widget
     #=================================================
-    def log(self, message: str, scroll_to_bottom: bool = True) -> None:
+    def log(self, message: str, scroll_to_bottom: bool = False) -> None:
         self.text_output.config(state="normal")
         self.text_output.insert("end", f"{message}\n")
         if scroll_to_bottom:
@@ -436,6 +527,7 @@ class MainWindow(tk.Tk):
         # rebuild collection and reset dropdowns
         self.collection.build_the_collection()
         self.filters.select_first_all()
+        self.filters.set_search_hint()
 
         # build full dropdown lists again
         self._on_dropdown_change("folder")
@@ -492,9 +584,7 @@ class MainWindow(tk.Tk):
 
     def on_logo_click(self, event) -> None:
         self.clear_text_output()
-        reporter = StatisticsReporter(
-            partial(self.log, scroll_to_bottom=False)
-        )
+        reporter = StatisticsReporter(self.log)
         reporter.report(
             stats=self.stats,
             collection=self.collection,

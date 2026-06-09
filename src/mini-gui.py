@@ -438,68 +438,42 @@ class MainWindow(tk.Tk):
         self.reset_btn.configure(command=self.reset)
 
     #=================================================
-    # global search
+    # search
     #=================================================
-    def global_search(self, query: str) -> None:
-        query = query.strip().lower()
+    def search_in_filtered_books(self, query: str) -> None:
 
-        if not query:
+        books_to_search: list[Book] = []
+        for title in self.filtered_books:
+            book = book_utils.get_book_by_title(self.collection.books, title)
+            if book is not None:
+                books_to_search.append(book)
+
+        if not books_to_search:
+            self.log("No books to search.")
             return
 
-        self.clear_text_output()
+        matches: SearchMatches = book_utils.search_books(
+            books_to_search,
+            query
+        )
 
-        matches = {
-            "title": set(),
-            "quote": {}
-        }
-
-        for book in self.collection.books:
-            # check book title with lower case
-            if query in book.title.lower():
-                matches["title"].add(book.title)
-
-            for quote in book.quotes:
-                if query in quote.text.lower():
-                    matches["quote"].setdefault(book.title, []).append(quote.text)
-
-        # return if no match was found
-        if not matches["title"] and not matches["quote"]:
-            self.log("No match found.")
-            return
-
-        if matches["title"]:
-            header = "Title matches"
-            self.log(header)
-            self.log(f"{'-' * len(header)}\n")
-
-            for book_title in matches["title"]:
-                self.log(book_title)
-            self.log("\n")
-
-        if matches["quote"]:
-            header = "Quote matches"
-            self.log(header)
-            self.log(f"{'-' * len(header)}\n")
-
-            for i, (book_title, quotes) in enumerate(matches["quote"].items()):
-                self.log(book_title)
-                self.log("-" * len(book_title))
-
-                for j, q in enumerate(quotes):
-                    self.log(q)
-                    if j != len(quotes) - 1:
-                        self.log("\n")
-
-                if i != len(matches["quote"]) - 1:
-                    self.log("\n")
+        formatted_lines = book_utils.format_search_results(matches)
+        for line in formatted_lines:
+            if line:
+                self.log(line)
+            else:
+                self.log("")
+                self.log("")
 
     #=================================================
     # search events
     #=================================================
     def _on_search(self, query: str) -> None:
+        self.clear_text_output()
         if len(query) < 3:
+            self.log("Incorrect input. Please enter at least 3 characters.")
             return
-        self.global_search(query)
+        self.search_in_filtered_books(query)
 
     #=================================================
     # log messages to the text widget

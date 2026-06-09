@@ -4,11 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [2.2.0] – 2026-XX
 #### Added
+- Search field for `mini-gui`
 - Introduced `QuoteManager` to separate quote printing logic from UI
-- Introduced `FilterPanel` for `mini-gui` to encapsulate dropdown UI logic
+- Introduced `FilterPanel` for `mini-gui` to encapsulate dropdown UI logic and search field
 - Introduced `Statistics`, `WordStatistics` and `StatisticsReporter` to centralize computation and functions
-- Easter-egg statistics report for `mini-gui`
 - `collection-cli` with functionality comparable to the PySide6 version (CLI replacement for GUI)
+- Easter-egg report for `mini-gui`
   
 #### Changed
 - Refactored quote printing logic into `QuoteManager` and removed direct UI/timer coupling

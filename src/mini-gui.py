@@ -440,11 +440,18 @@ class MainWindow(tk.Tk):
     #=================================================
     # search
     #=================================================
-    def search_in_filtered_books(self, query: str) -> None:
+    def search_books(self, query: str) -> None:
 
         books_to_search: list[Book] = []
-        for title in self.filtered_books:
-            book = book_utils.get_book_by_title(self.collection.books, title)
+        selected_book = self.filters.selected_book
+
+        if selected_book == constants.ANY_BOOK:
+            for title in self.filtered_books:
+                book = book_utils.get_book_by_title(self.collection.books, title)
+                if book is not None:
+                    books_to_search.append(book)
+        else:
+            book = book_utils.get_book_by_title(self.collection.books, selected_book)
             if book is not None:
                 books_to_search.append(book)
 
@@ -457,7 +464,7 @@ class MainWindow(tk.Tk):
             query
         )
 
-        formatted_lines = book_utils.format_search_results(matches)
+        formatted_lines = book_utils.format_search_results(matches, show_headers=len(books_to_search) > 1)
         for line in formatted_lines:
             if line:
                 self.log(line)
@@ -473,7 +480,7 @@ class MainWindow(tk.Tk):
         if len(query) < 3:
             self.log("Incorrect input. Please enter at least 3 characters.")
             return
-        self.search_in_filtered_books(query)
+        self.search_books(query)
 
     #=================================================
     # log messages to the text widget

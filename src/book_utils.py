@@ -103,12 +103,15 @@ class SearchMatches(TypedDict):
     title: set[str]
     quote: dict[str, list[str]]
 
-def search_books(books, query: str) -> SearchMatches:
-    query = query.strip().lower()
-    matches = {
+def search_books(books: list[Book], query: str) -> SearchMatches:
+
+    # initialize the search results
+    matches: SearchMatches = {
         "title": set(),
         "quote": {}
     }
+
+    query = query.strip().lower()
 
     if not query:
         return matches
@@ -123,7 +126,7 @@ def search_books(books, query: str) -> SearchMatches:
 
     return matches
 
-def format_search_results(matches: SearchMatches) -> list[str]:
+def format_search_results(matches: SearchMatches, show_headers: bool = True) -> list[str]:
     output: list[str] = []
 
     # nothing found
@@ -131,7 +134,7 @@ def format_search_results(matches: SearchMatches) -> list[str]:
         return ["No match found."]
 
     # title matches
-    if matches["title"]:
+    if show_headers and matches["title"]:
         header = "Title matches"
         output.append(header)
         output.append("-" * len(header))
@@ -145,14 +148,16 @@ def format_search_results(matches: SearchMatches) -> list[str]:
 
     # quote matches
     if matches["quote"]:
-        header = "Quote matches"
-        output.append(header)
-        output.append("-" * len(header))
-        output.append(" ")
+        if show_headers:
+            header = "Quote matches"
+            output.append(header)
+            output.append("-" * len(header))
+            output.append(" ")
 
         for i, (book_title, quotes) in enumerate(matches["quote"].items()):
-            output.append(book_title)
-            output.append("-" * len(book_title))
+            if show_headers:
+                output.append(book_title)
+                output.append("-" * len(book_title))
 
             for q in quotes:
                 output.append(q)

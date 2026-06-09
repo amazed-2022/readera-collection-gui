@@ -227,7 +227,7 @@ class MainWindow(tk.Tk):
 
     def set_default_window_size(self):
         width = 750
-        height = 650
+        height = 700
 
 		# get screen size
         screen_width = self.winfo_screenwidth()

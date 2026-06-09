@@ -99,7 +99,7 @@ class QuoteManager:
                 # add an extra empty line for better separation
                 self.ui.log("")
             self.ui.log(f"{book.title}")
-            self.ui.log(f"{'-'*len(book.title)}\n")
+            self.ui.log(f"{'-'*len(book.title)}\n", scroll_to_bottom=True)
             self.book_header_printed = True
 
         # get the random quote and print it
@@ -107,10 +107,10 @@ class QuoteManager:
 
         # something went wrong, inform user
         if random_quote is None:
-            self.ui.log(f'Failed to get a quote from "{book.title}"')
+            self.ui.log(f'Failed to get a quote from "{book.title}"', scroll_to_bottom=True)
             return
 
-        self.ui.log(random_quote.text)
+        self.ui.log(random_quote.text, scroll_to_bottom=True)
         self.quote_printed = True
 
         if not is_book_selected:
@@ -153,7 +153,11 @@ class QuoteManager:
         if self.pending_book_data:
             # unpack the stored tuple
             book, quotes_left_in_book = self.pending_book_data
-            self._print_author_now(book, quotes_left_in_book, scroll_to_bottom=False)
+            self._print_author_now(
+                book,
+                quotes_left_in_book,
+                scroll_to_bottom=False
+            )
         self.pending_book_data = None
         self.book_data_timer = None
 
@@ -195,8 +199,8 @@ class QuoteManager:
 
         # book exists, get quotes for printing
         quotes = book_utils.get_quotes_sorted_by_page(book)
-        self.ui.log(book.title, scroll_to_bottom=False)
-        self.ui.log('-' * len(book.title), scroll_to_bottom=False)
+        self.ui.log(book.title)
+        self.ui.log('-' * len(book.title))
 
         # setup async iteration state and start the loop
         self.book_quote_count = len(quotes)
@@ -215,10 +219,10 @@ class QuoteManager:
             return
 
         quote_info_line = f"{i + 1} / {self.book_quote_count}  (p.{quote.page})"
-        self.ui.log(quote_info_line, scroll_to_bottom=False)
-        self.ui.log(quote.text, scroll_to_bottom=False)
+        self.ui.log(quote_info_line)
+        self.ui.log(quote.text)
         if i < (self.book_quote_count - 1):
-            self.ui.log("\n", scroll_to_bottom=False)
+            self.ui.log("\n")
         self.ui.set_quotes_counter(self.book_quote_count - i)
 
         # schedule next iteration

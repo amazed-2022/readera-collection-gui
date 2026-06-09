@@ -63,7 +63,7 @@ Designed for quick, distraction-free usage.
   - Reset state
 
 <p align="center">
-<img width="640" alt="kép" src="https://github.com/user-attachments/assets/8b7f66c0-ce63-46ac-ab02-9de9d8a3e023" />
+<img width="640" alt="image" src="https://github.com/user-attachments/assets/9f256bce-4d9e-437e-8dd4-1404e8909c1a" />
 </p>
 
 ### full-gui

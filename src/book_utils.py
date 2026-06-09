@@ -5,6 +5,8 @@ import random
 
 from book_collection import Book, Quote
 from constants_loader import constants
+from typing import TypedDict
+
 
 #=================================================
 # functions for print_random_quote
@@ -94,6 +96,72 @@ def get_and_export_quotes(book: Book, filename: str) -> list[Quote]:
 
     return quotes
 
+#=================================================
+# search functions
+#=================================================
+class SearchMatches(TypedDict):
+    title: set[str]
+    quote: dict[str, list[str]]
+
+def search_books(books, query: str) -> SearchMatches:
+    query = query.strip().lower()
+    matches = {
+        "title": set(),
+        "quote": {}
+    }
+
+    if not query:
+        return matches
+
+    for book in books:
+        if query in book.title.lower():
+            matches["title"].add(book.title)
+
+        for quote in book.quotes:
+            if query in quote.text.lower():
+                matches["quote"].setdefault(book.title, []).append(quote.text)
+
+    return matches
+
+def format_search_results(matches: SearchMatches) -> list[str]:
+    output: list[str] = []
+
+    # nothing found
+    if not (matches["title"] or matches["quote"]):
+        return ["No match found."]
+
+    # title matches
+    if matches["title"]:
+        header = "Title matches"
+        output.append(header)
+        output.append("-" * len(header))
+        output.append(" ")
+
+        for title in sorted(matches["title"]):
+            output.append(title)
+
+        # spacing
+        output.append("")
+
+    # quote matches
+    if matches["quote"]:
+        header = "Quote matches"
+        output.append(header)
+        output.append("-" * len(header))
+        output.append(" ")
+
+        for i, (book_title, quotes) in enumerate(matches["quote"].items()):
+            output.append(book_title)
+            output.append("-" * len(book_title))
+
+            for q in quotes:
+                output.append(q)
+                output.append("")
+
+            if i != len(matches["quote"]) - 1:
+                output.append("")
+
+    return output
 
 #=================================================
 # functions for print_quote_distribution

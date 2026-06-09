@@ -444,7 +444,7 @@ class MainWindow(QMainWindow):
     #=================================================
     # FUNCTION: log messages to the text box
     #=================================================
-    def log(self, message, scroll_to_bottom: bool = True):
+    def log(self, message, scroll_to_bottom: bool = False):
         # make sure text output is visible
         self.show_text_output()
         # use insertPlainText to prevent automatic scrolling
@@ -731,10 +731,7 @@ class MainWindow(QMainWindow):
     #=================================================
     def print_statistics(self):
         self.clear()
-
-        reporter = StatisticsReporter(
-            partial(self.log, scroll_to_bottom=False)
-        )
+        reporter = StatisticsReporter(self.log)
         reporter.report(
             stats=Statistics.from_collection(self.collection),
             collection=self.collection,

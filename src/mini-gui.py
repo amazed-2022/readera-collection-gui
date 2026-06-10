@@ -466,6 +466,8 @@ class MainWindow(tk.Tk):
 
         formatted = book_utils.format_search_results_text(
             matches,
+            query,
+            highlight_match=True,
             show_headers=len(books_to_search) > 1
         )
         self.log(formatted)
@@ -617,7 +619,7 @@ class MainWindow(tk.Tk):
 
         self.set_quotes_counter(quotes_count)
 
-    def set_quotes_counter(self, value: value: int | str) -> None:
+    def set_quotes_counter(self, value: int | str) -> None:
         self.quotes_remaining_var.set(str(value))
 
     def delay_source_enabled(self) -> bool:

@@ -54,11 +54,13 @@ To use all features of `readera-collection-cli`, the following should be ensured
 Designed for quick, distraction-free usage.
 - Built with `Tkinter` (standard library, no external dependencies)
 - Lightweight version of the full application
+- Supports folder and author-based filtering
 - Shows remaining quotes counter in the header
-- Provides basic functionality only:
+- Provides basic functionality only:  
   - Random quote
   - Delay author (checkbutton)
   - Print every quote from a selected book
+  - Search
   - Clear output
   - Reset state
 

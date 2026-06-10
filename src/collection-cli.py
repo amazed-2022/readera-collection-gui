@@ -1,6 +1,7 @@
 #=================================================
 # IMPORT
 #=================================================
+import book_utils
 import datetime
 import os
 import random
@@ -565,37 +566,22 @@ while True:
             str_to_search = input(search_prompt).lower()
             print('-' * (len(search_prompt) + len(str_to_search)))
 
-            if len(str_to_search) >= 3:
-                counter = 0
-                for book in collection.books:
-                    match_in_book = False
-
-                    for quote in book.get_all_quotes_list():
-                        quote_text = quote.text.lower()
-
-                        if str_to_search in quote_text:
-
-                            # check if it's the first match in this book
-                            if not match_in_book:
-                                print_separator_line()
-                                print(f"{book.title}\n{'-' * len(book.title)}\n")
-                                match_in_book = True
-
-                            # print the quote with the search term highlighted
-                            print_wrapped_text(quote.text.replace(str_to_search, str_to_search.upper()))
-                            print('\n')
-
-                            # use findall, because a quote may contain the searched word multiple times
-                            counter += len(re.findall(str_to_search, quote_text))
-
-                result = f"Matched {counter} time{'s' if counter > 1 else ''}."
-                print(result if counter else "No match found.")
-                print('-' * len(result) if counter else '')
-
-            elif str_to_search == 'x':
+            if str_to_search == 'x':
                 break
-            else:
-                print("Incorrect input.")
+
+            matches: book_utils.SearchMatches = book_utils.search_books(
+                collection.books,
+                str_to_search
+            )
+
+            formatted = book_utils.format_search_results_text(
+                matches,
+                str_to_search,
+                highlight_match=True,
+                show_headers=True
+            )
+
+            print(formatted)
             print('\n')
             print_separator_line()
 

@@ -569,6 +569,11 @@ while True:
             if str_to_search == 'x':
                 break
 
+            if len(str_to_search) < 3:
+                print("Incorrect input. Please enter at least 3 characters.")
+                print_separator_line()
+                continue
+
             matches: book_utils.SearchMatches = book_utils.search_books(
                 collection.books,
                 str_to_search

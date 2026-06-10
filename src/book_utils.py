@@ -130,7 +130,7 @@ def add_blank_line(output: list[str], n: int = 1) -> None:
     for _ in range(n):
         output.append("")
 
-def format_search_results(matches: SearchMatches, show_headers: bool = True) -> str:
+def format_search_results_text(matches: SearchMatches, show_headers: bool = True) -> str:
 
     output: list[str] = []
 

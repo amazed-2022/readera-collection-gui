@@ -5,7 +5,6 @@ import book_utils
 import datetime
 import os
 import random
-import re
 import sys
 import textwrap
 import unicodedata

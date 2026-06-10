@@ -184,7 +184,7 @@ def format_search_results_text(
                     q = pattern.sub(query.upper(), q)
 
                 output.append(q)
-                # dont't add double spacing after last quote
+                # don't add double-spacing after last quote
                 if j != len(matches["quotes"][book_title]) - 1:
                     add_blank_line(output, 2)
 

@@ -9,7 +9,6 @@ from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
 from constants_loader import constants
 from datetime import datetime
-from functools import partial
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (

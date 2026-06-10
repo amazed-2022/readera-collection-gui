@@ -2,6 +2,7 @@
 # IMPORT
 #=================================================
 import random
+import re
 
 from book_collection import Book, Quote
 from constants_loader import constants
@@ -130,9 +131,17 @@ def add_blank_line(output: list[str], n: int = 1) -> None:
     for _ in range(n):
         output.append("")
 
-def format_search_results_text(matches: SearchMatches, show_headers: bool = True) -> str:
+def format_search_results_text(
+    matches: SearchMatches,
+    query: str = "",
+    highlight_match: bool = False,
+    show_headers: bool = True
+) -> str:
 
     output: list[str] = []
+
+    if highlight_match and not query:
+        raise ValueError("query is required when highlight_match is True")
 
     # nothing found
     if not (matches["titles"] or matches["quotes"]):
@@ -160,6 +169,9 @@ def format_search_results_text(matches: SearchMatches, show_headers: bool = True
             output.append(header)
             output.append("-" * len(header))
             add_blank_line(output)
+            
+        # compile a case-insensitive regex pattern for the literal query text
+        pattern = re.compile(re.escape(query), re.IGNORECASE) if query else None
 
         for i, (book_title, quotes) in enumerate(matches["quotes"].items()):
             if show_headers:
@@ -167,6 +179,10 @@ def format_search_results_text(matches: SearchMatches, show_headers: bool = True
                 output.append("-" * len(book_title))
 
             for j, q in enumerate(quotes):
+                # highlight matches if enabled
+                if pattern and highlight_match:
+                    q = pattern.sub(query.upper(), q)
+
                 output.append(q)
                 # dont't add double spacing after last quote
                 if j != len(matches["quotes"][book_title]) - 1:

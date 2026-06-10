@@ -469,6 +469,7 @@ class MainWindow(tk.Tk):
             show_headers=len(books_to_search) > 1
         )
         self.log(formatted)
+        self.set_quotes_counter('-')
 
     #=================================================
     # search events
@@ -616,7 +617,7 @@ class MainWindow(tk.Tk):
 
         self.set_quotes_counter(quotes_count)
 
-    def set_quotes_counter(self, value: int) -> None:
+    def set_quotes_counter(self, value: value: int | str) -> None:
         self.quotes_remaining_var.set(str(value))
 
     def delay_source_enabled(self) -> bool:

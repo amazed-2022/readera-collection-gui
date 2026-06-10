@@ -100,15 +100,15 @@ def get_and_export_quotes(book: Book, filename: str) -> list[Quote]:
 # search functions
 #=================================================
 class SearchMatches(TypedDict):
-    title: set[str]
-    quote: dict[str, list[str]]
+    titles: set[str]
+    quotes: dict[str, list[str]]
 
 def search_books(books: list[Book], query: str) -> SearchMatches:
 
     # initialize the search results
     matches: SearchMatches = {
-        "title": set(),
-        "quote": {}
+        "titles": set(),
+        "quotes": {}
     }
 
     query = query.strip().lower()
@@ -118,55 +118,64 @@ def search_books(books: list[Book], query: str) -> SearchMatches:
 
     for book in books:
         if query in book.title.lower():
-            matches["title"].add(book.title)
+            matches["titles"].add(book.title)
 
         for quote in book.quotes:
             if query in quote.text.lower():
-                matches["quote"].setdefault(book.title, []).append(quote.text)
+                matches["quotes"].setdefault(book.title, []).append(quote.text)
 
     return matches
 
-def format_search_results(matches: SearchMatches, show_headers: bool = True) -> list[str]:
+def add_blank_line(output: list[str], n: int = 1) -> None:
+    for _ in range(n):
+        output.append("")
+
+def format_search_results(matches: SearchMatches, show_headers: bool = True) -> str:
+
     output: list[str] = []
 
     # nothing found
-    if not (matches["title"] or matches["quote"]):
-        return ["No match found."]
+    if not (matches["titles"] or matches["quotes"]):
+        return "No match found."
 
     # title matches
-    if show_headers and matches["title"]:
+    if show_headers and matches["titles"]:
         header = "Title matches"
         output.append(header)
         output.append("-" * len(header))
-        output.append(" ")
+        add_blank_line(output)
 
-        for title in sorted(matches["title"]):
+        for title in sorted(matches["titles"]):
             output.append(title)
 
-        # spacing
-        output.append("")
+        # add spacing between sections
+        if matches["quotes"]:
+            add_blank_line(output, 3)
 
     # quote matches
-    if matches["quote"]:
+    if matches["quotes"]:
+
         if show_headers:
             header = "Quote matches"
             output.append(header)
             output.append("-" * len(header))
-            output.append(" ")
+            add_blank_line(output)
 
-        for i, (book_title, quotes) in enumerate(matches["quote"].items()):
+        for i, (book_title, quotes) in enumerate(matches["quotes"].items()):
             if show_headers:
                 output.append(book_title)
                 output.append("-" * len(book_title))
 
-            for q in quotes:
+            for j, q in enumerate(quotes):
                 output.append(q)
-                output.append("")
+                # dont't add double spacing after last quote
+                if j != len(matches["quotes"][book_title]) - 1:
+                    add_blank_line(output, 2)
 
-            if i != len(matches["quote"]) - 1:
-                output.append("")
+            if i != len(matches["quotes"]) - 1:
+                add_blank_line(output, 3)
 
-    return output
+    return "\n".join(output)
 
 #=================================================
 # functions for print_quote_distribution

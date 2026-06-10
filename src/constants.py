@@ -22,8 +22,8 @@ MAX_SEC_BETWEEN_LAST_QUOTE_AND_READ_DATE = 7 * ONE_DAY_IN_SECONDS
 #=================================================
 # read list can be started from a timestamp
 #=================================================
-# 2026-01-01 12:00:00
-START_DATE_FOR_READ_LIST = 1767265200
+# 2024-01-09 00:00:00
+START_DATE_FOR_READ_LIST = 1704758400
 
 
 #=================================================

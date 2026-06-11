@@ -33,6 +33,7 @@ class QuoteManagerUI(Protocol):
     def get_selected_book_title(self) -> str: ...
     def get_collection_books(self) -> list[Book]: ...
     def get_filtered_books(self) -> list[str]: ...
+    def get_book_by_title(self, title: str) -> Book | None: ...
 
 #=================================================
 # QUOTE PRINTER
@@ -192,7 +193,7 @@ class QuoteManager:
             self.ui.log("Select a book from the list.")
             return
 
-        book = book_utils.get_book_by_title(self.ui.get_collection_books(), selected_title)
+        book = self.ui.get_book_by_title(selected_title)
         if book is None:
             self.ui.log("Book not found.")
             return

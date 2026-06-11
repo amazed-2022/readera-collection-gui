@@ -66,13 +66,6 @@ def get_random_quote(book: Book, length: str = "any") -> tuple[Quote | None, int
 #=================================================
 # functions for print_every_quote
 #=================================================
-def get_book_by_title(collection: list[Book], title: str) -> Book | None:
-    """
-    Return the book instance with the given title from the collection.
-    """
-    return next((book for book in collection if book.title == title), None)
-
-
 def get_quotes_sorted_by_page(book: Book) -> list[Quote]:
     """
     Return all quotes from a book sorted by page number.

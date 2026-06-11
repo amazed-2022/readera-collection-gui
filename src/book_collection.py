@@ -111,8 +111,12 @@ class BookCollection:
     def __init__(self) -> None:
         # The Collection is stored as an instance attribute
         self.books: list[Book] = []
+        self.books_by_title: dict[str, Book] = {}
         self.authors_with_quotes: list[str] = []
         self.folders: dict[str, set] = {}
+
+    def get_book_by_title(self, title: str) -> Book | None:
+        return self.books_by_title.get(title)
 
     #=================================================
     # FUNCTION: build The Collection
@@ -123,6 +127,8 @@ class BookCollection:
 
         # reset state
         self.books = []
+        self.books_by_title = {}
+        self.authors_with_quotes = []
         self.folders = {}
 
         # open and read the JSON file
@@ -224,15 +230,17 @@ class BookCollection:
                 # add the constructed date
                 this_book.have_read_date = aux_date
 
-        # gather authors into a set
-        authors_set = {
-            book.author
-            for book in self.books
-            if book.total_quotes > 0
-        }
+        # alphabetical order by title
+        self.books.sort(key=lambda bk: bk.title)
+
+        # gather books into a dictionary and authors into a set
+        authors_set = set()
+        for book in self.books:
+            self.books_by_title[book.title] = book
+            if book.total_quotes > 0:
+                authors_set.add(book.author)
+
         # sort them alphabetically
         self.authors_with_quotes = sorted(authors_set)
 
-        # alphabetical order by title
-        self.books.sort(key=lambda bk: bk.title)
         return error

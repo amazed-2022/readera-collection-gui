@@ -447,11 +447,11 @@ class MainWindow(tk.Tk):
 
         if selected_book == constants.ANY_BOOK:
             for title in self.filtered_books:
-                book = book_utils.get_book_by_title(self.collection.books, title)
+                book = self.collection.get_book_by_title(title)
                 if book is not None:
                     books_to_search.append(book)
         else:
-            book = book_utils.get_book_by_title(self.collection.books, selected_book)
+            book = self.collection.get_book_by_title(selected_book)
             if book is not None:
                 books_to_search.append(book)
 
@@ -607,7 +607,7 @@ class MainWindow(tk.Tk):
                 if self._book_matches_filters(book, chosen_folder, chosen_author)
             )
         else:
-            book = book_utils.get_book_by_title(self.collection.books, selected_book)
+            book = self.collection.get_book_by_title(selected_book)
             if book:
                 quotes_count = (
                     book.total_quotes
@@ -647,6 +647,9 @@ class MainWindow(tk.Tk):
 
     def get_selected_book_title(self) -> str:
         return self.filters.selected_book
+
+    def get_book_by_title(self, title: str) -> Book | None:
+        return self.collection.get_book_by_title(title)
 
 #=================================================
 # MAIN

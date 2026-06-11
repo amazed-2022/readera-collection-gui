@@ -725,6 +725,9 @@ class MainWindow(QMainWindow):
     def get_selected_book_title(self) -> str:
         return self.books_dropdown.currentText()
 
+    def get_book_by_title(self, title: str) -> Book | None:
+        return self.collection.get_book_by_title(title)
+
     #=================================================
     # FUNCTION: print statistics
     #=================================================
@@ -754,7 +757,7 @@ class MainWindow(QMainWindow):
             self.log("Select a book from the list.")
             return
 
-        book = book_utils.get_book_by_title(self.collection.books, selected_title)
+        book = self.collection.get_book_by_title(selected_title)
 
         if book is None:
             self.log("Book not found.")
@@ -813,7 +816,7 @@ class MainWindow(QMainWindow):
         if selected_title == constants.ANY_BOOK:
             books = [book for book in self.collection.books if book.title in self.filtered_books]
         else:
-            book = book_utils.get_book_by_title(self.collection.books, selected_title)
+            book = self.collection.get_book_by_title(selected_title)
             books = [book] if book else []
 
         counter = 0

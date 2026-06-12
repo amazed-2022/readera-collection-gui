@@ -8,6 +8,14 @@ from book_collection import Book, Quote
 from constants_loader import constants
 from typing import TypedDict
 
+#=================================================
+# helper
+#=================================================
+def find_book_by_title(collection: list[Book], title: str) -> Book | None:
+    """
+    Return the book instance with the given title from the collection.
+    """
+    return next((book for book in collection if book.title == title), None)
 
 #=================================================
 # functions for print_random_quote
@@ -38,7 +46,7 @@ def get_book_for_random_quote(
             return None, "All quotes were printed."
     else:
         # get the selected book instance
-        book: Book | None = get_book_by_title(collection, selected_title)
+        book: Book | None = find_book_by_title(collection, selected_title)
 
         if book is None:
             return None, "Book not found."

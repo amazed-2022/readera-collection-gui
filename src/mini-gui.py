@@ -4,6 +4,7 @@
 import book_utils
 import os
 import tkinter as tk
+import unicodedata
 
 from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
@@ -284,8 +285,16 @@ class MainWindow(tk.Tk):
     def _init_filters(self) -> None:
         self.filters.set_dropdowns_font(self.default_font)
 
+        # sort folders ignoring case and diacritical marks (accents).
         self.filters.set_folders_list(
-            [constants.ANY_FOLDER] + sorted(list(self.collection.folders.keys()))
+            [constants.ANY_FOLDER] +
+            sorted(
+                self.collection.folders.keys(),
+                key=lambda s: ''.join(
+                    c for c in unicodedata.normalize('NFD', s)
+                    if unicodedata.category(c) != 'Mn'
+                ).lower()
+            )
         )
 
         self.filters.set_authors_list(

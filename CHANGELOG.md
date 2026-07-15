@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.2.0] – 2026-XX
+## [2.2.0] – 2026-07
 #### Added
 - Search field for `mini-gui`
 - Introduced `QuoteManager` to separate quote printing logic from UI

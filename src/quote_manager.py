@@ -194,7 +194,7 @@ class QuoteManager:
                 "No specific book selected.\n"
                 "A random book was chosen from the current selection.\n\n"
             )
-            
+
             book = book_utils.get_random_book(
                 self.ui.get_collection_books(),
                 self.ui.get_filtered_books()

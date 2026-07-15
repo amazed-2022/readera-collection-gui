@@ -23,6 +23,7 @@ def find_book_by_title(collection: list[Book], title: str) -> Book | None:
 def get_random_book(
     collection: list[Book],
     filtered_titles: list[str],
+    *,
     length: str = "any",
     only_with_available_quotes: bool = False
 ) -> Book | None:
@@ -61,7 +62,7 @@ def get_book_for_random_quote(
         book = get_random_book(
             collection,
             filtered_titles,
-            length,
+            length=length,
             only_with_available_quotes=True
         )
 

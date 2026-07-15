@@ -18,8 +18,35 @@ def find_book_by_title(collection: list[Book], title: str) -> Book | None:
     return next((book for book in collection if book.title == title), None)
 
 #=================================================
-# functions for print_random_quote
+# functions for random print
 #=================================================
+def get_random_book(
+    collection: list[Book],
+    filtered_titles: list[str],
+    length: str = "any",
+    only_with_available_quotes: bool = False
+) -> Book | None:
+    """
+    Return a random book matching the filtered titles.
+    If only_with_available_quotes is True, only return books with remaining quotes.
+    """
+
+    books: list[Book] = [
+        book
+        for book in collection
+        if book.title in filtered_titles
+        and (
+            not only_with_available_quotes
+            or (
+                book.has_remaining_quotes
+                if length != "short"
+                else book.has_remaining_short_quotes
+            )
+        )
+    ]
+
+    return random.choice(books) if books else None
+
 def get_book_for_random_quote(
     collection: list[Book],
     selected_title: str,
@@ -31,19 +58,17 @@ def get_book_for_random_quote(
     Also returns a message if no book/quote is available.
     """
     if selected_title == constants.ANY_BOOK:
-        # build books list with available quotes
-        books: list[Book] = [
-            book
-            for book in collection
-            if book.title in filtered_titles
-            and (book.has_remaining_quotes if length != "short" else book.has_remaining_short_quotes)
-        ]
+        book = get_random_book(
+            collection,
+            filtered_titles,
+            length,
+            only_with_available_quotes=True
+        )
 
-        # check if any book remains at all
-        if books:
-            return random.choice(books), None
-        else:
+        if book is None:
             return None, "All quotes were printed."
+
+        return book, None
     else:
         # get the selected book instance
         book: Book | None = find_book_by_title(collection, selected_title)
@@ -60,7 +85,6 @@ def get_book_for_random_quote(
 
         # book is valid for random quote
         return book, None
-
 
 def get_random_quote(book: Book, length: str = "any") -> tuple[Quote | None, int]:
     """
@@ -170,7 +194,7 @@ def format_search_results_text(
             output.append(header)
             output.append("-" * len(header))
             add_blank_line(output)
-            
+
         # compile a case-insensitive regex pattern for the literal query text
         pattern = re.compile(re.escape(query), re.IGNORECASE) if query else None
 

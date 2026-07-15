@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Refactored quote printing logic into `QuoteManager` and removed direct UI/timer coupling
 - Replaced direct `after/after_cancel` usage with abstracted scheduling API
 - Moved statistical aggregation logic from GUI into `Statistics` and `WordStatistics` dataclasses
+- Every quote print now selects a random book when no specific book is selected
 
 ---
 

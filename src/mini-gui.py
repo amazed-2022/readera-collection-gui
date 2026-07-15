@@ -8,9 +8,9 @@ import unicodedata
 
 from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
-from collections.abc import Iterator
+from book_utils import SearchMatches
 from constants_loader import constants
-from quote_manager import QuoteManager
+from quote_manager import QuoteManager, QuoteManagerUI
 from tkinter import ttk, messagebox, font
 
 #=================================================
@@ -92,7 +92,8 @@ class FilterPanel(ttk.Frame):
     def select_first_book(self) -> None:
         self._select_first_value(self.books_dropdown)
 
-    def _select_first_value(self, combobox: ttk.Combobox) -> None:
+    @staticmethod
+    def _select_first_value(combobox: ttk.Combobox) -> None:
         if combobox["values"]:
             combobox.current(0)
 
@@ -113,7 +114,7 @@ class FilterPanel(ttk.Frame):
         # use lambda to adapt Tkinter's event callback to a query-string callback
         self.search_entry.bind("<Return>", lambda event: callback(self.search_var.get()))
 
-    def clear_search_hint(self, event):
+    def clear_search_hint(self, _event):
         if self.search_var.get() == self.search_hint:
             self.search_var.set("")
 
@@ -135,7 +136,7 @@ class FilterPanel(ttk.Frame):
 #=================================================
 # MAIN WINDOW
 #=================================================
-class MainWindow(tk.Tk):
+class MainWindow(tk.Tk, QuoteManagerUI):
 
     #=================================================
     # type hints
@@ -230,11 +231,11 @@ class MainWindow(tk.Tk):
         width = 750
         height = 700
 
-		# get screen size
+        # get screen size
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
 
-		# calculate top-left corner coordinates and set geometry
+        # calculate top-left corner coordinates and set geometry
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
         self.geometry(f"{width}x{height}+{x}+{y}")
@@ -247,20 +248,20 @@ class MainWindow(tk.Tk):
         self.text_frame = ttk.Frame(self.panel)
         self.buttons_frame = ttk.Frame(self.panel)
 
-		# grid and configure main panel
+        # grid and configure main panel
         self.header_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         self.text_frame.grid(row=1, column=0, sticky="nsew", padx=15)
         self.buttons_frame.grid(row=2, column=0, sticky="ew", pady=18)
         self.panel.rowconfigure(1, weight=1)
         self.panel.columnconfigure(0, weight=1)
 
-		# create FilterPanel (manages filter dropdowns and selection logic)
+        # create FilterPanel (manages filter dropdowns and selection logic)
         self.filters = FilterPanel(self.header_frame, self.default_font)
-		# create further sub-frames
+        # create further sub-frames
         self.q_counter_frame = ttk.Frame(self.header_frame)
         self.logo_frame = ttk.Frame(self.header_frame)
 
-		# grid and configure header frame
+        # grid and configure header frame
         self.filters.grid(row=0, column=0, sticky="ew", padx=(25, 0))
         self.logo_frame.grid(row=0, column=1, sticky="ew", padx=0)
         self.q_counter_frame.grid(row=0, column=2)
@@ -311,7 +312,7 @@ class MainWindow(tk.Tk):
     # init buttons
     #=================================================
     def _init_buttons(self) -> None:
-		# custom style
+        # custom style
         style = ttk.Style()
         style.configure("Big.TButton", font=self.button_font, padding=(15,15))
 
@@ -327,7 +328,7 @@ class MainWindow(tk.Tk):
             style="Big.TButton"
         )
 
-		# this will be a special Tkinter variable
+        # this will be a special Tkinter variable
         self.delay_source_toggle = tk.BooleanVar(value=False)
         self.delay_source_btn = tk.Checkbutton(
             self.buttons_frame,
@@ -415,11 +416,11 @@ class MainWindow(tk.Tk):
     # button frame
     #=================================================
     def _build_buttons_frame(self) -> None:
-		# left buttons
+        # left buttons
         self.every_q_btn.grid(row=0, column=0, padx=(25, 0), sticky="ew")
         self.random_q_btn.grid(row=0, column=1, padx=(15, 0), sticky="ew")
         self.delay_source_btn.grid(row=0, column=2, padx=(15, 0))
-		# right buttons
+        # right buttons
         self.clear_btn.grid(row=0, column=4, padx=(15, 0), sticky="ew")
         self.reset_btn.grid(row=0, column=5, padx=(15, 25), sticky="ew")
 
@@ -434,7 +435,7 @@ class MainWindow(tk.Tk):
     # signals (event bindings)
     #=================================================
     def _init_signals(self) -> None:
-		# this method binds change callback for all comboboxes
+        # this method binds change callback for all comboboxes
         self.filters.set_on_change_callback(self._on_dropdown_change)
         self.filters.set_search_callback(self._on_search)
 
@@ -573,7 +574,7 @@ class MainWindow(tk.Tk):
         self.filters.select_first_book()
         self.update_quotes_counter()
 
-    def on_logo_click(self, event) -> None:
+    def on_logo_click(self, _event) -> None:
         self.clear_text_output()
         reporter = StatisticsReporter(self.log)
         reporter.report(
@@ -637,9 +638,9 @@ class MainWindow(tk.Tk):
     def schedule(self, ms: int, callback) -> str:
         return self.after(ms, callback)
 
-    def cancel_timer(self, timer_id: str) -> None:
-        if timer_id is not None:
-            self.after_cancel(timer_id)
+    def cancel_timer(self, timer: object) -> None:
+        if isinstance(timer, str):
+            self.after_cancel(timer)
 
     def scroll_to_top(self) -> None:
         self.text_output.see("1.0")

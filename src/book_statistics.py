@@ -32,8 +32,7 @@ class Statistics:
 
     @classmethod
     def from_collection(cls, collection: BookCollection):
-    
-        books_count = 0
+
         books_20th = 0
         books_21st = 0
         books_with_quotes = 0

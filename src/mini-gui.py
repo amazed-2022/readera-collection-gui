@@ -627,6 +627,16 @@ class MainWindow(tk.Tk, QuoteManagerUI):
 
     def _on_logo_left_click(self, _event) -> None:
         self.clear_text_output()
+
+        # search for the selected book on Goodreads
+        selected_book = self.filters.selected_book
+        if selected_book != constants.ANY_BOOK:
+            webbrowser.open(
+                f"https://www.goodreads.com/search?q="
+                f"{selected_book.replace(' - ', ' ').replace(' ', '+')}"
+            )
+            return
+
         self.log_book_list()
 
     def _on_goodreads_click(self, event) -> None:

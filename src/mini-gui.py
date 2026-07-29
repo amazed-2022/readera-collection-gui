@@ -5,6 +5,7 @@ import book_utils
 import os
 import tkinter as tk
 import unicodedata
+import webbrowser
 
 from book_collection import BookCollection, Book
 from book_statistics import Statistics, StatisticsReporter
@@ -114,7 +115,7 @@ class FilterPanel(ttk.Frame):
         # use lambda to adapt Tkinter's event callback to a query-string callback
         self.search_entry.bind("<Return>", lambda event: callback(self.search_var.get()))
 
-    def clear_search_hint(self, _event):
+    def clear_search_hint(self, _event) -> None:
         if self.search_var.get() == self.search_hint:
             self.search_var.set("")
 
@@ -227,7 +228,7 @@ class MainWindow(tk.Tk, QuoteManagerUI):
         self.panel = ttk.Frame(self)
         self.panel.pack(fill="both", expand=True)
 
-    def set_default_window_size(self):
+    def set_default_window_size(self) -> None:
         width = 750
         height = 700
 
@@ -401,6 +402,7 @@ class MainWindow(tk.Tk, QuoteManagerUI):
             pady=15,
             bg="#F0E6C8"
         )
+
         scrollbar = ttk.Scrollbar(self.text_frame, orient="vertical", command=self.text_output.yview)
         self.text_output.configure(yscrollcommand=scrollbar.set)
 
@@ -411,6 +413,27 @@ class MainWindow(tk.Tk, QuoteManagerUI):
         # give extra space to text widget, scrollbar column stays fixed
         self.text_frame.grid_rowconfigure(0, weight=1)
         self.text_frame.grid_columnconfigure(0, weight=1)
+
+        # these are used for collection books print
+        self.text_output.tag_bind(
+            "goodreads_link",
+            "<Button-1>",
+            self._on_goodreads_click,
+        )
+
+        # show hand cursor when hovering over book link
+        self.text_output.tag_bind(
+            "goodreads_link",
+            "<Enter>",
+            lambda e: self.text_output.config(cursor="hand2"),
+        )
+
+        # restore default cursor when leaving book link
+        self.text_output.tag_bind(
+            "goodreads_link",
+            "<Leave>",
+            lambda e: self.text_output.config(cursor=""),
+        )
 
     #=================================================
     # button frame
@@ -439,7 +462,8 @@ class MainWindow(tk.Tk, QuoteManagerUI):
         self.filters.set_on_change_callback(self._on_dropdown_change)
         self.filters.set_search_callback(self._on_search)
 
-        self.logo.bind("<Button-1>", self.on_logo_click)
+        self.logo.bind("<Button-1>", self._on_logo_left_click)
+        self.logo.bind("<Button-3>", self._on_logo_right_click)
 
         self.every_q_btn.configure(command=self.quote_manager.print_every_quote)
         self.random_q_btn.configure(command=self.quote_manager.print_random_quote)
@@ -494,13 +518,31 @@ class MainWindow(tk.Tk, QuoteManagerUI):
         self.search_in_collection(query)
 
     #=================================================
-    # log messages to the text widget
+    # log functions to the text widget
     #=================================================
     def log(self, message: str, scroll_to_bottom: bool = False) -> None:
         self.text_output.config(state="normal")
         self.text_output.insert("end", f"{message}\n")
         if scroll_to_bottom:
             self.scroll_to_bottom()
+        self.text_output.config(state="disabled")
+
+    def log_book_list(self) -> None:
+        self.text_output.config(state="normal")
+
+        for book in self.collection.books:
+            if self._book_matches_filters(
+                book,
+                self.filters.selected_folder,
+                self.filters.selected_author
+            ):
+                start = self.text_output.index("end-1c")
+                self.text_output.insert("end", f"• {book.title}\n")
+                end = self.text_output.index("end-1c")
+
+                self.text_output.tag_add("goodreads_link", start, end)
+                self.text_output.tag_add(f"book_{book.title}", start, end)
+
         self.text_output.config(state="disabled")
 
     #=================================================
@@ -566,7 +608,15 @@ class MainWindow(tk.Tk, QuoteManagerUI):
 
         for book in self.collection.books:
             # check selected folder and/or author for matching books
-            if self._book_matches_filters(book, chosen_folder, self.filters.selected_author) and book.total_quotes > 0:
+            matches_filter = self._book_matches_filters(
+                book,
+                chosen_folder,
+                self.filters.selected_author
+            )
+
+            has_quotes = book.total_quotes > 0
+
+            if matches_filter and has_quotes:
                 self.filtered_books.append(book.title)
 
         # set gathered list and reset dropdown
@@ -574,7 +624,29 @@ class MainWindow(tk.Tk, QuoteManagerUI):
         self.filters.select_first_book()
         self.update_quotes_counter()
 
-    def on_logo_click(self, _event) -> None:
+    def _on_logo_left_click(self, _event) -> None:
+        self.clear_text_output()
+        self.log_book_list()
+
+    def _on_goodreads_click(self, event) -> None:
+        # get text index from clicked mouse position
+        index = self.text_output.index(f"@{event.x},{event.y}")
+        tags = self.text_output.tag_names(index)
+
+        # find linked book title tag
+        for tag in tags:
+            if tag.startswith("book_"):
+                title = tag.removeprefix("book_")
+
+                url = (
+                    "https://www.goodreads.com/search?q="
+                    + title.replace(" ", "+")
+                )
+
+                webbrowser.open(url)
+                return
+
+    def _on_logo_right_click(self, _event) -> None:
         self.clear_text_output()
         reporter = StatisticsReporter(self.log)
         reporter.report(

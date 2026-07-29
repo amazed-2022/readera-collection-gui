@@ -540,8 +540,9 @@ class MainWindow(tk.Tk, QuoteManagerUI):
                 self.text_output.insert("end", f"• {book.title}\n")
                 end = self.text_output.index("end-1c")
 
+                search_title = book.title.replace(" - ", " ")
                 self.text_output.tag_add("goodreads_link", start, end)
-                self.text_output.tag_add(f"book_{book.title}", start, end)
+                self.text_output.tag_add(f"book_{search_title}", start, end)
 
         self.text_output.config(state="disabled")
 

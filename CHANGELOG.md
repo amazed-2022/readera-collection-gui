@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] – 2026-xx
+#### Added
+- Interactive book list view with Goodreads links via logo left-click
+
+---
+
 ## [2.2.0] – 2026-07
 #### Added
 - Search field for `mini-gui`

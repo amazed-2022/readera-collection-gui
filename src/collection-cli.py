@@ -5,6 +5,7 @@ import book_utils
 import datetime
 import os
 import random
+import subprocess
 import sys
 import textwrap
 import unicodedata
@@ -326,7 +327,7 @@ options_menu = create_options_menu(OPTIONS)
 #=================================================
 while True:
     # start with empty window
-    os.system('cls')
+    subprocess.run(["cmd", "/c", "cls"])
 
     # print the main title and options
     string = f"== The Collection =="
@@ -644,4 +645,4 @@ while True:
     for book in collection.books:
         book.clear_selected_set()
 
-    os.system('cls')
+    subprocess.run(["cmd", "/c", "cls"])

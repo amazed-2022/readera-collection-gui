@@ -528,21 +528,30 @@ class MainWindow(tk.Tk, QuoteManagerUI):
         self.text_output.config(state="disabled")
 
     def log_book_list(self) -> None:
-        self.text_output.config(state="normal")
 
-        for book in self.collection.books:
+        matching_books = [
+            book for book in self.collection.books
             if self._book_matches_filters(
                 book,
                 self.filters.selected_folder,
                 self.filters.selected_author
-            ):
-                start = self.text_output.index("end-1c")
-                self.text_output.insert("end", f"• {book.title}\n")
-                end = self.text_output.index("end-1c")
+            )
+        ]
 
-                search_title = book.title.replace(" - ", " ")
-                self.text_output.tag_add("goodreads_link", start, end)
-                self.text_output.tag_add(f"book_{search_title}", start, end)
+        # print a summary header
+        shown = len(matching_books)
+        total = len(self.collection.books)
+        self.log(f"Book list ({shown} of {total}):\n")
+
+        self.text_output.config(state="normal")
+        for book in matching_books:
+            start = self.text_output.index("end-1c")
+            self.text_output.insert("end", f"• {book.title}\n")
+            end = self.text_output.index("end-1c")
+
+            search_title = book.title.replace(" - ", " ")
+            self.text_output.tag_add("goodreads_link", start, end)
+            self.text_output.tag_add(f"book_{search_title}", start, end)
 
         self.text_output.config(state="disabled")
 

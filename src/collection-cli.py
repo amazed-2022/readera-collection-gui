@@ -6,7 +6,6 @@ import datetime
 import os
 import random
 import sys
-import subprocess
 import textwrap
 import unicodedata
 
@@ -32,6 +31,14 @@ OPTIONS = [
     "Search",
     "Exit"
 ]
+
+NO_PAUSE_OPTIONS = {
+    "Random / All Quotes",
+    "Random / Short Quotes",
+    "Random / Selected Author",
+    "Random / Selected Folder",
+    "Search",
+}
 
 LENGTHS = ["Any length", "Short only"]
 
@@ -75,7 +82,7 @@ def print_separator_line() -> None:
 # print options menu
 #=================================================
 def print_options() -> None:
-    for key, value in Options_Menu.items():
+    for key, value in options_menu.items():
         if key.isdigit():
             print(f" {int(key)}  -->  {value}")
         else:
@@ -112,8 +119,8 @@ def get_option() -> str:
     while attempt  < len(prompts):
         opt = input(prompts[attempt ])
 
-        if opt.isdigit() and opt in Options_Menu:
-            return Options_Menu.get(opt, "Something went wrong")
+        if opt.isdigit() and opt in options_menu:
+            return options_menu.get(opt, "Something went wrong")
         elif opt == 'x':
             sys.exit()
         attempt  += 1
@@ -228,7 +235,11 @@ def choose_a_book(attr: str) -> Book:
     print_selection_list(titles)
     choice = get_user_choice("book", len(books_for_selection), zero_is_valid=True)
     print_separator_line()
-    return books_for_selection[choice - 1] if choice else random.choice(books_for_selection)
+
+    if choice:
+        return books_for_selection[choice - 1]
+
+    return random.choice(books_for_selection)
 
 #=================================================
 # user can choose an author
@@ -309,13 +320,13 @@ if error:
     print(error)
     sys.exit()
 
-Options_Menu = create_options_menu(OPTIONS)
+options_menu = create_options_menu(OPTIONS)
 #=================================================
 # main loop for printing
 #=================================================
 while True:
     # start with empty window
-    subprocess.run(["cmd", "/c", "cls"])
+    os.system('cls')
 
     # print the main title and options
     string = f"== The Collection =="
@@ -370,9 +381,15 @@ while True:
         #=================================================
         if option == "Book / every quote":
             # open output file with context manager
-            with open(f"{selected_book.title}.txt", "w", encoding="utf8") as f_output:
+            filename = f"{selected_book.title}.txt"
+            with open(filename, "w", encoding="utf8") as f_output:
                 # create a list sorted by page number of all quotes in the book
-                sorted_by_page = sorted(selected_book.get_all_quotes_list(), key=lambda q: q.page)
+                quotes = selected_book.get_all_quotes_list()
+
+                sorted_by_page = sorted(
+                    quotes,
+                    key=lambda q: q.page
+                )
 
                 print(selected_book.title)
                 print('-' * len(selected_book.title))
@@ -437,28 +454,32 @@ while True:
 
         book_property = choose_a_property()
 
-        if book_property == "added on":
-            sorted_books = sorted(collection.books, key=lambda book: book.file_modified_date, reverse=True)
-        elif book_property == "reading now":
-            sorted_books = sorted(collection.books, key=lambda book: book.published_date, reverse=True)
-        elif book_property == "finished list":
-            sorted_books = sorted(collection.books, key=lambda book: book.have_read_date, reverse=True)
-        elif book_property == "read duration":
-            sorted_books = sorted(collection.books, key=lambda book: book.first_q_timestamp, reverse=True)
-        elif book_property == "publish date":
-            sorted_books = sorted(collection.books, key=lambda book: book.published_date, reverse=True)
-        elif book_property == "number of quotes":
-            sorted_books = sorted(collection.books, key=lambda book: book.total_quotes, reverse=True)
-        elif book_property == "quote/page ratio":
-            sorted_books = sorted(collection.books, key=lambda book: book.quotes_per_page, reverse=True)
-        elif book_property == "rating":
-            sorted_books = sorted(collection.books, key=lambda book: book.rating, reverse=True)
-        else:
-            sorted_books = sorted(collection.books, key=lambda book: book.title, reverse=False)
+        sort_rules = {
+            "added on": (lambda b: b.file_modified_date, True),
+            "reading now": (lambda b: b.published_date, True),
+            "finished list": (lambda b: b.have_read_date, True),
+            "read duration": (lambda b: b.first_q_timestamp, True),
+            "publish date": (lambda b: b.published_date, True),
+            "number of quotes": (lambda b: b.total_quotes, True),
+            "quote/page ratio": (lambda b: b.quotes_per_page, True),
+            "rating": (lambda b: b.rating, True),
+            "folder": (lambda b: b.title, False),
+        }
+
+        sort_key, reverse = sort_rules.get(
+            book_property,
+            (lambda b: b.title, False)
+        )
+
+        sorted_books = sorted(collection.books, key=sort_key, reverse=reverse)
 
         # choose function returns none if all is requested
-        not_an_exception = book_property not in {"read duration", "reading now", "finished list"}
-        folder = choose_a_folder(collection.folders) if (collection.folders and not_an_exception) else None
+        allow_folder_selection = book_property not in {"read duration", "reading now", "finished list"}
+        folder = (
+            choose_a_folder(collection.folders)
+            if collection.folders and allow_folder_selection
+            else None
+        )
 
         while True:
             for book in sorted_books:
@@ -484,10 +505,27 @@ while True:
                                 print(f"  -->  {book.published_date}  /  {book.title}")
 
                     elif book_property == "read duration":
-                        if ( book.first_q_timestamp > constants.START_DATE_FOR_READ_LIST and
-                            (book.last_q_timestamp - book.first_q_timestamp) > constants.ONE_DAY_IN_SECONDS and
-                             book.title not in constants.EXCLUDED_TITLES_FROM_READ_DURATION and
-                             book.is_read):
+                        started_after_limit = (
+                            book.first_q_timestamp > constants.START_DATE_FOR_READ_LIST
+                        )
+
+                        took_more_than_day = (
+                            (book.last_q_timestamp - book.first_q_timestamp)
+                            > constants.ONE_DAY_IN_SECONDS
+                        )
+
+                        not_excluded = (
+                            book.title not in constants.EXCLUDED_TITLES_FROM_READ_DURATION
+                        )
+
+                        is_finished = book.is_read
+
+                        if (
+                            started_after_limit
+                            and took_more_than_day
+                            and not_excluded
+                            and is_finished
+                        ):
                             dt_first = datetime.datetime.fromtimestamp(book.first_q_timestamp)
                             elapsed_days = (book.have_read_date - dt_first).days + 1
                             if dt_first.year == book.have_read_date.year:
@@ -599,15 +637,11 @@ while True:
     #=================================================
     # hold on and clear screen before next iteration
     #=================================================
-    if (option != "Random / All Quotes"        and
-        option != "Random / Short Quotes"      and
-        option != "Random / Selected Author"   and
-        option != "Random / Selected Folder"   and
-        option != "Search"):
+    if option not in NO_PAUSE_OPTIONS:
         input()
 
     # start over with next iteration
     for book in collection.books:
         book.clear_selected_set()
 
-    subprocess.run(["cmd", "/c", "cls"])
+    os.system('cls')

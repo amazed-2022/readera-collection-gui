@@ -29,11 +29,11 @@ class Statistics:
     author_quote_counts: dict[str, int]
     folder_quote_counts: dict[str, int]
     folder_book_counts: dict[str, int]
+    folder_books_read_counts: dict[str, int]
 
     @classmethod
     def from_collection(cls, collection: BookCollection):
 
-        books_count = 0
         books_20th = 0
         books_21st = 0
         books_with_quotes = 0
@@ -45,6 +45,7 @@ class Statistics:
         author_quote_counts = {}
         folder_quote_counts = {}
         folder_book_counts = {}
+        folder_books_read_counts = {}
 
         for book in collection.books:
             if book.total_quotes > 0:
@@ -56,6 +57,10 @@ class Statistics:
                 )
             if book.is_read:
                 books_read += 1
+                folder_books_read_counts[book.folder] = (
+                    folder_books_read_counts.get(book.folder, 0)
+                    + 1
+                )
             if 1900 <= book.published_date < 2000:
                 books_20th += 1
             if book.published_date >= 2000:
@@ -100,6 +105,13 @@ class Statistics:
             )
         )
 
+        folder_books_read_counts = dict(
+            sorted(
+                folder_books_read_counts.items(),
+                key=lambda item: item[1],
+                reverse=True,
+        )
+
         return cls(
             books_count=len(collection.books),
             books_with_quotes=books_with_quotes,
@@ -114,6 +126,7 @@ class Statistics:
             author_quote_counts=author_quote_counts,
             folder_quote_counts=folder_quote_counts,
             folder_book_counts=folder_book_counts,
+            folder_books_read_counts=folder_books_read_counts,
         )
 
 

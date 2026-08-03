@@ -106,10 +106,11 @@ class Statistics:
         )
 
         folder_books_read_counts = dict(
-            sorted(
-                folder_books_read_counts.items(),
-                key=lambda item: item[1],
-                reverse=True,
+                sorted(
+                    folder_books_read_counts.items(),
+                    key=lambda item: item[1],
+                    reverse=True,
+            )
         )
 
         return cls(
@@ -208,14 +209,15 @@ class StatisticsReporter:
 
     ):
         #=================================================
-        # books
+        # all books
         #=================================================
-        self.emit(self.section("Statistics"))
+        self.emit(self.section("The Collection: An X-Ray Snapshot"))
         self.emit("")
-        self.report_stat_line(
-                "Books in The Collection",
-                f"{stats.books_count:4d} / 100%"
-            )
+
+        self.emit(self.section("Library"))
+        self.emit("")
+
+        self.report_total_books(stats)
 
         if stats.books_21st:
             self.report_stat_line(
@@ -228,8 +230,36 @@ class StatisticsReporter:
             self.report_stat_line(
                 "Books from the 20th century",
                 f"{stats.books_20th:4d} / "
-                f"{self.get_percentage_string(stats.books_20th, stats.books_count)}"
+                f"{self.get_percentage_string(stats.books_20th, stats.books_count)}",
+                blank_line=True
             )
+
+        # folders (book counts)
+        self.report_folder_dict(stats.folder_book_counts, stats.books_count)
+
+        #=================================================
+        # read books
+        #=================================================
+        self.emit(self.section("Reading"))
+        self.emit("")
+        self.report_total_books(stats)
+
+        self.report_stat_line(
+            "Books read",
+            f"{stats.books_read:4d} / "
+            f"{self.get_percentage_string(stats.books_read, stats.books_count)}",
+            blank_line=True
+        )
+
+        # folders (book counts)
+        self.report_folder_dict(stats.folder_books_read_counts, stats.books_read)
+
+        #=================================================
+        # quotes
+        #=================================================
+        self.emit(self.section("Quotes"))
+        self.emit("")
+        self.report_total_books(stats)
 
         self.report_stat_line(
             "Books with quotes",
@@ -237,19 +267,6 @@ class StatisticsReporter:
             f"{self.get_percentage_string(stats.books_with_quotes, stats.books_count)}"
         )
 
-        self.report_stat_line(
-            "Books finished",
-            f"{stats.books_read:4d} / "
-            f"{self.get_percentage_string(stats.books_read, stats.books_count)}",
-            blank_line=True
-        )
-
-        # folders (book counts)
-        self.report_folder_dict(stats.folder_book_counts, stats.books_count)
-
-        #=================================================
-        # quotes
-        #=================================================
         self.report_stat_line(
             "Quotes in total",
             f"{stats.total_quotes_count:4d} / 100%"
@@ -309,6 +326,12 @@ class StatisticsReporter:
     #=================================================
     # HELPERS
     #=================================================
+    def report_total_books(self, stats: Statistics):
+        self.report_stat_line(
+                "Books in total",
+                f"{stats.books_count:4d} / 100%"
+            )
+
     def report_stat_line(self, string, value, blank_line=False):
         self.emit(f"{string}  {'-'*(self.line_width-len(string))}>  {value}")
         if blank_line:

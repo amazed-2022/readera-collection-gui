@@ -264,7 +264,8 @@ class StatisticsReporter:
         self.report_stat_line(
             "Books with quotes",
             f"{stats.books_with_quotes:4d} / "
-            f"{self.get_percentage_string(stats.books_with_quotes, stats.books_count)}"
+            f"{self.get_percentage_string(stats.books_with_quotes, stats.books_count)}",
+            blank_line=True
         )
 
         self.report_stat_line(

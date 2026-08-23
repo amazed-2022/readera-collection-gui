@@ -716,9 +716,11 @@ class MainWindow(tk.Tk, QuoteManagerUI):
         except tk.TclError:
             return None
 
-    def get_keyboard_language(self) -> str:
+    @staticmethod
+    def get_keyboard_language() -> str:
         buffer = ctypes.create_unicode_buffer(9)
-        ctypes.windll.user32.GetKeyboardLayoutNameW(buffer)
+        user32 = ctypes.WinDLL("user32")
+        user32.GetKeyboardLayoutNameW(buffer)
 
         layout = buffer.value.upper()
 

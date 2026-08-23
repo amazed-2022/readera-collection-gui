@@ -316,6 +316,13 @@ class MainWindow(QMainWindow):
         self.output_stack.setCurrentWidget(self.table_output)
         self.table_output.resizeColumnsToContents()
 
+        # force last column to stretch again
+        header = self.table_output.horizontalHeader()
+        header.setSectionResizeMode(
+            self.table_output.model().columnCount() - 1,
+            QHeaderView.ResizeMode.Stretch
+        )
+
     #=============
     # button grid
     # +-------------------------------------------------------------------------------------------+
@@ -519,13 +526,13 @@ class MainWindow(QMainWindow):
             "Title",
             "Year",
             "Rating",
-            "Ratings x1000",
+            "Ratings x1000" if book_property != constants.PROP_READ_DURATION else "",
             "Folder",
             "Quotes",
             "Pages",
             "Quotes / pages",
-            "Finished",
-            "Added",
+            "Finished" if book_property != constants.PROP_READ_DURATION else "",
+            "Added" if book_property != constants.PROP_READ_DURATION else "",
         ]
         # keep only non-empty headers and keep track of indexes
         indexes = [i for i, h in enumerate(headers) if h]

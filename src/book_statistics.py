@@ -29,11 +29,11 @@ class Statistics:
     author_quote_counts: dict[str, int]
     folder_quote_counts: dict[str, int]
     folder_book_counts: dict[str, int]
+    folder_books_read_counts: dict[str, int]
 
     @classmethod
     def from_collection(cls, collection: BookCollection):
 
-        books_count = 0
         books_20th = 0
         books_21st = 0
         books_with_quotes = 0
@@ -45,6 +45,7 @@ class Statistics:
         author_quote_counts = {}
         folder_quote_counts = {}
         folder_book_counts = {}
+        folder_books_read_counts = {}
 
         for book in collection.books:
             if book.total_quotes > 0:
@@ -56,6 +57,10 @@ class Statistics:
                 )
             if book.is_read:
                 books_read += 1
+                folder_books_read_counts[book.folder] = (
+                    folder_books_read_counts.get(book.folder, 0)
+                    + 1
+                )
             if 1900 <= book.published_date < 2000:
                 books_20th += 1
             if book.published_date >= 2000:
@@ -100,6 +105,14 @@ class Statistics:
             )
         )
 
+        folder_books_read_counts = dict(
+                sorted(
+                    folder_books_read_counts.items(),
+                    key=lambda item: item[1],
+                    reverse=True,
+            )
+        )
+
         return cls(
             books_count=len(collection.books),
             books_with_quotes=books_with_quotes,
@@ -114,6 +127,7 @@ class Statistics:
             author_quote_counts=author_quote_counts,
             folder_quote_counts=folder_quote_counts,
             folder_book_counts=folder_book_counts,
+            folder_books_read_counts=folder_books_read_counts,
         )
 
 
@@ -195,14 +209,15 @@ class StatisticsReporter:
 
     ):
         #=================================================
-        # books
+        # all books
         #=================================================
-        self.emit(self.section("Statistics"))
+        self.emit(self.section("The Collection: An X-Ray Snapshot"))
         self.emit("")
-        self.report_stat_line(
-                "Books in The Collection",
-                f"{stats.books_count:4d} / 100%"
-            )
+
+        self.emit(self.section("Library"))
+        self.emit("")
+
+        self.report_total_books(stats)
 
         if stats.books_21st:
             self.report_stat_line(
@@ -215,28 +230,44 @@ class StatisticsReporter:
             self.report_stat_line(
                 "Books from the 20th century",
                 f"{stats.books_20th:4d} / "
-                f"{self.get_percentage_string(stats.books_20th, stats.books_count)}"
+                f"{self.get_percentage_string(stats.books_20th, stats.books_count)}",
+                blank_line=True
             )
 
-        self.report_stat_line(
-            "Books with quotes",
-            f"{stats.books_with_quotes:4d} / "
-            f"{self.get_percentage_string(stats.books_with_quotes, stats.books_count)}"
-        )
+        # folders (book counts)
+        self.report_folder_dict(stats.folder_book_counts, stats.books_count)
+
+        #=================================================
+        # read books
+        #=================================================
+        self.emit(self.section("Reading"))
+        self.emit("")
+        self.report_total_books(stats)
 
         self.report_stat_line(
-            "Books finished",
+            "Books read",
             f"{stats.books_read:4d} / "
             f"{self.get_percentage_string(stats.books_read, stats.books_count)}",
             blank_line=True
         )
 
         # folders (book counts)
-        self.report_folder_dict(stats.folder_book_counts, stats.books_count)
+        self.report_folder_dict(stats.folder_books_read_counts, stats.books_read)
 
         #=================================================
         # quotes
         #=================================================
+        self.emit(self.section("Quotes"))
+        self.emit("")
+        self.report_total_books(stats)
+
+        self.report_stat_line(
+            "Books with quotes",
+            f"{stats.books_with_quotes:4d} / "
+            f"{self.get_percentage_string(stats.books_with_quotes, stats.books_count)}",
+            blank_line=True
+        )
+
         self.report_stat_line(
             "Quotes in total",
             f"{stats.total_quotes_count:4d} / 100%"
@@ -296,6 +327,12 @@ class StatisticsReporter:
     #=================================================
     # HELPERS
     #=================================================
+    def report_total_books(self, stats: Statistics):
+        self.report_stat_line(
+                "Books in total",
+                f"{stats.books_count:4d} / 100%"
+            )
+
     def report_stat_line(self, string, value, blank_line=False):
         self.emit(f"{string}  {'-'*(self.line_width-len(string))}>  {value}")
         if blank_line:

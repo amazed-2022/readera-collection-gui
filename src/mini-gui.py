@@ -2,6 +2,7 @@
 # IMPORT
 #=================================================
 import book_utils
+import ctypes
 import os
 import tkinter as tk
 import unicodedata
@@ -464,6 +465,7 @@ class MainWindow(tk.Tk, QuoteManagerUI):
 
         self.logo.bind("<Button-1>", self._on_logo_left_click)
         self.logo.bind("<Button-3>", self._on_logo_right_click)
+        self.text_output.bind("<Button-3>", self._on_text_right_click)
 
         self.every_q_btn.configure(command=self.quote_manager.print_every_quote)
         self.random_q_btn.configure(command=self.quote_manager.print_random_quote)
@@ -634,8 +636,10 @@ class MainWindow(tk.Tk, QuoteManagerUI):
         self.filters.select_first_book()
         self.update_quotes_counter()
 
+    #=================================================
+    # logo clicks
+    #=================================================
     def _on_logo_left_click(self, _event) -> None:
-        self.clear_text_output()
 
         # search for the selected book on Goodreads
         selected_book = self.filters.selected_book
@@ -646,8 +650,23 @@ class MainWindow(tk.Tk, QuoteManagerUI):
             )
             return
 
+        self.clear_text_output()
         self.log_book_list()
 
+    def _on_logo_right_click(self, _event) -> None:
+        self.clear_text_output()
+        reporter = StatisticsReporter(self.log)
+        reporter.report(
+            stats=self.stats,
+            collection=self.collection,
+            max_short_quote_chars=constants.MAX_CHAR_IN_SHORT_QUOTE,
+            omitted_words=constants.WORDS_TO_OMIT_FROM_SEARCH,
+            top_n_words=30
+        )
+
+    #=================================================
+    # text clicks
+    #=================================================
     def _on_goodreads_click(self, event) -> None:
         # get text index from clicked mouse position
         index = self.text_output.index(f"@{event.x},{event.y}")
@@ -666,16 +685,54 @@ class MainWindow(tk.Tk, QuoteManagerUI):
                 webbrowser.open(url)
                 return
 
-    def _on_logo_right_click(self, _event) -> None:
-        self.clear_text_output()
-        reporter = StatisticsReporter(self.log)
-        reporter.report(
-            stats=self.stats,
-            collection=self.collection,
-            max_short_quote_chars=constants.MAX_CHAR_IN_SHORT_QUOTE,
-            omitted_words=constants.WORDS_TO_OMIT_FROM_SEARCH,
-            top_n_words=30
-        )
+    def _on_text_right_click(self, event) -> None:
+        index = self.text_output.index(f"@{event.x},{event.y}")
+
+        # get keyboard main language
+        target_language = self.get_keyboard_language()
+
+        try:
+            if (self.text_output.compare("sel.first", "<=", index)
+                    and self.text_output.compare(index, "<", "sel.last")):
+
+                selected = self.get_selected_text()
+
+                if selected:
+                    url = (
+                        f"https://translate.google.com/?sl=auto&tl={target_language}&text="
+                        + selected.replace(" ", "+")
+                    )
+                    webbrowser.open(url)
+
+        except tk.TclError:
+            pass
+
+    #=================================================
+    # text selection helpers
+    #=================================================
+    def get_selected_text(self) -> str | None:
+        try:
+            return self.text_output.get("sel.first", "sel.last")
+        except tk.TclError:
+            return None
+
+    def get_keyboard_language(self) -> str:
+        buffer = ctypes.create_unicode_buffer(9)
+        ctypes.windll.user32.GetKeyboardLayoutNameW(buffer)
+
+        layout = buffer.value.upper()
+
+        language_map = {
+            "0409": "en",
+            "0407": "de",
+            "040C": "fr",
+            "040E": "hu",
+            "0410": "it",
+            "0416": "pt",
+            "0C0A": "es",
+        }
+
+        return language_map.get(layout[-4:], "en")
 
     #=================================================
     # filter match for a book instance

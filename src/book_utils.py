@@ -147,7 +147,7 @@ def search_books(books: list[Book], query: str) -> SearchMatches:
         if query in book.title.lower():
             matches["titles"].add(book.title)
 
-        for quote in book.quotes:
+        for quote in book.get_all_quotes_list():
             if query in quote.text.lower():
                 matches["quotes"].setdefault(book.title, []).append(quote.text)
 

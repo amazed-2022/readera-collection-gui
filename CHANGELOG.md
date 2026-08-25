@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] – 2026-xx
+#### Added
+- 
+
+#### Fixed
+- 
+  
+---
 ## [2.3.0] – 2026-08
 #### Added
 - Interactive book list view with Goodreads links via logo left-click

@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2.3.0] – 2026-08
 #### Added
 - Interactive book list view with Goodreads links via logo left-click
 - Translate selected text via Google Translate using right-click

@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 - Interactive book list view with Goodreads links via logo left-click
 - Translate selected text via Google Translate using right-click
 
+#### Fixed
+- Fixed quote search not including short quotes
+  
 ---
 
 ## [2.2.0] – 2026-07

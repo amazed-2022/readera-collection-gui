@@ -146,7 +146,7 @@ class BookCollection:
             colls = self._load_json("colls.json")
         except FileNotFoundError:
             self.warnings.append(
-                "Folders file (colls.json) not found; books will be left unassigned."
+                "Folders file (colls.json) not found, books will be left unassigned."
             )
             colls = []
         except json.JSONDecodeError as error:

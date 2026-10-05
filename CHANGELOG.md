@@ -8,8 +8,21 @@ All notable changes to this project will be documented in this file.
 
 #### Fixed
 - 
-  
+
+## [3.0.0] – 2026-10
+#### Added
+- Handling for missing folder data, books are left unassigned when the folders backup is unavailable
+- GUI warnings for non-critical collection issues
+
+#### Changed
+- Updated JSON handling to support the new format used by ReadEra backup files  
+  (book data and folder data are now stored in separate JSON files)
+
+#### Breaking Changes
+- ReadEra export must now include the new JSON backup files (`docs_1.json`, `colls.json`)
+
 ---
+
 ## [2.3.0] – 2026-08
 #### Added
 - Interactive book list view with Goodreads links via logo left-click

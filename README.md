@@ -1,7 +1,7 @@
 # readera-collection-gui
 An **unofficial GUI tool** for loading and viewing books and quotes stored in ReadEra backup files.
 
-**Current version:** v2.3.0  
+**Current version:** v3.0.0  
 **License:** GNU GPL v3.0  
 **Author:** amazed  
 **Version history:** [CHANGELOG](CHANGELOG.md)
@@ -25,8 +25,8 @@ If you enjoy using it, please consider supporting the developers by purchasing t
 2. **Create a backup file** in the ReadEra app (Settings → Backup & Restore)
 3. **Transfer backup file to your PC** (Google Drive, Gmail, etc.)
 4. **Extract the `.bak` file into a folder**  
-   (only `library.json` is needed; other files can be deleted)
-5. **Place the project Python files** in the same folder as `library.json`
+   (`docs_1.json` and `colls.json` are needed; other files can be deleted)
+5. **Place the project Python files** in the same folder as the exported `json` files
 6. **Run one of the following:**
     - `mini-gui.py` (lightweight Tkinter version)
     - `readera-collection-gui.py` (full version)

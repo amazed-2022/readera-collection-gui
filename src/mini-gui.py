@@ -823,6 +823,9 @@ if __name__ == "__main__":
     if error:
         window.log(f"Error reading JSON file: {error}\n")
     else:
+        for warning in The_Collection.warnings:
+            window.log(f"Warning: {warning}\n")
+
         window.log(
             f"This collection has {window.stats.total_quotes_count}"
             f" quotes from {len(window.filtered_books)} books.\n\n"

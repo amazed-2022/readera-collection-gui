@@ -114,6 +114,7 @@ class BookCollection:
         self.books_by_title: dict[str, Book] = {}
         self.authors_with_quotes: list[str] = []
         self.folders: dict[str, set] = {}
+        self.warnings: list[str] = []
 
     def get_book_by_title(self, title: str) -> Book | None:
         return self.books_by_title.get(title)
@@ -121,6 +122,10 @@ class BookCollection:
     #=================================================
     # FUNCTION: build The Collection
     #=================================================
+    def _load_json(self, filename: str) -> list[dict]:
+        with open(filename, "r", encoding="utf8") as file:
+            return json.load(file)
+
     def build_the_collection(self) -> Exception | None:
         # return value
         error: Exception | None = None
@@ -131,18 +136,27 @@ class BookCollection:
         self.authors_with_quotes = []
         self.folders = {}
 
-        # open and read the JSON file
+        # open and read the JSON files
         try:
-            with open('library.json', 'r', encoding="utf8") as file:
-                data: dict = json.load(file)
+            data = self._load_json("docs_1.json")
         except (FileNotFoundError, json.JSONDecodeError) as error:
             return error
 
+        try:
+            colls = self._load_json("colls.json")
+        except FileNotFoundError:
+            self.warnings.append(
+                "Folders file (colls.json) not found; books will be left unassigned."
+            )
+            colls = []
+        except json.JSONDecodeError as error:
+            return error
+
         # get the folders dictionary, each value will be a set of book IDs
-        for coll in data['colls']:
+        for coll in colls:
             self.folders[coll['data']['coll_title']] = set(coll['docs'])
 
-        for doc in data['docs']:
+        for doc in data:
             if doc['data']['doc_active'] == 1:
                 # Use regex to remove non-alphabet characters from the beginning of the title
                 book_title: str = re.sub(r"^[^a-zA-Z]+", "", doc['data']['doc_file_name_title'])
@@ -243,4 +257,4 @@ class BookCollection:
         # sort them alphabetically
         self.authors_with_quotes = sorted(authors_set)
 
-        return error
+        return None

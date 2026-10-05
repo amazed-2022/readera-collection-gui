@@ -321,6 +321,11 @@ if error:
     print(error)
     sys.exit()
 
+for warning in collection.warnings:
+    print(f"Warning: {warning}\n")
+    print("Press any key to continue...")
+    input()
+
 options_menu = create_options_menu(OPTIONS)
 #=================================================
 # main loop for printing

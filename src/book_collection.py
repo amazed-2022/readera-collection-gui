@@ -122,14 +122,12 @@ class BookCollection:
     #=================================================
     # FUNCTION: build The Collection
     #=================================================
-    def _load_json(self, filename: str) -> list[dict]:
+    @staticmethod
+    def _load_json(filename: str) -> list[dict]:
         with open(filename, "r", encoding="utf8") as file:
             return json.load(file)
 
     def build_the_collection(self) -> Exception | None:
-        # return value
-        error: Exception | None = None
-
         # reset state
         self.books = []
         self.books_by_title = {}

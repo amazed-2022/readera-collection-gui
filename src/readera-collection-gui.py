@@ -873,4 +873,7 @@ if __name__ == "__main__":
     window = MainWindow(The_Collection)
     if error:
         window.log(f"Error reading JSON file: {error}")
+    else:
+        for warning in The_Collection.warnings:
+            window.log(f"Warning: {warning}\n")
     sys.exit(app.exec())

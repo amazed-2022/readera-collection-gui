@@ -156,13 +156,16 @@ class BookCollection:
 
         for doc in data:
             if doc['data']['doc_active'] == 1:
-                # Use regex to remove non-alphabet characters from the beginning of the title
+                # remove leading non-letter characters
                 book_title: str = re.sub(r"^[^a-zA-Z]+", "", doc['data']['doc_file_name_title'])
 
                 # handle renamed books, book_title is the default return
                 book_title = constants.BOOK_RENAME_DICTIONARY.get(book_title, book_title)
-                # remove funny character (Zero Width Space)
+
+                # remove zero-width spaces and truncate long titles
                 book_title = book_title.replace('\u200b', '').strip()
+                if len(book_title) > 70:
+                    book_title = book_title[:68].rsplit(" ", 1)[0] + ".."
 
                 # add the book to The Collection (which is a list of instances)
                 this_book: Book = Book(book_title)

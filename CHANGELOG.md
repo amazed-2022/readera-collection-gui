@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] – 2026-xx
 #### Added
-- 
+- Quote printing timer tracking and cancellation for safe reset and cleanup
 
 #### Fixed
 - 

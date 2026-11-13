@@ -51,6 +51,7 @@ class QuoteManager:
 
     book_quote_count: int
     quote_iter: Iterator[tuple[int, Quote]]
+    quote_iter_timer: object | None = None
 
     #=================================================
     # initialization
@@ -223,6 +224,7 @@ class QuoteManager:
             i, quote = next(self.quote_iter)
         except StopIteration:
             # finished
+            self.quote_iter_timer = None
             self.ui.scroll_to_top()
             self.ui.set_quotes_counter(0)
             return
@@ -235,7 +237,12 @@ class QuoteManager:
         self.ui.set_quotes_counter(self.book_quote_count - i)
 
         # schedule next iteration
-        self.ui.schedule(5, self._print_next_quote)
+        self.quote_iter_timer = self.ui.schedule(5, self._print_next_quote)
+        
+    def _cancel_quote_iter_timer(self) -> None:
+        if self.quote_iter_timer is not None:
+            self.ui.cancel_timer(self.quote_iter_timer)
+            self.quote_iter_timer = None
 
     #=================================================
     # reset state
@@ -244,3 +251,4 @@ class QuoteManager:
         self._flush_pending_author(print_data=False)
         self.quote_printed = False
         self.book_header_printed = False
+        self._cancel_quote_iter_timer()

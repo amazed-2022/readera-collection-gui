@@ -56,7 +56,7 @@ If you enjoy using it, please consider supporting the developers by purchasing t
   
 ## Usage
 
-To use all features of `readera-collection-cli`, the following should be ensured:
+For the best experience with any of the available tools, the following should be ensured:
 - Books should have **consistent, readable filenames**, e.g.:  
  `Example Author - Example Title.epub`
 - In the ReadEra app, books should be organized into **Collections** (which are basically folders), e.g. novels, sci-fi, etc.

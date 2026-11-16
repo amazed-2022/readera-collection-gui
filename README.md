@@ -1,6 +1,6 @@
 # 📚 readera-collection-gui
 
-An unofficial Python tool for loading and viewing books and quotations stored in ReadEra backup files.
+An unofficial Python tool for loading and exploring books and quotations from ReadEra backup files.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/9f256bce-4d9e-437e-8dd4-1404e8909c1a" width="500" alt="ReadEra Collection Mini GUI" />

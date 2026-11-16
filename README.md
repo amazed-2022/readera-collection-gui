@@ -1,10 +1,18 @@
-# readera-collection-gui
-An **unofficial GUI tool** for loading and viewing books and quotes stored in ReadEra backup files.
+# 📚 readera-collection-gui
 
-**Current version:** v3.0.0  
-**License:** GNU GPL v3.0  
-**Author:** amazed  
-**Version history:** [CHANGELOG](CHANGELOG.md)
+An unofficial Python tool for loading and viewing books and quotes stored in ReadEra backup files.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/9f256bce-4d9e-437e-8dd4-1404e8909c1a" width="500" alt="ReadEra Collection Mini GUI" />
+</p>
+
+<p align="center">
+  <a href="#mini-gui">Mini GUI</a> ·
+  <a href="#full-gui">Full GUI</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#usage">Usage</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
 
 ---
 **Dependencies:** PySide6

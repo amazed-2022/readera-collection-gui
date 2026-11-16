@@ -1,25 +1,39 @@
 # 📚 readera-collection-gui
 
-An unofficial Python tool for loading and viewing books and quotes stored in ReadEra backup files.
+An unofficial Python tool for loading and viewing books and quotations stored in ReadEra backup files.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/9f256bce-4d9e-437e-8dd4-1404e8909c1a" width="500" alt="ReadEra Collection Mini GUI" />
 </p>
 
 <p align="center">
-  <a href="#mini-gui">Mini GUI</a> ·
-  <a href="#full-gui">Full GUI</a> ·
-  <a href="#installation">Installation</a> ·
-  <a href="#usage">Usage</a> ·
-  <a href="CHANGELOG.md">Changelog</a>
+  <a href="#introduction">Introduction</a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="#installation">Installation</a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="#usage">Usage</a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="#mini-gui">mini-gui</a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="#full-gui">Full-GUI</a>
 </p>
 
----
-**Dependencies:** PySide6
-- Website: https://www.qt.io/qt-for-python
-- License: LGPL v3.0
----
+<hr>
 
+<p>
+  <strong>Current version:</strong> v3.0.0<br>
+  <strong>License:</strong> GNU GPL v3.0<br>
+  <strong>Author:</strong> amazed<br>
+  <strong>Version history:</strong> <a href="CHANGELOG.md">CHANGELOG</a>
+</p>
+
+<p>
+  <strong>Full-GUI Dependencies:</strong> PySide6<br>
+  Website: <a href="https://www.qt.io/qt-for-python">Qt for Python</a><br>
+  License: LGPL v3.0
+</p>
+
+<hr>
 
 ## Introduction
 This project is not affiliated with, endorsed by, or connected to ReadEra or its developers, this tool exists solely to help users work with their own exported data outside the app.
